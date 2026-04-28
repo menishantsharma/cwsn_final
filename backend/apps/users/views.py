@@ -30,7 +30,7 @@ class SendOTPView(APIView):
                 .v2 \
                 .services(settings.TWILIO_VERIFY_SERVICE_SID) \
                 .verifications \
-                .create(to=phone_number, channel='whatsapp')
+                .create(to=phone_number, channel='sms')
             
             return Response({'status': 'OTP sent successfully via WhatsApp', 'sid': verification.sid}, status=status.HTTP_200_OK)
             
