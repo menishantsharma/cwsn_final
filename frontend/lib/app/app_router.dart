@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/pages/otp_verify_page.dart';
 import 'package:frontend/features/auth/presentation/pages/phone_input_page.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
 import 'package:frontend/home_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,6 +12,7 @@ class AppRoutes {
   static const String phoneInput = '/phone-input';
   static const String otpVerify = '/otp-verify';
   static const String home = '/home';
+  static const String categories = '/categories';
 
   AppRoutes._();
 }
@@ -48,7 +50,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (isVerified && (isOnAuth || isOnSplash)) {
-        return AppRoutes.home;
+        return AppRoutes.categories;
       }
 
       if (!isVerified && !isOnAuth && !isOtpSent) {
@@ -72,6 +74,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (_, _) => const OtpVerifyPage(),
       ),
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
+      GoRoute(
+        path: AppRoutes.categories,
+        builder: (_, _) => const CategoriesPage(),
+      ),
     ],
   );
 });
