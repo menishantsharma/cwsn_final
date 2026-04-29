@@ -7,6 +7,7 @@ import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
 import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
+import 'package:frontend/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String categories = '/categories';
   static const String subcategories = '/subcategories';
   static const String services = '/services';
+  static const String notifications = '/notifications';
 
   AppRoutes._();
 }
@@ -91,6 +93,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.services,
         builder: (_, state) =>
             ServicesPage(subcategory: state.extra as SubcategoryModel),
+      ),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, _) => const NotificationsPage(),
       ),
     ],
   );

@@ -63,7 +63,25 @@ class _Header extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Find Services', style: AppTextStyles.displaySmall),
+        Row(
+          children: [
+            Expanded(
+              child: Text('Find Services', style: AppTextStyles.displaySmall),
+            ),
+            IconButton(
+              onPressed: () => context.push(
+                AppRoutes.notifications,
+              ), // navigate to notifications page
+              icon: const Icon(Icons.notifications_outlined),
+              color: AppColors.textPrimary,
+            ),
+            IconButton(
+              onPressed: () {}, // navigate to profile page
+              icon: const Icon(Icons.person_outline_rounded),
+              color: AppColors.textPrimary,
+            ),
+          ],
+        ),
         const SizedBox(height: AppDimensions.spacing8),
         Text(
           'Select a category to get started',
