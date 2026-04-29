@@ -26,7 +26,7 @@ class CategoriesPage extends ConsumerWidget {
           ),
           data: (categories) {
             if (categories.isEmpty) {
-              EmptyState(
+              return EmptyState(
                 icon: Icons.category_outlined,
                 title: 'No categories available',
                 subtitle: 'Please check back later',
@@ -126,7 +126,6 @@ class _CategoryCard extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: AppDimensions.spacing8),
-                  // Subcategory count badge
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: AppDimensions.spacing8,
