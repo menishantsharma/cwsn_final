@@ -8,7 +8,6 @@ import 'package:frontend/features/categories/domain/models/subcategory_model.dar
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
 import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
-import 'package:frontend/home_page.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
@@ -79,7 +78,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.otpVerify,
         builder: (_, _) => const OtpVerifyPage(),
       ),
-      GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(
         path: AppRoutes.categories,
         builder: (_, _) => const CategoriesPage(),
