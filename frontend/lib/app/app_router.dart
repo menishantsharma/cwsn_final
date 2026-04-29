@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/pages/otp_verify_page.dart';
 import 'package:frontend/features/auth/presentation/pages/phone_input_page.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
+import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
 import 'package:frontend/home_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -13,6 +15,7 @@ class AppRoutes {
   static const String otpVerify = '/otp-verify';
   static const String home = '/home';
   static const String categories = '/categories';
+  static const String subcategories = '/subcategories';
 
   AppRoutes._();
 }
@@ -77,6 +80,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.categories,
         builder: (_, _) => const CategoriesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.subcategories,
+        builder: (_, state) =>
+            SubcategoriesPage(category: state.extra as CategoryModel),
       ),
     ],
   );

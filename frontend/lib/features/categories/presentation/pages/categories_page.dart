@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/presentation/providers/category_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class CategoriesPage extends ConsumerWidget {
   const CategoriesPage({super.key});
@@ -80,7 +82,7 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {},
+      onTap: () => context.push(AppRoutes.subcategories, extra: category),
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.surface,
