@@ -63,7 +63,29 @@ class VerifyOTPView(APIView):
 
             if verification_check.status == 'approved':
                 user, created = User.objects.get_or_create(phone_number=phone_number)
+
+                # I changed this
+                if created:
+                    user.is_cwsn_user = True
+                    user.is_caregiver = True
+                    user.save(update_fields=['is_cwsn_user', 'is_caregiver'])
+                    
+                    CWSNProfile.objects.create(
+                        user=user,
+                        name=phone_number,
+                        age=0,
+                        gender='Other',
+                    )
+                    CaregiverProfile.objects.create(
+                        user=user,
+                        name=phone_number,
+                        age=0,
+                        gender='Other',
+                    )
+                # My change over
+
                 token, _ = Token.objects.get_or_create(user=user)
+
                 return Response({
                     'status': 'OTP verified successfully',
                     'token': token.key,
