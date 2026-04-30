@@ -26,6 +26,34 @@ class _EditableServiceDetailPageState
     );
   }
 
+  Future<void> _confirmDelete(BuildContext context) async {
+    final navigator = Navigator.of(context); // capture before await
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete service?'),
+        content: const Text(
+          'This will archive the service and remove it from all listings.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+    await ref.read(editableServiceProvider.notifier).deleteService();
+    navigator.pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final serviceAsync = ref.watch(editableServiceProvider);
@@ -48,6 +76,11 @@ class _EditableServiceDetailPageState
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
               ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: Colors.red),
+              onPressed: () => _confirmDelete(context),
             ),
         ],
       ),
@@ -273,11 +306,8 @@ class _EditableServiceDetailPageState
           top: Radius.circular(AppDimensions.radiusXl),
         ),
       ),
-      builder: (_) => _AgeSheetContent(
-        minAge: minAge,
-        maxAge: maxAge,
-        onSave: onSave,
-      ),
+      builder: (_) =>
+          _AgeSheetContent(minAge: minAge, maxAge: maxAge, onSave: onSave),
     );
   }
 }
@@ -641,11 +671,7 @@ class _AgeSheetContent extends StatefulWidget {
   final int? maxAge;
   final void Function(int?, int?) onSave;
 
-  const _AgeSheetContent({
-    required this.onSave,
-    this.minAge,
-    this.maxAge,
-  });
+  const _AgeSheetContent({required this.onSave, this.minAge, this.maxAge});
 
   @override
   State<_AgeSheetContent> createState() => _AgeSheetContentState();
@@ -658,8 +684,12 @@ class _AgeSheetContentState extends State<_AgeSheetContent> {
   @override
   void initState() {
     super.initState();
-    _minController = TextEditingController(text: widget.minAge?.toString() ?? '');
-    _maxController = TextEditingController(text: widget.maxAge?.toString() ?? '');
+    _minController = TextEditingController(
+      text: widget.minAge?.toString() ?? '',
+    );
+    _maxController = TextEditingController(
+      text: widget.maxAge?.toString() ?? '',
+    );
   }
 
   @override
@@ -694,11 +724,15 @@ class _AgeSheetContentState extends State<_AgeSheetContent> {
                   decoration: InputDecoration(
                     labelText: 'Min age',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       borderSide: const BorderSide(color: AppColors.primary),
                     ),
                   ),
@@ -713,11 +747,15 @@ class _AgeSheetContentState extends State<_AgeSheetContent> {
                   decoration: InputDecoration(
                     labelText: 'Max age',
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       borderSide: const BorderSide(color: AppColors.border),
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMd,
+                      ),
                       borderSide: const BorderSide(color: AppColors.primary),
                     ),
                   ),
@@ -898,13 +936,19 @@ class _ChipSheetContentState extends State<_ChipSheetContent> {
                     vertical: AppDimensions.spacing8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    color: isSelected
+                        ? AppColors.primary
+                        : AppColors.surfaceVariant,
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusFull,
+                    ),
                   ),
                   child: Text(
                     opt,
                     style: AppTextStyles.labelMedium.copyWith(
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                      color: isSelected
+                          ? Colors.white
+                          : AppColors.textSecondary,
                     ),
                   ),
                 ),

@@ -9,6 +9,7 @@ import 'package:frontend/features/categories/presentation/pages/categories_page.
 import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
 import 'package:frontend/features/notifications/presentation/pages/notifications_page.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
+import 'package:frontend/features/services/presentation/pages/create_service_page.dart';
 import 'package:frontend/features/services/presentation/pages/editable_service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
@@ -30,6 +31,7 @@ class AppRoutes {
   static const String editableServiceDetail = '/my-service';
   static const String profile = '/profile';
   static const String editProfile = '/edit-profile';
+  static const String createService = '/create-service';
 
   AppRoutes._();
 }
@@ -122,6 +124,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.editProfile,
         builder: (_, _) => const EditProfilePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.createService,
+        builder: (_, state) =>
+            CreateServicePage(subcategory: state.extra as SubcategoryModel),
       ),
     ],
   );

@@ -5,7 +5,6 @@ import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/core/widgets/empty_state.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
@@ -36,33 +35,27 @@ class ServicesPage extends ConsumerWidget {
           data: (services) => myServiceAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => const Center(child: Text('Something went wrong')),
-            data: (myService) => services.isEmpty && myService == null
-                ? const EmptyState(
-                    icon: Icons.design_services_outlined,
-                    title: 'No services found',
-                    subtitle: 'No services available in this subcategory yet',
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: AppDimensions.spacing32,
-                    ),
-                    itemCount: services.length + 2,
-                    separatorBuilder: (_, i) => SizedBox(
-                      height: i == 0
-                          ? AppDimensions.spacing24
-                          : AppDimensions.spacing12,
-                    ),
-                    itemBuilder: (context, index) {
-                      if (index == 0) return _Header(subcategory: subcategory);
-                      if (index == 1) {
-                        return myService != null
-                            ? _MyServiceCard(service: myService)
-                            : const _AddServiceCard();
-                      }
-                      return _ServiceCard(service: services[index - 2]);
-                    },
-                  ),
+            data: (myService) => ListView.separated(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: AppDimensions.spacing32,
+              ),
+              itemCount: services.length + 2,
+              separatorBuilder: (_, i) => SizedBox(
+                height: i == 0
+                    ? AppDimensions.spacing24
+                    : AppDimensions.spacing12,
+              ),
+              itemBuilder: (context, index) {
+                if (index == 0) return _Header(subcategory: subcategory);
+                if (index == 1) {
+                  return myService != null
+                      ? _MyServiceCard(service: myService)
+                      : _AddServiceCard(subcategory: subcategory);
+                }
+                return _ServiceCard(service: services[index - 2]);
+              },
+            ),
           ),
         ),
       ),
@@ -192,14 +185,13 @@ class _ServiceCard extends StatelessWidget {
 }
 
 class _AddServiceCard extends StatelessWidget {
-  const _AddServiceCard();
+  final SubcategoryModel subcategory;
+  const _AddServiceCard({required this.subcategory});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        // TODO: navigate to add service page
-      },
+      onTap: () => context.push(AppRoutes.createService, extra: subcategory),
       child: DottedBorder(
         options: RoundedRectDottedBorderOptions(
           color: AppColors.primary,

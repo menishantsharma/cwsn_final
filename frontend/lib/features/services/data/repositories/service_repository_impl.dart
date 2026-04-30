@@ -30,10 +30,20 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @override
+  Future<ServiceModel> createService({required Map<String, dynamic> fields}) {
+    return _remoteSource.createService(fields: fields);
+  }
+
+  @override
   Future<ServiceModel> updateService({
     required int id,
     required Map<String, dynamic> fields,
   }) {
     return _remoteSource.updateService(id: id, fields: fields);
+  }
+
+  @override
+  Future<void> deleteService({required int id}) {
+    return _remoteSource.deleteService(id: id);
   }
 }

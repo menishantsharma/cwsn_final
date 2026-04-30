@@ -59,6 +59,11 @@ class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
       return updated;
     });
   }
+
+  Future<void> deleteService() async {
+    state = const AsyncLoading();
+    await ref.read(serviceRepositoryProvider).deleteService(id: _original.id);
+  }
 }
 
 final editableServiceProvider =

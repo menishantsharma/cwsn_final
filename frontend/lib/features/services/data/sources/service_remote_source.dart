@@ -39,6 +39,16 @@ class ServiceRemoteSource {
     return ServiceModel.fromJson(results.first as Map<String, dynamic>);
   }
 
+  Future<ServiceModel> createService({
+    required Map<String, dynamic> fields,
+  }) async {
+    final response = await _dio.post(
+      '/api/services/services/',
+      data: FormData.fromMap(fields),
+    );
+    return ServiceModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
   Future<ServiceModel> updateService({
     required int id,
     required Map<String, dynamic> fields,
@@ -48,5 +58,9 @@ class ServiceRemoteSource {
       data: FormData.fromMap(fields),
     );
     return ServiceModel.fromJson(response.data as Map<String, dynamic>);
+  }
+
+  Future<void> deleteService({required int id}) async {
+    await _dio.delete('/api/services/services/$id/');
   }
 }
