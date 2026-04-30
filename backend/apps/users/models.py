@@ -213,3 +213,7 @@ def handle_caregiver_suspension(sender, instance, created, update_fields, **kwar
 def invalidate_caregiver_profile_cache(sender, instance, **kwargs):
     cache.delete_pattern("caregiver_profiles_list_*")
     cache.delete(f"caregiver_profile_detail_{instance.id}")
+
+    # Added by me
+    cache.delete_pattern("services_list_user_*")
+    cache.delete_pattern("services_list_public_*")

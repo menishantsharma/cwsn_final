@@ -12,6 +12,9 @@ import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/pages/editable_service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
+import 'package:frontend/features/profile/presentation/pages/profile_page.dart';
+import 'package:frontend/features/profile/presentation/pages/edit_profile_page.dart';
+
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
@@ -25,6 +28,8 @@ class AppRoutes {
   static const String notifications = '/notifications';
   static const String serviceDetail = '/service-detail';
   static const String editableServiceDetail = '/my-service';
+  static const String profile = '/profile';
+  static const String editProfile = '/edit-profile';
 
   AppRoutes._();
 }
@@ -112,6 +117,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.editableServiceDetail,
         builder: (_, state) =>
             EditableServiceDetailPage(service: state.extra as ServiceModel),
+      ),
+      GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
+      GoRoute(
+        path: AppRoutes.editProfile,
+        builder: (_, _) => const EditProfilePage(),
       ),
     ],
   );

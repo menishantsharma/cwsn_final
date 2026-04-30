@@ -76,7 +76,8 @@ class _Header extends StatelessWidget {
               color: AppColors.textPrimary,
             ),
             IconButton(
-              onPressed: () {}, // navigate to profile page
+              onPressed: () =>
+                  context.push(AppRoutes.profile), // navigate to profile page
               icon: const Icon(Icons.person_outline_rounded),
               color: AppColors.textPrimary,
             ),

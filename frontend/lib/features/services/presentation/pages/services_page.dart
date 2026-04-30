@@ -152,7 +152,12 @@ class _ServiceCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(service.title, style: AppTextStyles.titleSmall),
+                  Text(
+                    service.title,
+                    style: AppTextStyles.titleSmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (service.description != null) ...[
                     const SizedBox(height: AppDimensions.spacing4),
                     Text(
@@ -296,7 +301,12 @@ class _MyServiceCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppDimensions.spacing2),
-                    Text(service.title, style: AppTextStyles.titleSmall),
+                    Text(
+                      service.title,
+                      style: AppTextStyles.titleSmall,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (service.description != null) ...[
                       const SizedBox(height: AppDimensions.spacing4),
                       Text(
