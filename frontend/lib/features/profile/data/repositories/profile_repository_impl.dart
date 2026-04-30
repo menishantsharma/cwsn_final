@@ -28,4 +28,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
 
   @override
   Future<void> deleteAccount() => _remoteSource.deleteAccount();
+
+  @override
+  Future<List<ChildProfileModel>> getChildren() => _remoteSource.getChildren();
+
+  @override
+  Future<ChildProfileModel> addChild(Map<String, dynamic> data) =>
+      _remoteSource.addChild(data);
+
+  @override
+  Future<ChildProfileModel> updateChild(int id, Map<String, dynamic> data) =>
+      _remoteSource.updateChild(id, data);
+
+  @override
+  Future<void> deleteChild(int id) => _remoteSource.deleteChild(id);
 }

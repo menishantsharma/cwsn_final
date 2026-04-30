@@ -123,14 +123,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   keyboardType: TextInputType.number,
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) return 'Age is required';
-                    if (int.tryParse(v.trim()) == null)
+                    if (int.tryParse(v.trim()) == null) {
                       return 'Enter a valid age';
+                    }
                     return null;
                   },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _selectedGender,
+                  initialValue: _selectedGender,
                   decoration: const InputDecoration(
                     labelText: 'Gender',
                     border: OutlineInputBorder(),

@@ -94,7 +94,7 @@ class _NotificationsTab extends ConsumerWidget {
         return ListView.separated(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
           itemCount: notifications.length,
-          separatorBuilder: (_, __) =>
+          separatorBuilder: (_, _) =>
               const SizedBox(height: AppDimensions.spacing12),
           itemBuilder: (_, i) => _NotificationCard(
             notification: notifications[i],

@@ -9,4 +9,8 @@ abstract class ProfileRepository {
     Map<String, dynamic> data,
   );
   Future<void> deleteAccount();
+  Future<List<ChildProfileModel>> getChildren();
+  Future<ChildProfileModel> addChild(Map<String, dynamic> data);
+  Future<ChildProfileModel> updateChild(int id, Map<String, dynamic> data);
+  Future<void> deleteChild(int id);
 }

@@ -41,9 +41,14 @@ class ProfileNotifier extends AsyncNotifier<ProfileState> {
     final results = await Future.wait([
       _repository.getCwsnProfile(),
       _repository.getCaregiverProfile(),
+      _repository.getChildren(),
     ]);
+
+    final cwsnProfile = results[0] as CwsnProfileModel;
+    final children = results[2] as List<ChildProfileModel>;
+
     return ProfileState(
-      cwsnProfile: results[0] as CwsnProfileModel,
+      cwsnProfile: cwsnProfile.copyWith(children: children),
       caregiverProfile: results[1] as CaregiverProfileModel,
     );
   }
@@ -75,6 +80,46 @@ class ProfileNotifier extends AsyncNotifier<ProfileState> {
   Future<void> deleteAccount() async {
     await _repository.deleteAccount();
     await ref.read(authProvider.notifier).logout();
+  }
+
+  Future<void> addChild(Map<String, dynamic> data) async {
+    final current = state.value!;
+    final newChild = await _repository.addChild(data);
+    final updatedChildren = <ChildProfileModel>[
+      ...(current.cwsnProfile?.children ?? []),
+      newChild,
+    ];
+    state = AsyncData(
+      current.copyWith(
+        cwsnProfile: current.cwsnProfile?.copyWith(children: updatedChildren),
+      ),
+    );
+  }
+
+  Future<void> updateChild(int id, Map<String, dynamic> data) async {
+    final current = state.value!;
+    final updated = await _repository.updateChild(id, data);
+    final updatedChildren = current.cwsnProfile!.children
+        .map((c) => c.id == id ? updated : c)
+        .toList();
+    state = AsyncData(
+      current.copyWith(
+        cwsnProfile: current.cwsnProfile!.copyWith(children: updatedChildren),
+      ),
+    );
+  }
+
+  Future<void> deleteChild(int id) async {
+    final current = state.value!;
+    await _repository.deleteChild(id);
+    final updatedChildren = current.cwsnProfile!.children
+        .where((c) => c.id != id)
+        .toList();
+    state = AsyncData(
+      current.copyWith(
+        cwsnProfile: current.cwsnProfile!.copyWith(children: updatedChildren),
+      ),
+    );
   }
 }
 

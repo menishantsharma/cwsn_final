@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/features/profile/domain/models/profile_model.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/app_router.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
@@ -7,6 +8,60 @@ import 'package:frontend/features/profile/presentation/providers/profile_provide
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
+
+  void _showAddChildSheet(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _AddChildSheet(
+        onSave: (data) => ref.read(profileProvider.notifier).addChild(data),
+      ),
+    );
+  }
+
+  void _showEditChildSheet(
+    BuildContext context,
+    WidgetRef ref,
+    ChildProfileModel child,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _AddChildSheet(
+        initial: child,
+        onSave: (data) =>
+            ref.read(profileProvider.notifier).updateChild(child.id, data),
+      ),
+    );
+  }
+
+  void _confirmDeleteChild(
+    BuildContext context,
+    WidgetRef ref,
+    ChildProfileModel child,
+  ) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Delete Child'),
+        content: Text('Remove ${child.name} from your profile?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ref.read(profileProvider.notifier).deleteChild(child.id);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -59,6 +114,14 @@ class ProfilePage extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            _ChildrenCard(
+              children: profile.cwsnProfile?.children ?? [],
+              onAdd: () => _showAddChildSheet(context, ref),
+              onEdit: (child) => _showEditChildSheet(context, ref, child),
+              onDelete: (child) => _confirmDeleteChild(context, ref, child),
+            ),
+
             const SizedBox(height: 16),
             _InfoCard(
               title: 'Caregiver Info',
@@ -228,6 +291,215 @@ class _InfoRow extends StatelessWidget {
           ),
           Expanded(child: Text(value.isNotEmpty ? value : '—')),
         ],
+      ),
+    );
+  }
+}
+
+class _ChildrenCard extends StatelessWidget {
+  final List<ChildProfileModel> children;
+  final VoidCallback onAdd;
+  final void Function(ChildProfileModel) onEdit;
+  final void Function(ChildProfileModel) onDelete;
+
+  const _ChildrenCard({
+    required this.children,
+    required this.onAdd,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Children',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: onAdd,
+                  tooltip: 'Add Child',
+                ),
+              ],
+            ),
+            const Divider(),
+            if (children.isEmpty)
+              const Text(
+                'No children added yet.',
+                style: TextStyle(color: Colors.grey),
+              )
+            else
+              ...children.map(
+                (child) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 4),
+                  child: Row(
+                    children: [
+                      const Icon(
+                        Icons.child_care,
+                        size: 20,
+                        color: Colors.blueGrey,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${child.name}  •  Age ${child.age}  •  ${child.gender}',
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        onPressed: () => onEdit(child),
+                        tooltip: 'Edit',
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.delete,
+                          size: 18,
+                          color: Colors.red,
+                        ),
+                        onPressed: () => onDelete(child),
+                        tooltip: 'Delete',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddChildSheet extends StatefulWidget {
+  final Future<void> Function(Map<String, dynamic>) onSave;
+  final ChildProfileModel? initial;
+
+  const _AddChildSheet({required this.onSave, this.initial});
+
+  @override
+  State<_AddChildSheet> createState() => _AddChildSheetState();
+}
+
+class _AddChildSheetState extends State<_AddChildSheet> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _nameController;
+  late final TextEditingController _ageController;
+  late String _gender;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initial?.name ?? '');
+    _ageController = TextEditingController(
+      text: widget.initial != null ? widget.initial!.age.toString() : '',
+    );
+    _gender = widget.initial?.gender ?? 'Male';
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await widget.onSave({
+        'name': _nameController.text.trim(),
+        'age': int.parse(_ageController.text.trim()),
+        'gender': _gender,
+      });
+      if (mounted) Navigator.pop(context);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save child: $e')));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isEdit = widget.initial != null;
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 16,
+        right: 16,
+        top: 16,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              isEdit ? 'Edit Child' : 'Add Child',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Name'),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _ageController,
+              decoration: const InputDecoration(labelText: 'Age'),
+              keyboardType: TextInputType.number,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return 'Required';
+                if (int.tryParse(v.trim()) == null) return 'Must be a number';
+                return null;
+              },
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: _gender,
+              decoration: const InputDecoration(labelText: 'Gender'),
+              items: [
+                'Male',
+                'Female',
+                'Other',
+              ].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+              onChanged: (v) => setState(() => _gender = v!),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _loading ? null : _submit,
+              child: _loading
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Text(isEdit ? 'Update' : 'Save'),
+            ),
+          ],
+        ),
       ),
     );
   }
