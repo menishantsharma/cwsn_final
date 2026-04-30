@@ -7,6 +7,8 @@ import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/presentation/providers/category_provider.dart';
+import 'package:frontend/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class CategoriesPage extends ConsumerWidget {
@@ -68,13 +70,42 @@ class _Header extends StatelessWidget {
             Expanded(
               child: Text('Find Services', style: AppTextStyles.displaySmall),
             ),
-            IconButton(
-              onPressed: () => context.push(
-                AppRoutes.notifications,
-              ), // navigate to notifications page
-              icon: const Icon(Icons.notifications_outlined),
-              color: AppColors.textPrimary,
+            Consumer(
+              builder: (context, ref, _) {
+                final unreadNotifs = ref
+                    .watch(notificationProvider)
+                    .maybeWhen(
+                      data: (list) => list.where((n) => !n.isRead).length,
+                      orElse: () => 0,
+                    );
+                final pendingRequests = ref.watch(pendingRequestCountProvider);
+                final totalBadge = unreadNotifs + pendingRequests;
+
+                return Stack(
+                  children: [
+                    IconButton(
+                      onPressed: () => context.push(AppRoutes.notifications),
+                      icon: const Icon(Icons.notifications_outlined),
+                      color: AppColors.textPrimary,
+                    ),
+                    if (totalBadge > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              },
             ),
+
             IconButton(
               onPressed: () =>
                   context.push(AppRoutes.profile), // navigate to profile page
