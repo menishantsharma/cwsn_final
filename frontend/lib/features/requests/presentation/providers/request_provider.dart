@@ -32,6 +32,17 @@ class RequestNotifier extends AsyncNotifier<List<RequestModel>> {
       state.requireValue.map((r) => r.id == updated.id ? updated : r).toList(),
     );
   }
+
+  Future<void> sendRequest({
+    required int serviceId,
+    required int childId,
+    String? note,
+  }) async {
+    final created = await ref
+        .read(requestRemoteSourceProvider)
+        .createRequest(serviceId: serviceId, childId: childId, note: note);
+    state = AsyncData([...state.requireValue, created]);
+  }
 }
 
 final requestProvider =
@@ -46,4 +57,13 @@ final pendingRequestCountProvider = Provider<int>((ref) {
         data: (requests) => requests.where((r) => r.status == 'Pending').length,
         orElse: () => 0,
       );
+});
+
+final serviceRequestProvider = FutureProvider.family<List<RequestModel>, int>((
+  ref,
+  serviceId,
+) {
+  return ref
+      .read(requestRemoteSourceProvider)
+      .getRequestsAsParent(serviceId: serviceId);
 });

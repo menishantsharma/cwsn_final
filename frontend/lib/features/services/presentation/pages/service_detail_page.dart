@@ -1,16 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
+import 'package:frontend/features/profile/domain/models/profile_model.dart'
+    hide CaregiverProfileModel;
+import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/requests/domain/models/request_model.dart';
+import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 
-class ServiceDetailPage extends StatelessWidget {
+class ServiceDetailPage extends ConsumerWidget {
   final ServiceModel service;
 
   const ServiceDetailPage({super.key, required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
@@ -27,7 +34,7 @@ class ServiceDetailPage extends StatelessWidget {
             if (service.caregiverProfile != null) ...[
               const _Divider(),
               const SizedBox(height: AppDimensions.spacing24),
-              _ProviderSection(profile: service.caregiverProfile!),
+              _ProviderSection(service: service),
               const SizedBox(height: AppDimensions.spacing32),
             ],
           ],
@@ -219,17 +226,15 @@ class _Divider extends StatelessWidget {
 
 // ── Provider Section ──────────────────────────────────────
 
-class _ProviderSection extends StatelessWidget {
-  final CaregiverProfileModel profile;
-  const _ProviderSection({required this.profile});
-
-  bool _hasContent() =>
-      (profile.aboutMe?.isNotEmpty ?? false) ||
-      (profile.qualifications?.isNotEmpty ?? false) ||
-      profile.languages.isNotEmpty;
+class _ProviderSection extends ConsumerWidget {
+  final ServiceModel service;
+  const _ProviderSection({required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = service.caregiverProfile!;
+    final requestAsync = ref.watch(serviceRequestProvider(service.id));
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(AppDimensions.spacing20),
@@ -249,14 +254,358 @@ class _ProviderSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _ProviderHeader(profile: profile),
-          if (_hasContent()) ...[
-            const SizedBox(height: AppDimensions.spacing16),
-            const Divider(color: AppColors.border),
-            const SizedBox(height: AppDimensions.spacing16),
+          const SizedBox(height: AppDimensions.spacing16),
+          const Divider(color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacing16),
+          if (profile.aboutMe != null && profile.aboutMe!.isNotEmpty ||
+              profile.qualifications != null &&
+                  profile.qualifications!.isNotEmpty ||
+              profile.languages.isNotEmpty)
             _ProviderDetails(profile: profile),
-          ],
+          const SizedBox(height: AppDimensions.spacing16),
+          // Request contact section
+          requestAsync.when(
+            loading: () => const Center(
+              child: SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            error: (_, __) => _RequestButton(serviceId: service.id),
+            data: (requests) {
+              if (requests.isEmpty) {
+                return _RequestButton(serviceId: service.id);
+              }
+              final request = requests.first;
+              return _RequestStatus(request: request);
+            },
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _RequestButton extends ConsumerWidget {
+  final int serviceId;
+  const _RequestButton({required this.serviceId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        icon: const Icon(Icons.phone_outlined, size: 18),
+        label: const Text('Request Contact'),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          ),
+        ),
+        onPressed: () => _showRequestSheet(context, ref, serviceId),
+      ),
+    );
+  }
+
+  void _showRequestSheet(BuildContext context, WidgetRef ref, int serviceId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusXl),
+        ),
+      ),
+      builder: (_) => _RequestSheet(serviceId: serviceId),
+    );
+  }
+}
+
+class _RequestSheet extends ConsumerStatefulWidget {
+  final int serviceId;
+  const _RequestSheet({required this.serviceId});
+
+  @override
+  ConsumerState<_RequestSheet> createState() => _RequestSheetState();
+}
+
+class _RequestSheetState extends ConsumerState<_RequestSheet> {
+  ChildProfileModel? _selectedChild;
+  final _noteController = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_selectedChild == null) return;
+    setState(() => _loading = true);
+    try {
+      await ref
+          .read(requestProvider.notifier)
+          .sendRequest(
+            serviceId: widget.serviceId,
+            childId: _selectedChild!.id,
+            note: _noteController.text.trim(),
+          );
+      ref.invalidate(serviceRequestProvider(widget.serviceId));
+      if (mounted) Navigator.of(context).pop();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.toString())));
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final profileAsync = ref.watch(profileProvider);
+    final children = profileAsync.value?.cwsnProfile?.children ?? [];
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        20,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing20),
+          Text('Request Contact', style: AppTextStyles.titleMedium),
+          const SizedBox(height: AppDimensions.spacing4),
+          Text(
+            'Select the child this request is for',
+            style: AppTextStyles.bodySmall,
+          ),
+          const SizedBox(height: AppDimensions.spacing20),
+          if (children.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppDimensions.spacing16),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+              ),
+              child: Text(
+                'No children added yet. Add a child from your profile first.',
+                style: AppTextStyles.bodySmall,
+              ),
+            )
+          else
+            ...children.map(
+              (child) => _ChildOption(
+                child: child,
+                selected: _selectedChild?.id == child.id,
+                onTap: () => setState(() => _selectedChild = child),
+              ),
+            ),
+          const SizedBox(height: AppDimensions.spacing16),
+          TextField(
+            controller: _noteController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'Add a note (optional)',
+              hintStyle: AppTextStyles.bodySmall,
+              filled: true,
+              fillColor: AppColors.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: (_selectedChild == null || _loading) ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.border,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Send Request'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ChildOption extends StatelessWidget {
+  final ChildProfileModel child;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ChildOption({
+    required this.child,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppDimensions.spacing8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacing16,
+          vertical: AppDimensions.spacing12,
+        ),
+        decoration: BoxDecoration(
+          color: selected
+              ? AppColors.primary.withValues(alpha: 0.08)
+              : AppColors.background,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          border: Border.all(
+            color: selected ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              selected ? Icons.radio_button_checked : Icons.radio_button_off,
+              size: 18,
+              color: selected ? AppColors.primary : AppColors.textHint,
+            ),
+            const SizedBox(width: AppDimensions.spacing12),
+            Text(
+              '${child.name} · ${child.age}y · ${child.gender}',
+              style: AppTextStyles.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RequestStatus extends StatelessWidget {
+  final RequestModel request;
+  const _RequestStatus({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final isAccepted = request.status == 'Accepted';
+    final isPending = request.status == 'Pending';
+
+    final statusColor = switch (request.status) {
+      'Accepted' => Colors.green,
+      'Rejected' => Colors.red,
+      _ => AppColors.textSecondary,
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spacing8,
+                vertical: AppDimensions.spacing4,
+              ),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+              child: Text(
+                isPending ? 'Request Pending' : request.status,
+                style: AppTextStyles.labelSmall.copyWith(color: statusColor),
+              ),
+            ),
+          ],
+        ),
+        if (isAccepted && request.caregiverPhone != null) ...[
+          const SizedBox(height: AppDimensions.spacing12),
+          GestureDetector(
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: request.caregiverPhone!));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Phone number copied')),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spacing12,
+                vertical: AppDimensions.spacing8,
+              ),
+              decoration: BoxDecoration(
+                color: Colors.green.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.phone_outlined,
+                    size: 16,
+                    color: Colors.green,
+                  ),
+                  const SizedBox(width: AppDimensions.spacing8),
+                  Text(
+                    request.caregiverPhone!,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: Colors.green.shade700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Hold to copy',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.textHint,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }
@@ -347,6 +696,7 @@ class _ProviderDetails extends StatelessWidget {
         ],
         if (profile.languages.isNotEmpty)
           _LanguagesRow(languages: profile.languages),
+        const SizedBox(height: AppDimensions.spacing12),
       ],
     );
   }
