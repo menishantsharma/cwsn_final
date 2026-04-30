@@ -166,6 +166,23 @@ class _ServiceCard extends StatelessWidget {
                       _Chip(label: service.serviceType),
                       const SizedBox(width: AppDimensions.spacing8),
                       _Chip(label: service.paymentType),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.thumb_up_outlined,
+                            size: 13,
+                            color: AppColors.primary,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${service.upvoteCount}',
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
@@ -314,6 +331,23 @@ class _MyServiceCard extends StatelessWidget {
                         _Chip(label: service.serviceType),
                         const SizedBox(width: AppDimensions.spacing8),
                         _Chip(label: service.paymentType),
+                        const Spacer(),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.thumb_up_outlined,
+                              size: 13,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              '${service.upvoteCount}',
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ],

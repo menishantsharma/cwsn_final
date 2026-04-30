@@ -10,6 +10,7 @@ import 'package:frontend/features/profile/presentation/providers/profile_provide
 import 'package:frontend/features/requests/domain/models/request_model.dart';
 import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
+import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
 
 class ServiceDetailPage extends ConsumerWidget {
   final ServiceModel service;
@@ -46,18 +47,61 @@ class ServiceDetailPage extends ConsumerWidget {
 
 // ── Service Info ──────────────────────────────────────────
 
-class _ServiceInfoSection extends StatelessWidget {
+class _ServiceInfoSection extends ConsumerWidget {
   final ServiceModel service;
   const _ServiceInfoSection({required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isUpvoted = ref.watch(isUpvotedProvider(service.id));
+    final upvoteAsync = ref.watch(upvoteProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _ServiceHero(image: service.image),
         const SizedBox(height: AppDimensions.spacing20),
-        Text(service.title, style: AppTextStyles.displaySmall),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(service.title, style: AppTextStyles.displaySmall),
+            ),
+            const SizedBox(width: AppDimensions.spacing8),
+            GestureDetector(
+              onTap: () async {
+                try {
+                  await ref.read(upvoteProvider.notifier).toggle(service.id);
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          e.toString().contains('400')
+                              ? 'Accept a request first to upvote'
+                              : 'Could not upvote. Try again.',
+                        ),
+                      ),
+                    );
+                  }
+                }
+              },
+              child: upvoteAsync.when(
+                loading: () => _UpvotePill(
+                  count: service.upvoteCount,
+                  isUpvoted: false,
+                  loading: true,
+                ),
+                error: (_, _) =>
+                    _UpvotePill(count: service.upvoteCount, isUpvoted: false),
+                data: (_) => _UpvotePill(
+                  count: service.upvoteCount,
+                  isUpvoted: isUpvoted,
+                ),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: AppDimensions.spacing12),
         Row(
           children: [
@@ -75,6 +119,65 @@ class _ServiceInfoSection extends StatelessWidget {
         const SizedBox(height: AppDimensions.spacing20),
         _InfoGrid(service: service),
       ],
+    );
+  }
+}
+
+class _UpvotePill extends StatelessWidget {
+  final int count;
+  final bool isUpvoted;
+  final bool loading;
+
+  const _UpvotePill({
+    required this.count,
+    required this.isUpvoted,
+    this.loading = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacing8,
+        vertical: AppDimensions.spacing6,
+      ),
+      decoration: BoxDecoration(
+        color: isUpvoted
+            ? AppColors.primary.withValues(alpha: 0.1)
+            : AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+        border: Border.all(
+          color: isUpvoted ? AppColors.primary : AppColors.border,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          loading
+              ? SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1.5,
+                    color: AppColors.primary,
+                  ),
+                )
+              : Icon(
+                  isUpvoted ? Icons.thumb_up : Icons.thumb_up_outlined,
+                  size: 14,
+                  color: isUpvoted
+                      ? AppColors.primary
+                      : AppColors.textSecondary,
+                ),
+          const SizedBox(width: AppDimensions.spacing4),
+          Text(
+            '$count',
+            style: AppTextStyles.labelMedium.copyWith(
+              color: isUpvoted ? AppColors.primary : AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -275,7 +378,7 @@ class _ProviderSection extends ConsumerWidget {
                 ),
               ),
             ),
-            error: (_, __) => _RequestButton(serviceId: service.id),
+            error: (_, _) => _RequestButton(serviceId: service.id),
             data: (requests) {
               if (requests.isEmpty) {
                 return _RequestButton(serviceId: service.id);
@@ -542,23 +645,19 @@ class _RequestStatus extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spacing8,
-                vertical: AppDimensions.spacing4,
-              ),
-              decoration: BoxDecoration(
-                color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-              ),
-              child: Text(
-                isPending ? 'Request Pending' : request.status,
-                style: AppTextStyles.labelSmall.copyWith(color: statusColor),
-              ),
-            ),
-          ],
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacing8,
+            vertical: AppDimensions.spacing4,
+          ),
+          decoration: BoxDecoration(
+            color: statusColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          ),
+          child: Text(
+            isPending ? 'Request Pending' : request.status,
+            style: AppTextStyles.labelSmall.copyWith(color: statusColor),
+          ),
         ),
         if (isAccepted && request.caregiverPhone != null) ...[
           const SizedBox(height: AppDimensions.spacing12),
@@ -654,23 +753,6 @@ class _ProviderHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (profile.upvoteCount > 0)
-          Row(
-            children: [
-              const Icon(
-                Icons.thumb_up_outlined,
-                size: 14,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: AppDimensions.spacing4),
-              Text(
-                '${profile.upvoteCount}',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
       ],
     );
   }

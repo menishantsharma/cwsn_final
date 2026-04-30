@@ -564,23 +564,6 @@ class _ProviderHeader extends StatelessWidget {
             ],
           ),
         ),
-        if (profile.upvoteCount > 0)
-          Row(
-            children: [
-              const Icon(
-                Icons.thumb_up_outlined,
-                size: 14,
-                color: AppColors.primary,
-              ),
-              const SizedBox(width: AppDimensions.spacing4),
-              Text(
-                '${profile.upvoteCount}',
-                style: AppTextStyles.labelMedium.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
       ],
     );
   }
