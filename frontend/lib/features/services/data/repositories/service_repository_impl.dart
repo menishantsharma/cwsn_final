@@ -17,4 +17,23 @@ class ServiceRepositoryImpl implements ServiceRepository {
       subCategoryId: subCategoryId,
     );
   }
+
+  @override
+  Future<ServiceModel?> getMyServiceForSubcategory({
+    required int categoryId,
+    required int subCategoryId,
+  }) {
+    return _remoteSource.getMyServiceForSubcategory(
+      categoryId: categoryId,
+      subCategoryId: subCategoryId,
+    );
+  }
+
+  @override
+  Future<ServiceModel> updateService({
+    required int id,
+    required Map<String, dynamic> fields,
+  }) {
+    return _remoteSource.updateService(id: id, fields: fields);
+  }
 }

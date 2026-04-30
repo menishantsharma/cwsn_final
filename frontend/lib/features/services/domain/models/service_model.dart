@@ -41,6 +41,8 @@ class ServiceModel {
   final int? targetAgeMin;
   final int? targetAgeMax;
   final String targetGender;
+  final int categoryId; // ADD
+  final int subCategoryId; // ADD
   final CaregiverProfileModel? caregiverProfile;
 
   ServiceModel({
@@ -54,6 +56,8 @@ class ServiceModel {
     this.targetAgeMin,
     this.targetAgeMax,
     required this.targetGender,
+    required this.categoryId, // ADD
+    required this.subCategoryId, // ADD
     this.caregiverProfile,
   });
 
@@ -69,9 +73,37 @@ class ServiceModel {
       targetAgeMin: json['target_age_min'] as int?,
       targetAgeMax: json['target_age_max'] as int?,
       targetGender: json['target_gender'] as String,
+      categoryId: json['category'] as int,
+      subCategoryId: json['sub_category'] as int,
       caregiverProfile: json['caregiver_profile'] != null
           ? CaregiverProfileModel.fromJson(json['caregiver_profile'])
           : null,
+    );
+  }
+
+  ServiceModel copyWith({
+    String? title,
+    String? description,
+    String? serviceType,
+    String? paymentType,
+    int? targetAgeMin,
+    int? targetAgeMax,
+    String? targetGender,
+  }) {
+    return ServiceModel(
+      id: id,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      image: image,
+      serviceType: serviceType ?? this.serviceType,
+      paymentType: paymentType ?? this.paymentType,
+      upvoteCount: upvoteCount,
+      targetAgeMin: targetAgeMin ?? this.targetAgeMin,
+      targetAgeMax: targetAgeMax ?? this.targetAgeMax,
+      targetGender: targetGender ?? this.targetGender,
+      categoryId: categoryId,
+      subCategoryId: subCategoryId,
+      caregiverProfile: caregiverProfile,
     );
   }
 }

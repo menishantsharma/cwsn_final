@@ -5,4 +5,14 @@ abstract class ServiceRepository {
     required int categoryId,
     required int subCategoryId,
   });
+
+  Future<ServiceModel?> getMyServiceForSubcategory({
+    required int categoryId,
+    required int subCategoryId,
+  });
+
+  Future<ServiceModel> updateService({
+    required int id,
+    required Map<String, dynamic> fields,
+  });
 }

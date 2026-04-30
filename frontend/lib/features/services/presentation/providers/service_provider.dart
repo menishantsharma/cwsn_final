@@ -22,3 +22,46 @@ final serviceProvider = FutureProvider.family<List<ServiceModel>, (int, int)>((
       .watch(serviceRepositoryProvider)
       .getServices(categoryId: categoryId, subCategoryId: subCategoryId);
 });
+
+final myServiceProvider = FutureProvider.family<ServiceModel?, (int, int)>((
+  ref,
+  args,
+) {
+  final (categoryId, subCategoryId) = args;
+  return ref
+      .watch(serviceRepositoryProvider)
+      .getMyServiceForSubcategory(
+        categoryId: categoryId,
+        subCategoryId: subCategoryId,
+      );
+});
+
+class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
+  late ServiceModel _original;
+
+  @override
+  AsyncValue<ServiceModel> build() => const AsyncLoading();
+
+  void init(ServiceModel service) {
+    _original = service;
+    state = AsyncData(service);
+  }
+
+  Future<void> updateField(Map<String, dynamic> fields) async {
+    final current = state.value;
+    if (current == null) return;
+
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final updated = await ref
+          .read(serviceRepositoryProvider)
+          .updateService(id: _original.id, fields: fields);
+      return updated;
+    });
+  }
+}
+
+final editableServiceProvider =
+    NotifierProvider<EditableServiceNotifier, AsyncValue<ServiceModel>>(
+      EditableServiceNotifier.new,
+    );
