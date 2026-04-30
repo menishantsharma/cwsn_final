@@ -8,6 +8,8 @@ import 'package:frontend/features/categories/domain/models/subcategory_model.dar
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
 import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
 import 'package:frontend/features/notifications/presentation/pages/notifications_page.dart';
+import 'package:frontend/features/services/domain/models/service_model.dart';
+import 'package:frontend/features/services/presentation/pages/service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +22,7 @@ class AppRoutes {
   static const String subcategories = '/subcategories';
   static const String services = '/services';
   static const String notifications = '/notifications';
+  static const String serviceDetail = '/service-detail';
 
   AppRoutes._();
 }
@@ -97,6 +100,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.notifications,
         builder: (_, _) => const NotificationsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.serviceDetail,
+        builder: (_, state) =>
+            ServiceDetailPage(service: state.extra as ServiceModel),
       ),
     ],
   );
