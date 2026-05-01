@@ -19,13 +19,17 @@ class NotificationsPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text('Inbox', style: AppTextStyles.titleMedium),
+          backgroundColor: AppColors.background,
           elevation: 0,
+          scrolledUnderElevation: 0,
+          title: Text('Inbox', style: AppTextStyles.titleMedium),
           bottom: TabBar(
             labelStyle: AppTextStyles.labelMedium,
             labelColor: AppColors.primary,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primary,
+            indicatorWeight: 2,
+            dividerColor: AppColors.border,
             tabs: [
               const Tab(text: 'Notifications'),
               _RequestsTab(),
@@ -55,11 +59,11 @@ class _RequestsTab extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
               color: AppColors.primary,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
             ),
             child: Text(
               '$pending',
-              style: AppTextStyles.labelSmall.copyWith(color: Colors.white),
+              style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontSize: 10),
             ),
           ),
         ],
@@ -92,10 +96,9 @@ class _NotificationsTab extends ConsumerWidget {
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           itemCount: notifications.length,
-          separatorBuilder: (_, _) =>
-              const SizedBox(height: AppDimensions.spacing12),
+          separatorBuilder: (_, _) => const SizedBox(height: AppDimensions.spacing8),
           itemBuilder: (_, i) => _NotificationCard(
             notification: notifications[i],
             onTap: () => ref
@@ -114,31 +117,38 @@ class _NotificationCard extends StatelessWidget {
 
   const _NotificationCard({required this.notification, required this.onTap});
 
+  String _timeAgo(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inDays < 7) return '${diff.inDays}d ago';
+    return '${dt.day}/${dt.month}';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isUnread = !notification.isRead;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: notification.isRead
-              ? AppColors.surface
-              : AppColors.primaryLight,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          color: isUnread ? AppColors.primary.withValues(alpha: 0.04) : Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           border: Border.all(color: AppColors.border),
         ),
         padding: const EdgeInsets.all(AppDimensions.spacing16),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 10,
-              height: 10,
-              margin: const EdgeInsets.only(top: 5),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: notification.isRead
-                    ? Colors.transparent
-                    : AppColors.primary,
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isUnread ? AppColors.primary : Colors.transparent,
+                ),
               ),
             ),
             const SizedBox(width: AppDimensions.spacing12),
@@ -146,9 +156,34 @@ class _NotificationCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(notification.title, style: AppTextStyles.titleSmall),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          notification.title,
+                          style: AppTextStyles.titleSmall.copyWith(
+                            fontWeight: isUnread ? FontWeight.w600 : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppDimensions.spacing8),
+                      Text(
+                        _timeAgo(notification.createdAt),
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textHint,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: AppDimensions.spacing4),
-                  Text(notification.message, style: AppTextStyles.bodySmall),
+                  Text(
+                    notification.message,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -187,37 +222,44 @@ class _RequestsTabView extends ConsumerWidget {
         final history = requests.where((r) => r.status != 'Pending').toList();
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
           children: [
             if (pending.isNotEmpty) ...[
-              Text('Pending', style: AppTextStyles.titleSmall),
+              _SectionLabel('Pending'),
               const SizedBox(height: AppDimensions.spacing12),
-              ...pending.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.spacing12,
-                  ),
-                  child: _RequestCard(request: r),
-                ),
-              ),
+              ...pending.map((r) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
+                    child: _RequestCard(request: r),
+                  )),
             ],
             if (history.isNotEmpty) ...[
-              if (pending.isNotEmpty)
-                const SizedBox(height: AppDimensions.spacing8),
-              Text('History', style: AppTextStyles.titleSmall),
+              if (pending.isNotEmpty) const SizedBox(height: AppDimensions.spacing8),
+              _SectionLabel('History'),
               const SizedBox(height: AppDimensions.spacing12),
-              ...history.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.spacing12,
-                  ),
-                  child: _RequestCard(request: r),
-                ),
-              ),
+              ...history.map((r) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
+                    child: _RequestCard(request: r),
+                  )),
             ],
           ],
         );
       },
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.labelSmall.copyWith(
+        color: AppColors.textSecondary,
+        letterSpacing: 1,
+      ),
     );
   }
 }
@@ -234,22 +276,16 @@ class _RequestCard extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       padding: const EdgeInsets.all(AppDimensions.spacing16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: Column(
@@ -258,16 +294,17 @@ class _RequestCard extends ConsumerWidget {
                     Text(request.serviceTitle, style: AppTextStyles.titleSmall),
                     const SizedBox(height: AppDimensions.spacing4),
                     Text(
-                      'From: ${request.cwsnUserName}',
-                      style: AppTextStyles.bodySmall,
+                      request.cwsnUserName,
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                     ),
                     Text(
-                      'For: ${request.childName} · ${request.childAge}y · ${request.childGender}',
-                      style: AppTextStyles.bodySmall,
+                      '${request.childName} · ${request.childAge}y · ${request.childGender}',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: AppDimensions.spacing8),
               _StatusChip(status: request.status),
             ],
           ),
@@ -280,7 +317,10 @@ class _RequestCard extends ConsumerWidget {
                 color: AppColors.background,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               ),
-              child: Text(request.note!, style: AppTextStyles.bodySmall),
+              child: Text(
+                request.note!,
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+              ),
             ),
           ],
           if (isPending) ...[
@@ -288,40 +328,18 @@ class _RequestCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: () =>
-                        ref.read(requestProvider.notifier).reject(request.id),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textSecondary,
-                      side: const BorderSide(color: AppColors.border),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusMd,
-                        ),
-                      ),
-                    ),
-                    child: const Text('Decline'),
+                  child: _ActionButton(
+                    label: 'Decline',
+                    onTap: () => ref.read(requestProvider.notifier).reject(request.id),
+                    filled: false,
                   ),
                 ),
                 const SizedBox(width: AppDimensions.spacing12),
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () =>
-                        ref.read(requestProvider.notifier).accept(request.id),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppDimensions.radiusMd,
-                        ),
-                      ),
-                    ),
-                    child: Text(
-                      'Accept',
-                      style: AppTextStyles.labelMedium.copyWith(
-                        color: Colors.white,
-                      ),
-                    ),
+                  child: _ActionButton(
+                    label: 'Accept',
+                    onTap: () => ref.read(requestProvider.notifier).accept(request.id),
+                    filled: true,
                   ),
                 ),
               ],
@@ -331,17 +349,55 @@ class _RequestCard extends ConsumerWidget {
             const SizedBox(height: AppDimensions.spacing12),
             Row(
               children: [
-                const Icon(
-                  Icons.phone_outlined,
-                  size: 14,
-                  color: AppColors.primary,
-                ),
+                const Icon(Icons.phone_outlined, size: 13, color: AppColors.primary),
                 const SizedBox(width: AppDimensions.spacing6),
-                Text(request.caregiverPhone!, style: AppTextStyles.bodySmall),
+                Text(
+                  request.caregiverPhone!,
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
+                ),
               ],
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+  final bool filled;
+
+  const _ActionButton({required this.label, required this.onTap, required this.filled});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: Material(
+        color: filled ? AppColors.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          child: Container(
+            decoration: filled
+                ? null
+                : BoxDecoration(
+                    border: Border.all(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                  ),
+            child: Center(
+              child: Text(
+                label,
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: filled ? Colors.white : AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -353,10 +409,10 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      'Accepted' => Colors.green,
-      'Rejected' => Colors.red,
-      _ => AppColors.textSecondary,
+    final (color, bg) = switch (status) {
+      'Accepted' => (const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+      'Rejected' => (const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+      _ => (AppColors.textSecondary, AppColors.background),
     };
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -364,12 +420,12 @@ class _StatusChip extends StatelessWidget {
         vertical: AppDimensions.spacing4,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
+        color: bg,
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
       ),
       child: Text(
         status,
-        style: AppTextStyles.labelSmall.copyWith(color: color),
+        style: AppTextStyles.labelSmall.copyWith(color: color, fontSize: 11),
       ),
     );
   }
