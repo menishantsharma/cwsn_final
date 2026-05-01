@@ -13,14 +13,83 @@ final serviceRepositoryProvider = Provider<ServiceRepository>(
   (ref) => ServiceRepositoryImpl(ref.read(serviceRemoteSourceProvider)),
 );
 
+class ServiceFilter {
+  final String? serviceType;
+  final String? paymentType;
+  final String? targetGender;
+  final String? caregiverGender;
+  final int? childAge;
+
+  const ServiceFilter({
+    this.serviceType,
+    this.paymentType,
+    this.targetGender,
+    this.caregiverGender,
+    this.childAge,
+  });
+
+  bool get isActive =>
+      serviceType != null ||
+      paymentType != null ||
+      targetGender != null ||
+      caregiverGender != null ||
+      childAge != null;
+
+  ServiceFilter copyWith({
+    Object? serviceType = _sentinel,
+    Object? paymentType = _sentinel,
+    Object? targetGender = _sentinel,
+    Object? caregiverGender = _sentinel,
+    Object? childAge = _sentinel,
+  }) {
+    return ServiceFilter(
+      serviceType: serviceType == _sentinel ? this.serviceType : serviceType as String?,
+      paymentType: paymentType == _sentinel ? this.paymentType : paymentType as String?,
+      targetGender: targetGender == _sentinel ? this.targetGender : targetGender as String?,
+      caregiverGender: caregiverGender == _sentinel ? this.caregiverGender : caregiverGender as String?,
+      childAge: childAge == _sentinel ? this.childAge : childAge as int?,
+    );
+  }
+}
+
+const _sentinel = Object();
+
+final serviceFilterProvider =
+    NotifierProvider<ServiceFilterNotifier, ServiceFilter>(
+  ServiceFilterNotifier.new,
+);
+
+class ServiceFilterNotifier extends Notifier<ServiceFilter> {
+  @override
+  ServiceFilter build() => const ServiceFilter();
+
+  void setServiceType(String? value) =>
+      state = state.copyWith(serviceType: value);
+  void setPaymentType(String? value) =>
+      state = state.copyWith(paymentType: value);
+  void setTargetGender(String? value) =>
+      state = state.copyWith(targetGender: value);
+  void setCaregiverGender(String? value) =>
+      state = state.copyWith(caregiverGender: value);
+  void setChildAge(int? value) => state = state.copyWith(childAge: value);
+  void clearAll() => state = const ServiceFilter();
+}
+
 final serviceProvider = FutureProvider.family<List<ServiceModel>, (int, int)>((
   ref,
   args,
 ) {
   final (categoryId, subCategoryId) = args;
-  return ref
-      .watch(serviceRepositoryProvider)
-      .getServices(categoryId: categoryId, subCategoryId: subCategoryId);
+  final filter = ref.watch(serviceFilterProvider);
+  return ref.watch(serviceRepositoryProvider).getServices(
+        categoryId: categoryId,
+        subCategoryId: subCategoryId,
+        serviceType: filter.serviceType,
+        paymentType: filter.paymentType,
+        targetGender: filter.targetGender,
+        caregiverGender: filter.caregiverGender,
+        childAge: filter.childAge,
+      );
 });
 
 final myServiceProvider = FutureProvider.family<ServiceModel?, (int, int)>((

@@ -17,17 +17,40 @@ class ServicesPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final servicesAsync = ref.watch(
-      serviceProvider((subcategory.categoryId, subcategory.id)),
-    );
-
-    final myServiceAsync = ref.watch(
-      myServiceProvider((subcategory.categoryId, subcategory.id)),
-    );
+    final args = (subcategory.categoryId, subcategory.id);
+    final servicesAsync = ref.watch(serviceProvider(args));
+    final myServiceAsync = ref.watch(myServiceProvider(args));
+    final filter = ref.watch(serviceFilterProvider);
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.tune_rounded),
+                tooltip: 'Filter',
+                onPressed: () => _showFilterSheet(context, ref, filter),
+              ),
+              if (filter.isActive)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: AppColors.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
       body: SafeArea(
         child: servicesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -59,6 +82,190 @@ class ServicesPage extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showFilterSheet(BuildContext context, WidgetRef ref, ServiceFilter filter) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _FilterSheet(initialFilter: filter),
+    );
+  }
+}
+
+class _FilterSheet extends ConsumerStatefulWidget {
+  final ServiceFilter initialFilter;
+  const _FilterSheet({required this.initialFilter});
+
+  @override
+  ConsumerState<_FilterSheet> createState() => _FilterSheetState();
+}
+
+class _FilterSheetState extends ConsumerState<_FilterSheet> {
+  late String? _serviceType;
+  late String? _paymentType;
+  late String? _targetGender;
+  late String? _caregiverGender;
+  late TextEditingController _ageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _serviceType = widget.initialFilter.serviceType;
+    _paymentType = widget.initialFilter.paymentType;
+    _targetGender = widget.initialFilter.targetGender;
+    _caregiverGender = widget.initialFilter.caregiverGender;
+    _ageController = TextEditingController(
+      text: widget.initialFilter.childAge?.toString() ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _ageController.dispose();
+    super.dispose();
+  }
+
+  void _apply() {
+    final notifier = ref.read(serviceFilterProvider.notifier);
+    notifier.setServiceType(_serviceType);
+    notifier.setPaymentType(_paymentType);
+    notifier.setTargetGender(_targetGender);
+    notifier.setCaregiverGender(_caregiverGender);
+    final age = int.tryParse(_ageController.text.trim());
+    notifier.setChildAge(age);
+    Navigator.of(context).pop();
+  }
+
+  void _clear() {
+    setState(() {
+      _serviceType = null;
+      _paymentType = null;
+      _targetGender = null;
+      _caregiverGender = null;
+      _ageController.clear();
+    });
+    ref.read(serviceFilterProvider.notifier).clearAll();
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Filter Services', style: AppTextStyles.titleMedium),
+              TextButton(onPressed: _clear, child: const Text('Clear all')),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _FilterSection(
+            label: 'Service Type',
+            options: const ['Online', 'Offline', 'Hybrid'],
+            selected: _serviceType,
+            onSelected: (v) => setState(() => _serviceType = v),
+          ),
+          const SizedBox(height: 16),
+          _FilterSection(
+            label: 'Payment',
+            options: const ['Paid', 'Unpaid'],
+            selected: _paymentType,
+            onSelected: (v) => setState(() => _paymentType = v),
+          ),
+          const SizedBox(height: 16),
+          _FilterSection(
+            label: 'Child Gender',
+            options: const ['Any', 'Male', 'Female'],
+            selected: _targetGender,
+            onSelected: (v) => setState(() => _targetGender = v),
+          ),
+          const SizedBox(height: 16),
+          _FilterSection(
+            label: 'Caregiver Gender',
+            options: const ['Male', 'Female'],
+            selected: _caregiverGender,
+            onSelected: (v) => setState(() => _caregiverGender = v),
+          ),
+          const SizedBox(height: 16),
+          Text('Child Age', style: AppTextStyles.labelMedium),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: 120,
+            child: TextField(
+              controller: _ageController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                hintText: 'e.g. 8',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _apply,
+              child: const Text('Apply Filters'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FilterSection extends StatelessWidget {
+  final String label;
+  final List<String> options;
+  final String? selected;
+  final ValueChanged<String?> onSelected;
+
+  const _FilterSection({
+    required this.label,
+    required this.options,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: AppTextStyles.labelMedium),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          children: options.map((opt) {
+            final isSelected = selected == opt;
+            return ChoiceChip(
+              label: Text(opt),
+              selected: isSelected,
+              onSelected: (_) => onSelected(isSelected ? null : opt),
+              selectedColor: AppColors.primary,
+              labelStyle: AppTextStyles.labelSmall.copyWith(
+                color: isSelected ? Colors.white : AppColors.textPrimary,
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 }

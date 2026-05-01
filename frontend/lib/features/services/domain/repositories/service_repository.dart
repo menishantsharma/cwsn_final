@@ -4,6 +4,11 @@ abstract class ServiceRepository {
   Future<List<ServiceModel>> getServices({
     required int categoryId,
     required int subCategoryId,
+    String? serviceType,
+    String? paymentType,
+    String? targetGender,
+    String? caregiverGender,
+    int? childAge,
   });
 
   Future<ServiceModel?> getMyServiceForSubcategory({

@@ -9,10 +9,24 @@ class ServiceRemoteSource {
   Future<List<ServiceModel>> getServices({
     required int categoryId,
     required int subCategoryId,
+    String? serviceType,
+    String? paymentType,
+    String? targetGender,
+    String? caregiverGender,
+    int? childAge,
   }) async {
+    final params = <String, dynamic>{
+      'category': categoryId,
+      'sub_category': subCategoryId,
+      'service_type': serviceType,
+      'payment_type': paymentType,
+      'target_gender': targetGender,
+      'caregiver_gender': caregiverGender,
+      'child_age': childAge,
+    }..removeWhere((_, v) => v == null);
     final response = await _dio.get(
       '/api/services/services/',
-      queryParameters: {'category': categoryId, 'sub_category': subCategoryId},
+      queryParameters: params,
     );
 
     final results = response.data['results'] as List<dynamic>;
