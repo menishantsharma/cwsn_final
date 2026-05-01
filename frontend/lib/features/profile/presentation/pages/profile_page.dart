@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/profile/domain/models/profile_model.dart';
+import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/app_router.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
@@ -134,6 +135,8 @@ class ProfilePage extends ConsumerWidget {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            _MyServicesCard(),
             const SizedBox(height: 32),
             OutlinedButton.icon(
               icon: const Icon(Icons.logout),
@@ -383,6 +386,67 @@ class _ChildrenCard extends StatelessWidget {
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MyServicesCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final servicesAsync = ref.watch(allMyServicesProvider);
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'My Services',
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const Divider(),
+            servicesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => const Text('Failed to load services', style: TextStyle(color: Colors.grey)),
+              data: (services) => services.isEmpty
+                  ? const Text(
+                      'No services added yet.',
+                      style: TextStyle(color: Colors.grey),
+                    )
+                  : Column(
+                      children: services
+                          .map(
+                            (service) => ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: const Icon(
+                                Icons.design_services_outlined,
+                                color: Colors.blueGrey,
+                              ),
+                              title: Text(service.title),
+                              subtitle: Text(
+                                '${service.serviceType} · ${service.paymentType}',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              trailing: const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                              ),
+                              onTap: () => context.push(
+                                AppRoutes.editableServiceDetail,
+                                extra: service,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+            ),
           ],
         ),
       ),

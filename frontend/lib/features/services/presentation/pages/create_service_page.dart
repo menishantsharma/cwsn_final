@@ -57,6 +57,7 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
       ref.invalidate(
         serviceProvider((widget.subcategory.categoryId, widget.subcategory.id)),
       );
+      ref.invalidate(allMyServicesProvider);
       navigator.pop();
     } catch (_) {
       setState(() => _isLoading = false);

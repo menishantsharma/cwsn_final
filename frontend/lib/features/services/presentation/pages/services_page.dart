@@ -6,6 +6,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
+import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -277,13 +278,14 @@ class _Chip extends StatelessWidget {
   }
 }
 
-class _ServiceCard extends StatelessWidget {
+class _ServiceCard extends ConsumerWidget {
   final ServiceModel service;
 
   const _ServiceCard({required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final delta = ref.watch(upvoteCountDeltaProvider(service.id));
     return GestureDetector(
       onTap: () => context.push(AppRoutes.serviceDetail, extra: service),
       child: Container(
@@ -351,7 +353,7 @@ class _ServiceCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            '${service.upvoteCount}',
+                            '${service.upvoteCount + delta}',
                             style: AppTextStyles.labelSmall.copyWith(
                               color: AppColors.primary,
                             ),
@@ -436,12 +438,13 @@ class _AddServiceCard extends StatelessWidget {
   }
 }
 
-class _MyServiceCard extends StatelessWidget {
+class _MyServiceCard extends ConsumerWidget {
   final ServiceModel service;
   const _MyServiceCard({required this.service});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final delta = ref.watch(upvoteCountDeltaProvider(service.id));
     return GestureDetector(
       onTap: () =>
           context.push(AppRoutes.editableServiceDetail, extra: service),
@@ -516,7 +519,7 @@ class _MyServiceCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 3),
                             Text(
-                              '${service.upvoteCount}',
+                              '${service.upvoteCount + delta}',
                               style: AppTextStyles.labelSmall.copyWith(
                                 color: AppColors.primary,
                               ),

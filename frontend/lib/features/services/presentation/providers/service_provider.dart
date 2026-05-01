@@ -92,6 +92,10 @@ final serviceProvider = FutureProvider.family<List<ServiceModel>, (int, int)>((
       );
 });
 
+final allMyServicesProvider = FutureProvider<List<ServiceModel>>((ref) {
+  return ref.watch(serviceRepositoryProvider).getAllMyServices();
+});
+
 final myServiceProvider = FutureProvider.family<ServiceModel?, (int, int)>((
   ref,
   args,
@@ -116,6 +120,13 @@ class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
     state = AsyncData(service);
   }
 
+  void _invalidateLists() {
+    final key = (_original.categoryId, _original.subCategoryId);
+    ref.invalidate(allMyServicesProvider);
+    ref.invalidate(serviceProvider(key));
+    ref.invalidate(myServiceProvider(key));
+  }
+
   Future<void> updateField(Map<String, dynamic> fields) async {
     final current = state.value;
     if (current == null) return;
@@ -125,6 +136,7 @@ class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
       final updated = await ref
           .read(serviceRepositoryProvider)
           .updateService(id: _original.id, fields: fields);
+      _invalidateLists();
       return updated;
     });
   }
@@ -132,6 +144,7 @@ class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
   Future<void> deleteService() async {
     state = const AsyncLoading();
     await ref.read(serviceRepositoryProvider).deleteService(id: _original.id);
+    _invalidateLists();
   }
 }
 

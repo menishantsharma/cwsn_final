@@ -8,6 +8,11 @@ class ServiceRepositoryImpl implements ServiceRepository {
   ServiceRepositoryImpl(this._remoteSource);
 
   @override
+  Future<List<ServiceModel>> getAllMyServices() {
+    return _remoteSource.getAllMyServices();
+  }
+
+  @override
   Future<List<ServiceModel>> getServices({
     required int categoryId,
     required int subCategoryId,

@@ -4,6 +4,8 @@ import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
+import 'package:frontend/features/profile/domain/models/profile_model.dart' as profile_model;
+import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -229,7 +231,7 @@ class _EditableServiceDetailPageState
                 ],
               ),
               const SizedBox(height: AppDimensions.spacing16),
-              _ProviderSection(profile: service.caregiverProfile!),
+              const _ProviderSection(),
             ],
 
             const SizedBox(height: AppDimensions.spacing32),
@@ -498,103 +500,97 @@ class _ServiceHero extends StatelessWidget {
 
 // ── Provider Section (editable) ───────────────────────────
 
-class _ProviderSection extends StatelessWidget {
-  final CaregiverProfileModel profile;
-  const _ProviderSection({required this.profile});
-
-  bool _hasContent() =>
-      (profile.aboutMe?.isNotEmpty ?? false) ||
-      (profile.qualifications?.isNotEmpty ?? false) ||
-      profile.languages.isNotEmpty;
+class _ProviderSection extends ConsumerWidget {
+  const _ProviderSection();
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.spacing20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(child: _ProviderHeader(profile: profile)),
-              GestureDetector(
-                onTap: () => context.push(AppRoutes.editPersonalInfo),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.edit_outlined,
-                      size: 14,
-                      color: AppColors.primary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Edit',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                  ],
-                ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+
+    return profileAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (profile) {
+        final cwsn = profile.cwsnProfile;
+        final caregiver = profile.caregiverProfile;
+        final name = cwsn?.name ?? '';
+        final gender = cwsn?.gender;
+        final hasContent = caregiver != null &&
+            (caregiver.aboutMe.isNotEmpty ||
+                caregiver.qualifications.isNotEmpty ||
+                caregiver.languages.isNotEmpty);
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppDimensions.spacing20),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.spacing16),
-          const Divider(color: AppColors.border),
-          const SizedBox(height: AppDimensions.spacing16),
-          if (_hasContent()) ...[
-            _ProviderDetails(profile: profile),
-            const SizedBox(height: AppDimensions.spacing16),
-          ],
-          Align(
-            alignment: Alignment.centerRight,
-            child: GestureDetector(
-              onTap: () => context.push(AppRoutes.editCaregiverInfo),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.edit_outlined,
-                    size: 14,
-                    color: AppColors.primary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Edit caregiver info',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.primary,
+                  Expanded(child: _ProviderHeader(name: name, gender: gender)),
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.editPersonalInfo),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 4),
+                        Text('Edit', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+                      ],
                     ),
                   ),
                 ],
               ),
-            ),
+              const SizedBox(height: AppDimensions.spacing16),
+              const Divider(color: AppColors.border),
+              const SizedBox(height: AppDimensions.spacing16),
+              if (hasContent) ...[
+                _ProviderDetails(profile: caregiver),
+                const SizedBox(height: AppDimensions.spacing16),
+              ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => context.push(AppRoutes.editCaregiverInfo),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
+                      const SizedBox(width: 4),
+                      Text('Edit caregiver info', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
 class _ProviderHeader extends StatelessWidget {
-  final CaregiverProfileModel profile;
-  const _ProviderHeader({required this.profile});
+  final String name;
+  final String? gender;
+  const _ProviderHeader({required this.name, required this.gender});
 
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
+  String _initials(String n) {
+    final parts = n.trim().split(' ');
     if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
     if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
     return '?';
@@ -613,10 +609,8 @@ class _ProviderHeader extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              _initials(profile.name),
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.primary,
-              ),
+              _initials(name),
+              style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary),
             ),
           ),
         ),
@@ -625,10 +619,10 @@ class _ProviderHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(profile.name, style: AppTextStyles.titleSmall),
-              if (profile.gender != null && profile.gender!.isNotEmpty) ...[
+              Text(name, style: AppTextStyles.titleSmall),
+              if (gender != null && gender!.isNotEmpty) ...[
                 const SizedBox(height: AppDimensions.spacing4),
-                Text(profile.gender!, style: AppTextStyles.bodySmall),
+                Text(gender!, style: AppTextStyles.bodySmall),
               ],
             ],
           ),
@@ -639,7 +633,7 @@ class _ProviderHeader extends StatelessWidget {
 }
 
 class _ProviderDetails extends StatelessWidget {
-  final CaregiverProfileModel profile;
+  final profile_model.CaregiverProfileModel profile;
   const _ProviderDetails({required this.profile});
 
   @override
@@ -647,13 +641,12 @@ class _ProviderDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (profile.aboutMe != null && profile.aboutMe!.isNotEmpty) ...[
-          _DetailRow(label: 'About', value: profile.aboutMe!),
+        if (profile.aboutMe.isNotEmpty) ...[
+          _DetailRow(label: 'About', value: profile.aboutMe),
           const SizedBox(height: AppDimensions.spacing12),
         ],
-        if (profile.qualifications != null &&
-            profile.qualifications!.isNotEmpty) ...[
-          _DetailRow(label: 'Qualifications', value: profile.qualifications!),
+        if (profile.qualifications.isNotEmpty) ...[
+          _DetailRow(label: 'Qualifications', value: profile.qualifications),
           const SizedBox(height: AppDimensions.spacing12),
         ],
         if (profile.languages.isNotEmpty)

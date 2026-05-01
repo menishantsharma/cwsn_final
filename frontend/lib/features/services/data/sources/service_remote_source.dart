@@ -35,6 +35,17 @@ class ServiceRemoteSource {
         .toList();
   }
 
+  Future<List<ServiceModel>> getAllMyServices() async {
+    final response = await _dio.get(
+      '/api/services/services/',
+      queryParameters: {'mine': 'true'},
+    );
+    final results = response.data['results'] as List<dynamic>;
+    return results
+        .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<ServiceModel?> getMyServiceForSubcategory({
     required int categoryId,
     required int subCategoryId,
@@ -44,7 +55,7 @@ class ServiceRemoteSource {
       queryParameters: {
         'category': categoryId,
         'sub_category': subCategoryId,
-        'mine': true,
+        'mine': 'true',
       },
     );
 
