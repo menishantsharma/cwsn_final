@@ -110,7 +110,6 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   late String? _paymentType;
   late String? _targetGender;
   late String? _caregiverGender;
-  late TextEditingController _ageController;
 
   @override
   void initState() {
@@ -119,15 +118,6 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     _paymentType = widget.initialFilter.paymentType;
     _targetGender = widget.initialFilter.targetGender;
     _caregiverGender = widget.initialFilter.caregiverGender;
-    _ageController = TextEditingController(
-      text: widget.initialFilter.childAge?.toString() ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _ageController.dispose();
-    super.dispose();
   }
 
   void _apply() {
@@ -136,8 +126,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     notifier.setPaymentType(_paymentType);
     notifier.setTargetGender(_targetGender);
     notifier.setCaregiverGender(_caregiverGender);
-    final age = int.tryParse(_ageController.text.trim());
-    notifier.setChildAge(age);
+    notifier.setChildAge(null);
     Navigator.of(context).pop();
   }
 
@@ -147,7 +136,6 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
       _paymentType = null;
       _targetGender = null;
       _caregiverGender = null;
-      _ageController.clear();
     });
     ref.read(serviceFilterProvider.notifier).clearAll();
     Navigator.of(context).pop();
@@ -156,12 +144,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
+      padding: const EdgeInsets.all(20),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -200,21 +183,6 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             options: const ['Male', 'Female'],
             selected: _caregiverGender,
             onSelected: (v) => setState(() => _caregiverGender = v),
-          ),
-          const SizedBox(height: 16),
-          Text('Child Age', style: AppTextStyles.labelMedium),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: 120,
-            child: TextField(
-              controller: _ageController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                hintText: 'e.g. 8',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-            ),
           ),
           const SizedBox(height: 24),
           SizedBox(
