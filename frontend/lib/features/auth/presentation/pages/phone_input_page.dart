@@ -34,8 +34,7 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authProvider);
-    final isLoading = authState.isLoading;
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
 
     ref.listen<AsyncValue<AuthState>>(authProvider, (_, next) {
       next.whenOrNull(
@@ -57,113 +56,67 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        centerTitle: false,
-        title: Text('Verification', style: AppTextStyles.titleMedium),
-      ),
-      body: SafeArea(
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
         child: Padding(
           padding: AppDimensions.pagePadding,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(height: AppDimensions.spacing32),
-              Text(
-                'Enter your\nphone number',
-                style: AppTextStyles.displayMedium,
-              ),
+              const Spacer(flex: 3),
 
-              const SizedBox(height: AppDimensions.spacing12),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppDimensions.spacing6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusSm,
-                      ),
-                    ),
-                    child: const FaIcon(
-                      FontAwesomeIcons.whatsapp,
-                      color: AppColors.primary,
-                      size: 14,
-                    ),
+              RichText(
+                textAlign: TextAlign.center,
+                text: TextSpan(
+                  style: AppTextStyles.displayMedium.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 28,
                   ),
-                  const SizedBox(width: AppDimensions.spacing8),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: AppTextStyles.bodySmall,
-                        children: [
-                          TextSpan(text: 'We will send you an '),
-                          TextSpan(
-                            text: 'one-time password ',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                          ),
-                          TextSpan(text: ' via WhatsApp'),
-                        ],
-                      ),
+                  children: [
+                    TextSpan(
+                      text: 'Care',
+                      style: TextStyle(color: AppColors.primary),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spacing40),
-              Text('Mobile Number', style: AppTextStyles.labelMedium),
-
-              const SizedBox(height: AppDimensions.spacing8),
-
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                  border: Border.all(
-                    color: _isValid ? AppColors.primary : AppColors.border,
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: _isValid
-                          ? AppColors.primary.withValues(alpha: 0.12)
-                          : Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
+                    TextSpan(
+                      text: ' starts with\nconnection.',
+                      style: TextStyle(color: AppColors.textPrimary),
                     ),
                   ],
                 ),
+              ),
+
+              const Spacer(flex: 3),
+
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                  border: Border.all(color: AppColors.border),
+                ),
                 child: Row(
                   children: [
-                    Container(
+                    Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: AppDimensions.spacing12,
                         vertical: AppDimensions.spacing16,
                       ),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          right: BorderSide(
-                            color: _isValid
-                                ? AppColors.primary.withValues(alpha: 0.3)
-                                : AppColors.border,
-                            width: 1,
-                          ),
-                        ),
-                      ),
                       child: Row(
                         children: [
                           SizedBox(
-                            height: 20,
-                            width: 28,
+                            height: 18,
+                            width: 26,
                             child: CountryFlag.fromCountryCode('IN'),
                           ),
-                          const SizedBox(width: AppDimensions.spacing4),
+                          const SizedBox(width: AppDimensions.spacing6),
                           Text('+91', style: AppTextStyles.titleSmall),
+                          const SizedBox(width: AppDimensions.spacing8),
+                          Container(
+                            width: 1,
+                            height: 18,
+                            color: AppColors.border,
+                          ),
                         ],
                       ),
                     ),
@@ -175,6 +128,7 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                           decimal: false,
                         ),
                         textInputAction: TextInputAction.done,
+                        onSubmitted: (_) => _submit(),
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
                         ],
@@ -188,9 +142,9 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                             fontWeight: FontWeight.w400,
                           ),
                           counterText: '',
-                          contentPadding: EdgeInsets.symmetric(
+                          contentPadding: const EdgeInsets.symmetric(
                             vertical: AppDimensions.spacing16,
-                            horizontal: AppDimensions.spacing16,
+                            horizontal: AppDimensions.spacing4,
                           ),
                           border: InputBorder.none,
                         ),
@@ -204,41 +158,23 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                   ],
                 ),
               ),
-              const Spacer(),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
+
+              const SizedBox(height: AppDimensions.spacing16),
+
+              SizedBox(
                 height: AppDimensions.buttonHeight,
                 width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: _isValid
-                        ? [AppColors.primary, AppColors.primaryDark]
-                        : [AppColors.disabled, AppColors.disabled],
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                  boxShadow: _isValid
-                      ? [
-                          BoxShadow(
-                            color: AppColors.primary.withValues(alpha: 0.35),
-                            blurRadius: 16,
-                            offset: const Offset(0, 6),
-                          ),
-                        ]
-                      : [],
-                ),
                 child: Material(
-                  color: Colors.transparent,
+                  color: _isValid ? AppColors.primary : AppColors.disabled,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                   child: InkWell(
                     onTap: isLoading || !_isValid ? null : _submit,
-                    splashColor: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                     child: Center(
                       child: isLoading
                           ? const SizedBox(
-                              width: 24,
-                              height: 24,
+                              width: 22,
+                              height: 22,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
                                 color: Colors.white,
@@ -247,21 +183,17 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                FaIcon(
+                                const FaIcon(
                                   FontAwesomeIcons.whatsapp,
-                                  color: _isValid
-                                      ? Colors.white
-                                      : AppColors.disabledText,
-                                  size: 20,
+                                  color: Colors.white,
+                                  size: 16,
                                 ),
                                 const SizedBox(width: AppDimensions.spacing8),
                                 Text(
-                                  'Send OTP',
+                                  'Send OTP via WhatsApp',
                                   style: AppTextStyles.labelLarge.copyWith(
                                     fontSize: 16,
-                                    color: _isValid
-                                        ? Colors.white
-                                        : AppColors.disabledText,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -270,10 +202,24 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: AppDimensions.spacing32),
+
+              const SizedBox(height: AppDimensions.spacing16),
+
+              Text(
+                'By continuing, you agree to our Terms & Privacy Policy',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textHint,
+                  fontSize: 11,
+                  height: 1.5,
+                ),
+              ),
+
+              const Spacer(flex: 2),
             ],
           ),
         ),
+      ),
       ),
     );
   }
