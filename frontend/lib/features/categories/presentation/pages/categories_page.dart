@@ -25,30 +25,42 @@ class CategoriesPage extends ConsumerWidget {
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
-          error: (error, stackTrace) => Center(
+          error: (error, _) => Center(
             child: Text('Error: $error', style: AppTextStyles.bodyMedium),
           ),
           data: (categories) {
             if (categories.isEmpty) {
-              return EmptyState(
+              return const EmptyState(
                 icon: Icons.category_outlined,
                 title: 'No categories available',
                 subtitle: 'Please check back later',
               );
             }
 
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
-              itemBuilder: (context, index) {
-                if (index == 0) return _Header();
-                return _CategoryCard(category: categories[index - 1]);
-              },
-              separatorBuilder: (_, i) => SizedBox(
-                height: i == 0
-                    ? AppDimensions.spacing24
-                    : AppDimensions.spacing12,
-              ),
-              itemCount: categories.length + 1,
+            return CustomScrollView(
+              slivers: [
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
+                  sliver: SliverToBoxAdapter(child: _Header()),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+                  sliver: SliverGrid(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          _CategoryCard(category: categories[index]),
+                      childCount: categories.length,
+                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppDimensions.spacing12,
+                      mainAxisSpacing: AppDimensions.spacing12,
+                      childAspectRatio: 0.85,
+                    ),
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -105,20 +117,19 @@ class _Header extends StatelessWidget {
                 );
               },
             ),
-
             IconButton(
-              onPressed: () =>
-                  context.push(AppRoutes.profile), // navigate to profile page
+              onPressed: () => context.push(AppRoutes.profile),
               icon: const Icon(Icons.person_outline_rounded),
               color: AppColors.textPrimary,
             ),
           ],
         ),
-        const SizedBox(height: AppDimensions.spacing8),
+        const SizedBox(height: AppDimensions.spacing4),
         Text(
           'Select a category to get started',
-          style: AppTextStyles.bodyMedium,
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
         ),
+        const SizedBox(height: AppDimensions.spacing20),
       ],
     );
   }
@@ -135,79 +146,63 @@ class _CategoryCard extends StatelessWidget {
       onTap: () => context.push(AppRoutes.subcategories, extra: category),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
           border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        padding: const EdgeInsets.all(AppDimensions.spacing16),
-        child: Row(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              child: const Icon(
-                Icons.category_outlined,
-                color: AppColors.primary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spacing16),
+            // Image / placeholder
             Expanded(
+              child: category.imageUrl != null
+                  ? Image.network(
+                      category.imageUrl!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, e, s) => _PlaceholderBg(),
+                    )
+                  : _PlaceholderBg(),
+            ),
+            // Info
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(category.name, style: AppTextStyles.titleSmall),
-                  if (category.shortDescription != null) ...[
-                    const SizedBox(height: AppDimensions.spacing4),
-                    Text(
-                      category.shortDescription!,
-                      style: AppTextStyles.bodySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                  const SizedBox(height: AppDimensions.spacing8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppDimensions.spacing8,
-                      vertical: AppDimensions.spacing2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusFull,
-                      ),
-                    ),
-                    child: Text(
-                      '${category.subcategories.length} subcategories',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.primary,
-                      ),
+                  Text(
+                    category.name,
+                    style: AppTextStyles.titleSmall,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: AppDimensions.spacing4),
+                  Text(
+                    '${category.subcategories.length} subcategories',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      fontSize: 11,
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: AppDimensions.spacing8),
-            // Arrow
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: AppColors.textHint,
-            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PlaceholderBg extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppColors.primary.withValues(alpha: 0.07),
+      child: const Center(
+        child: Icon(Icons.category_outlined, color: AppColors.primary, size: 36),
       ),
     );
   }

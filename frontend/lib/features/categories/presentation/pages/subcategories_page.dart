@@ -19,33 +19,28 @@ class SubcategoriesPage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(),
-      body: SafeArea(
-        child: subcategories.isEmpty
-            ? const EmptyState(
-                icon: Icons.list_outlined,
-                title: 'No subcategories found',
-                subtitle: 'This category has no subcategories yet',
-              )
-            : ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: AppDimensions.spacing32,
-                ),
-                itemBuilder: (context, index) {
-                  if (index == 0) return _Header(category: category);
-                  return _SubcategoryCard(
-                    subcategory: subcategories[index - 1],
-                  );
-                },
-                separatorBuilder: (_, i) => SizedBox(
-                  height: i == 0
-                      ? AppDimensions.spacing24
-                      : AppDimensions.spacing12,
-                ),
-                itemCount: subcategories.length + 1,
-              ),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
       ),
+      body: subcategories.isEmpty
+          ? const EmptyState(
+              icon: Icons.list_outlined,
+              title: 'No subcategories found',
+              subtitle: 'This category has no subcategories yet',
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              itemCount: subcategories.length + 1,
+              separatorBuilder: (_, i) => SizedBox(
+                height: i == 0 ? AppDimensions.spacing20 : AppDimensions.spacing8,
+              ),
+              itemBuilder: (context, index) {
+                if (index == 0) return _Header(category: category);
+                return _SubcategoryCard(subcategory: subcategories[index - 1]);
+              },
+            ),
     );
   }
 }
@@ -61,8 +56,11 @@ class _Header extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(category.name, style: AppTextStyles.displaySmall),
-        const SizedBox(height: AppDimensions.spacing8),
-        Text('Select a subcategory', style: AppTextStyles.bodyMedium),
+        const SizedBox(height: AppDimensions.spacing4),
+        Text(
+          'Select a subcategory',
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+        ),
       ],
     );
   }
@@ -79,34 +77,16 @@ class _SubcategoryCard extends StatelessWidget {
       onTap: () => context.push(AppRoutes.services, extra: subcategory),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
-        padding: const EdgeInsets.all(AppDimensions.spacing16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacing16,
+          vertical: AppDimensions.spacing16,
+        ),
         child: Row(
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              child: const Icon(
-                Icons.folder_outlined,
-                color: AppColors.primary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spacing16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -116,7 +96,9 @@ class _SubcategoryCard extends StatelessWidget {
                     const SizedBox(height: AppDimensions.spacing4),
                     Text(
                       subcategory.shortDescription!,
-                      style: AppTextStyles.bodySmall,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -124,10 +106,10 @@ class _SubcategoryCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: AppDimensions.spacing8),
+            const SizedBox(width: AppDimensions.spacing12),
             const Icon(
               Icons.arrow_forward_ios_rounded,
-              size: 14,
+              size: 13,
               color: AppColors.textHint,
             ),
           ],
