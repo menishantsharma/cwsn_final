@@ -26,12 +26,16 @@ class ServicesPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         actions: [
           Stack(
             alignment: Alignment.center,
             children: [
               IconButton(
                 icon: const Icon(Icons.tune_rounded),
+                color: AppColors.textPrimary,
                 tooltip: 'Filter',
                 onPressed: () => _showFilterSheet(context, ref, filter),
               ),
@@ -54,21 +58,22 @@ class ServicesPage extends ConsumerWidget {
       ),
       body: SafeArea(
         child: servicesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          ),
           error: (e, _) => const Center(child: Text('Something went wrong')),
           data: (services) => myServiceAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            ),
             error: (e, _) => const Center(child: Text('Something went wrong')),
             data: (myService) => ListView.separated(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: AppDimensions.spacing32,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
               itemCount: services.length + 2,
               separatorBuilder: (_, i) => SizedBox(
                 height: i == 0
-                    ? AppDimensions.spacing24
-                    : AppDimensions.spacing12,
+                    ? AppDimensions.spacing20
+                    : AppDimensions.spacing8,
               ),
               itemBuilder: (context, index) {
                 if (index == 0) return _Header(subcategory: subcategory);
@@ -86,17 +91,22 @@ class ServicesPage extends ConsumerWidget {
     );
   }
 
-  void _showFilterSheet(BuildContext context, WidgetRef ref, ServiceFilter filter) {
+  void _showFilterSheet(
+      BuildContext context, WidgetRef ref, ServiceFilter filter) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+            top: Radius.circular(AppDimensions.radiusXl)),
       ),
       builder: (_) => _FilterSheet(initialFilter: filter),
     );
   }
 }
+
+// ── Filter Sheet ──────────────────────────────────────────
 
 class _FilterSheet extends ConsumerStatefulWidget {
   final ServiceFilter initialFilter;
@@ -145,52 +155,83 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Filter Services', style: AppTextStyles.titleMedium),
-              TextButton(onPressed: _clear, child: const Text('Clear all')),
+              GestureDetector(
+                onTap: _clear,
+                child: Text(
+                  'Clear all',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: AppDimensions.spacing20),
           _FilterSection(
             label: 'Service Type',
             options: const ['Online', 'Offline', 'Hybrid'],
             selected: _serviceType,
             onSelected: (v) => setState(() => _serviceType = v),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimensions.spacing16),
           _FilterSection(
             label: 'Payment',
             options: const ['Paid', 'Unpaid'],
             selected: _paymentType,
             onSelected: (v) => setState(() => _paymentType = v),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimensions.spacing16),
           _FilterSection(
             label: 'Child Gender',
             options: const ['Any', 'Male', 'Female'],
             selected: _targetGender,
             onSelected: (v) => setState(() => _targetGender = v),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppDimensions.spacing16),
           _FilterSection(
             label: 'Caregiver Gender',
             options: const ['Male', 'Female'],
             selected: _caregiverGender,
             onSelected: (v) => setState(() => _caregiverGender = v),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: AppDimensions.spacing24),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _apply,
-              child: const Text('Apply Filters'),
+            height: AppDimensions.buttonHeight,
+            child: Material(
+              color: AppColors.primary,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              child: InkWell(
+                onTap: _apply,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                child: Center(
+                  child: Text(
+                    'Apply Filters',
+                    style: AppTextStyles.labelLarge
+                        .copyWith(color: Colors.white, fontSize: 16),
+                  ),
+                ),
+              ),
             ),
           ),
         ],
@@ -217,19 +258,41 @@ class _FilterSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium),
-        const SizedBox(height: 8),
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 1,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing8),
         Wrap(
-          spacing: 8,
+          spacing: AppDimensions.spacing8,
+          runSpacing: AppDimensions.spacing8,
           children: options.map((opt) {
             final isSelected = selected == opt;
-            return ChoiceChip(
-              label: Text(opt),
-              selected: isSelected,
-              onSelected: (_) => onSelected(isSelected ? null : opt),
-              selectedColor: AppColors.primary,
-              labelStyle: AppTextStyles.labelSmall.copyWith(
-                color: isSelected ? Colors.white : AppColors.textPrimary,
+            return GestureDetector(
+              onTap: () => onSelected(isSelected ? null : opt),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.spacing16,
+                  vertical: AppDimensions.spacing8,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? AppColors.primary : Colors.white,
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusFull),
+                  border: Border.all(
+                    color:
+                        isSelected ? AppColors.primary : AppColors.border,
+                  ),
+                ),
+                child: Text(
+                  opt,
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                  ),
+                ),
               ),
             );
           }).toList(),
@@ -238,6 +301,8 @@ class _FilterSection extends StatelessWidget {
     );
   }
 }
+
+// ── Header ────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
   final SubcategoryModel subcategory;
@@ -250,12 +315,19 @@ class _Header extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(subcategory.name, style: AppTextStyles.displaySmall),
-        SizedBox(height: AppDimensions.spacing8),
-        Text('Available services', style: AppTextStyles.bodyMedium),
+        const SizedBox(height: AppDimensions.spacing4),
+        Text(
+          'Available services',
+          style: AppTextStyles.bodyMedium
+              .copyWith(color: AppColors.textSecondary),
+        ),
+        const SizedBox(height: AppDimensions.spacing16),
       ],
     );
   }
 }
+
+// ── Chips ─────────────────────────────────────────────────
 
 class _Chip extends StatelessWidget {
   final String label;
@@ -267,16 +339,71 @@ class _Chip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spacing8,
-        vertical: AppDimensions.spacing4,
+        vertical: 3,
       ),
       decoration: BoxDecoration(
         color: AppColors.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusSm),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
       ),
-      child: Text(label, style: AppTextStyles.labelSmall),
+      child: Text(
+        label,
+        style: AppTextStyles.labelSmall.copyWith(
+          color: AppColors.primary,
+          fontSize: 11,
+        ),
+      ),
     );
   }
 }
+
+// ── Caregiver Avatar ──────────────────────────────────────
+
+class _CaregiverAvatar extends StatelessWidget {
+  final String name;
+  final String? imageUrl;
+
+  const _CaregiverAvatar({required this.name, this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    if (imageUrl != null) {
+      return ClipOval(
+        child: Image.network(
+          imageUrl!,
+          width: 28,
+          height: 28,
+          fit: BoxFit.cover,
+          errorBuilder: (_, e, s) => _initials(),
+        ),
+      );
+    }
+    return _initials();
+  }
+
+  Widget _initials() {
+    final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: AppColors.primary.withValues(alpha: 0.12),
+      ),
+      child: Center(
+        child: Text(
+          initial,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.primary,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Service Card ──────────────────────────────────────────
 
 class _ServiceCard extends ConsumerWidget {
   final ServiceModel service;
@@ -286,97 +413,99 @@ class _ServiceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final delta = ref.watch(upvoteCountDeltaProvider(service.id));
+    final caregiver = service.caregiverProfile;
+
     return GestureDetector(
       onTap: () => context.push(AppRoutes.serviceDetail, extra: service),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           border: Border.all(color: AppColors.border),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
         ),
         padding: const EdgeInsets.all(AppDimensions.spacing16),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              child: const Icon(
-                Icons.design_services_outlined,
-                color: AppColors.primary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: AppDimensions.spacing16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
                     service.title,
                     style: AppTextStyles.titleSmall,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (service.description != null) ...[
-                    const SizedBox(height: AppDimensions.spacing4),
+                ),
+                const SizedBox(width: AppDimensions.spacing8),
+                Row(
+                  children: [
+                    const Icon(Icons.thumb_up_outlined,
+                        size: 13, color: AppColors.primary),
+                    const SizedBox(width: 3),
                     Text(
-                      service.description!,
-                      style: AppTextStyles.bodySmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      '${service.upvoteCount + delta}',
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: AppColors.primary),
                     ),
                   ],
-                  const SizedBox(height: AppDimensions.spacing8),
-                  Row(
-                    children: [
-                      _Chip(label: service.serviceType),
-                      const SizedBox(width: AppDimensions.spacing8),
-                      _Chip(label: service.paymentType),
-                      const Spacer(),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.thumb_up_outlined,
-                            size: 13,
-                            color: AppColors.primary,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            '${service.upvoteCount + delta}',
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: AppColors.primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                ),
+              ],
+            ),
+            if (service.description != null) ...[
+              const SizedBox(height: AppDimensions.spacing6),
+              Text(
+                service.description!,
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: AppColors.textSecondary),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: AppDimensions.spacing12),
+            Row(
+              children: [
+                _Chip(label: service.serviceType),
+                const SizedBox(width: AppDimensions.spacing6),
+                _Chip(label: service.paymentType),
+              ],
+            ),
+            if (caregiver != null) ...[
+              const SizedBox(height: AppDimensions.spacing12),
+              const Divider(height: 1, color: AppColors.border),
+              const SizedBox(height: AppDimensions.spacing12),
+              Row(
+                children: [
+                  _CaregiverAvatar(
+                    name: caregiver.name,
+                    imageUrl: service.image,
                   ),
+                  const SizedBox(width: AppDimensions.spacing8),
+                  Expanded(
+                    child: Text(
+                      caregiver.name,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 13, color: AppColors.textHint),
                 ],
               ),
-            ),
-            const SizedBox(width: AppDimensions.spacing8),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: AppColors.textHint,
-            ),
+            ],
           ],
         ),
       ),
     );
   }
 }
+
+// ── Add Service Card ──────────────────────────────────────
 
 class _AddServiceCard extends StatelessWidget {
   final SubcategoryModel subcategory;
@@ -389,47 +518,45 @@ class _AddServiceCard extends StatelessWidget {
       child: DottedBorder(
         options: RoundedRectDottedBorderOptions(
           color: AppColors.primary,
-          strokeWidth: 1.8,
-          dashPattern: const [8, 4],
-          radius: Radius.circular(AppDimensions.radiusXl),
+          strokeWidth: 1.5,
+          dashPattern: const [6, 4],
+          radius: Radius.circular(AppDimensions.radiusLg),
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+            color: AppColors.primary.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           ),
           padding: const EdgeInsets.all(AppDimensions.spacing16),
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   color: AppColors.primary,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
                 ),
-                child: const Icon(Icons.add, color: Colors.white, size: 26),
+                child: const Icon(Icons.add, color: Colors.white, size: 22),
               ),
-              const SizedBox(width: AppDimensions.spacing16),
+              const SizedBox(width: AppDimensions.spacing12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Add a Service', style: AppTextStyles.titleSmall),
-                    const SizedBox(height: AppDimensions.spacing4),
+                    Text('Offer a Service', style: AppTextStyles.titleSmall),
+                    const SizedBox(height: AppDimensions.spacing2),
                     Text(
-                      'Offer your expertise to others',
-                      style: AppTextStyles.bodySmall,
+                      'Share your expertise with families',
+                      style: AppTextStyles.bodySmall
+                          .copyWith(color: AppColors.textSecondary),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: AppDimensions.spacing8),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: AppColors.primary,
-              ),
+              const Icon(Icons.arrow_forward_ios_rounded,
+                  size: 13, color: AppColors.primary),
             ],
           ),
         ),
@@ -438,6 +565,8 @@ class _AddServiceCard extends StatelessWidget {
   }
 }
 
+// ── My Service Card ───────────────────────────────────────
+
 class _MyServiceCard extends ConsumerWidget {
   final ServiceModel service;
   const _MyServiceCard({required this.service});
@@ -445,97 +574,86 @@ class _MyServiceCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final delta = ref.watch(upvoteCountDeltaProvider(service.id));
+
     return GestureDetector(
       onTap: () =>
           context.push(AppRoutes.editableServiceDetail, extra: service),
       child: DottedBorder(
         options: RoundedRectDottedBorderOptions(
           color: AppColors.primary,
-          strokeWidth: 1.8,
-          dashPattern: const [8, 4],
-          radius: const Radius.circular(AppDimensions.radiusXl),
+          strokeWidth: 1.5,
+          dashPattern: const [6, 4],
+          radius: const Radius.circular(AppDimensions.radiusLg),
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+            color: AppColors.primary.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           ),
           padding: const EdgeInsets.all(AppDimensions.spacing16),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-                child: const Icon(
-                  Icons.design_services_outlined,
-                  color: AppColors.primary,
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacing16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Your Service',
-                      style: AppTextStyles.labelSmall.copyWith(
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    const SizedBox(height: AppDimensions.spacing2),
-                    Text(
-                      service.title,
-                      style: AppTextStyles.titleSmall,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (service.description != null) ...[
-                      const SizedBox(height: AppDimensions.spacing4),
-                      Text(
-                        service.description!,
-                        style: AppTextStyles.bodySmall,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: AppDimensions.spacing8),
-                    Row(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _Chip(label: service.serviceType),
-                        const SizedBox(width: AppDimensions.spacing8),
-                        _Chip(label: service.paymentType),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.thumb_up_outlined,
-                              size: 13,
-                              color: AppColors.primary,
-                            ),
-                            const SizedBox(width: 3),
-                            Text(
-                              '${service.upvoteCount + delta}',
-                              style: AppTextStyles.labelSmall.copyWith(
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          'YOUR SERVICE',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.primary,
+                            fontSize: 10,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                        const SizedBox(height: AppDimensions.spacing4),
+                        Text(
+                          service.title,
+                          style: AppTextStyles.titleSmall,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(width: AppDimensions.spacing8),
+                  Row(
+                    children: [
+                      const Icon(Icons.thumb_up_outlined,
+                          size: 13, color: AppColors.primary),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${service.upvoteCount + delta}',
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: AppColors.primary),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              const SizedBox(width: AppDimensions.spacing8),
-              Icon(
-                Icons.arrow_forward_ios_rounded,
-                size: 14,
-                color: AppColors.primary,
+              if (service.description != null) ...[
+                const SizedBox(height: AppDimensions.spacing8),
+                Text(
+                  service.description!,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+              const SizedBox(height: AppDimensions.spacing12),
+              Row(
+                children: [
+                  _Chip(label: service.serviceType),
+                  const SizedBox(width: AppDimensions.spacing6),
+                  _Chip(label: service.paymentType),
+                  const Spacer(),
+                  const Icon(Icons.arrow_forward_ios_rounded,
+                      size: 13, color: AppColors.primary),
+                ],
               ),
             ],
           ),
