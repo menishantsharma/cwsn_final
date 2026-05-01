@@ -41,8 +41,9 @@ class ServiceModel {
   final int? targetAgeMin;
   final int? targetAgeMax;
   final String targetGender;
-  final int categoryId; // ADD
-  final int subCategoryId; // ADD
+  final int categoryId;
+  final int subCategoryId;
+  final int caregiverId;
   final CaregiverProfileModel? caregiverProfile;
 
   ServiceModel({
@@ -56,8 +57,9 @@ class ServiceModel {
     this.targetAgeMin,
     this.targetAgeMax,
     required this.targetGender,
-    required this.categoryId, // ADD
-    required this.subCategoryId, // ADD
+    required this.caregiverId,
+    required this.categoryId,
+    required this.subCategoryId,
     this.caregiverProfile,
   });
 
@@ -75,6 +77,7 @@ class ServiceModel {
       targetGender: json['target_gender'] as String,
       categoryId: json['category'] as int,
       subCategoryId: json['sub_category'] as int,
+      caregiverId: json['caregiver'] as int,
       caregiverProfile: json['caregiver_profile'] != null
           ? CaregiverProfileModel.fromJson(json['caregiver_profile'])
           : null,
@@ -101,6 +104,7 @@ class ServiceModel {
       targetAgeMin: targetAgeMin ?? this.targetAgeMin,
       targetAgeMax: targetAgeMax ?? this.targetAgeMax,
       targetGender: targetGender ?? this.targetGender,
+      caregiverId: caregiverId,
       categoryId: categoryId,
       subCategoryId: subCategoryId,
       caregiverProfile: caregiverProfile,

@@ -42,6 +42,7 @@ class RequestNotifier extends AsyncNotifier<List<RequestModel>> {
         .read(requestRemoteSourceProvider)
         .createRequest(serviceId: serviceId, childId: childId, note: note);
     state = AsyncData([...state.requireValue, created]);
+    ref.invalidate(parentRequestsProvider);
   }
 }
 
@@ -59,11 +60,6 @@ final pendingRequestCountProvider = Provider<int>((ref) {
       );
 });
 
-final serviceRequestProvider = FutureProvider.family<List<RequestModel>, int>((
-  ref,
-  serviceId,
-) {
-  return ref
-      .read(requestRemoteSourceProvider)
-      .getRequestsAsParent(serviceId: serviceId);
+final parentRequestsProvider = FutureProvider<List<RequestModel>>((ref) {
+  return ref.read(requestRemoteSourceProvider).getRequestsAsParent();
 });

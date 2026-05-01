@@ -6,10 +6,14 @@ class RequestModel {
   final String childName;
   final int childAge;
   final String childGender;
+  final int cwsnUserId;
+  final String cwsnUserName;
+  final String? cwsnUserPhone;
+  final int caregiverId;
+  final String caregiverName;
+  final String? caregiverPhone;
   final String status;
   final String? note;
-  final String cwsnUserName;
-  final String? caregiverPhone;
   final DateTime createdAt;
 
   RequestModel({
@@ -20,10 +24,14 @@ class RequestModel {
     required this.childName,
     required this.childAge,
     required this.childGender,
+    required this.cwsnUserId,
+    required this.cwsnUserName,
+    this.cwsnUserPhone,
+    required this.caregiverId,
+    required this.caregiverName,
+    this.caregiverPhone,
     required this.status,
     this.note,
-    required this.cwsnUserName,
-    this.caregiverPhone,
     required this.createdAt,
   });
 
@@ -36,10 +44,14 @@ class RequestModel {
       childName: json['child_name'] as String,
       childAge: json['child_age'] as int,
       childGender: json['child_gender'] as String,
+      cwsnUserId: json['cwsn_user'] as int,
+      cwsnUserName: json['cwsn_user_name'] as String,
+      cwsnUserPhone: json['cwsn_user_phone'] as String?,
+      caregiverId: json['caregiver'] as int,
+      caregiverName: json['caregiver_name'] as String,
+      caregiverPhone: json['caregiver_phone'] as String?,
       status: json['status'] as String,
       note: json['note'] as String?,
-      cwsnUserName: json['cwsn_user_name'] as String,
-      caregiverPhone: json['caregiver_phone'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }
@@ -53,10 +65,14 @@ class RequestModel {
       childName: childName,
       childAge: childAge,
       childGender: childGender,
+      cwsnUserId: cwsnUserId,
+      cwsnUserName: cwsnUserName,
+      cwsnUserPhone: cwsnUserPhone,
+      caregiverId: caregiverId,
+      caregiverName: caregiverName,
+      caregiverPhone: caregiverPhone,
       status: status ?? this.status,
       note: note,
-      cwsnUserName: cwsnUserName,
-      caregiverPhone: caregiverPhone,
       createdAt: createdAt,
     );
   }

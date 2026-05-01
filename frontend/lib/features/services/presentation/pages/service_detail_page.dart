@@ -54,6 +54,7 @@ class _ServiceInfoSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isUpvoted = ref.watch(isUpvotedProvider(service.id));
+    final delta = ref.watch(upvoteCountDeltaProvider(service.id));
     final upvoteAsync = ref.watch(upvoteProvider);
 
     return Column(
@@ -95,7 +96,7 @@ class _ServiceInfoSection extends ConsumerWidget {
                 error: (_, _) =>
                     _UpvotePill(count: service.upvoteCount, isUpvoted: false),
                 data: (_) => _UpvotePill(
-                  count: service.upvoteCount,
+                  count: service.upvoteCount + delta,
                   isUpvoted: isUpvoted,
                 ),
               ),
@@ -336,7 +337,7 @@ class _ProviderSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = service.caregiverProfile!;
-    final requestAsync = ref.watch(serviceRequestProvider(service.id));
+    final requestAsync = ref.watch(parentRequestsProvider);
 
     return Container(
       width: double.infinity,
@@ -379,12 +380,28 @@ class _ProviderSection extends ConsumerWidget {
               ),
             ),
             error: (_, _) => _RequestButton(serviceId: service.id),
-            data: (requests) {
-              if (requests.isEmpty) {
-                return _RequestButton(serviceId: service.id);
+            data: (allRequests) {
+              // exact request for this service
+              final serviceRequest = allRequests
+                  .where((r) => r.serviceId == service.id)
+                  .firstOrNull;
+
+              // any accepted request for this caregiver
+              final acceptedForCaregiver = allRequests
+                  .where(
+                    (r) =>
+                        r.caregiverId == service.caregiverId &&
+                        r.status == 'Accepted',
+                  )
+                  .firstOrNull;
+
+              if (acceptedForCaregiver != null) {
+                return _RequestStatus(request: acceptedForCaregiver);
               }
-              final request = requests.first;
-              return _RequestStatus(request: request);
+              if (serviceRequest != null) {
+                return _RequestStatus(request: serviceRequest);
+              }
+              return _RequestButton(serviceId: service.id);
             },
           ),
         ],
@@ -461,7 +478,7 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
             childId: _selectedChild!.id,
             note: _noteController.text.trim(),
           );
-      ref.invalidate(serviceRequestProvider(widget.serviceId));
+      ref.invalidate(parentRequestsProvider);
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
