@@ -68,15 +68,7 @@ class ProfilePage extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Profile'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.edit),
-            onPressed: () => context.push(AppRoutes.editProfile),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('My Profile')),
       body: profileAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Failed to load profile: $e')),
@@ -87,6 +79,7 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 24),
             _InfoCard(
               title: 'Personal Info',
+              onEdit: () => context.push(AppRoutes.editPersonalInfo),
               children: [
                 _InfoRow(
                   label: 'Phone',
@@ -125,6 +118,7 @@ class ProfilePage extends ConsumerWidget {
             const SizedBox(height: 16),
             _InfoCard(
               title: 'Caregiver Info',
+              onEdit: () => context.push(AppRoutes.editCaregiverInfo),
               children: [
                 _InfoRow(
                   label: 'About Me',
@@ -246,8 +240,9 @@ class _AvatarSection extends StatelessWidget {
 class _InfoCard extends StatelessWidget {
   final String title;
   final List<Widget> children;
+  final VoidCallback? onEdit;
 
-  const _InfoCard({required this.title, required this.children});
+  const _InfoCard({required this.title, required this.children, this.onEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -257,11 +252,25 @@ class _InfoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (onEdit != null)
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 20),
+                    onPressed: onEdit,
+                    tooltip: 'Edit',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+              ],
             ),
             const Divider(),
             ...children,

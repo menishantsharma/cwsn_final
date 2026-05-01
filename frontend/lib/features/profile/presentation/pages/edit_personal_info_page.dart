@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 
-class EditProfilePage extends ConsumerStatefulWidget {
-  const EditProfilePage({super.key});
+class EditPersonalInfoPage extends ConsumerStatefulWidget {
+  const EditPersonalInfoPage({super.key});
 
   @override
-  ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<EditPersonalInfoPage> createState() =>
+      _EditPersonalInfoPageState();
 }
 
-class _EditProfilePageState extends ConsumerState<EditProfilePage> {
+class _EditPersonalInfoPageState extends ConsumerState<EditPersonalInfoPage> {
   final _formKey = GlobalKey<FormState>();
 
   late TextEditingController _nameController;
@@ -18,11 +19,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late TextEditingController _streetAddressController;
   late TextEditingController _landmarkController;
   late TextEditingController _postalCodeController;
-  late TextEditingController _aboutMeController;
-  late TextEditingController _qualificationsController;
 
   String? _selectedGender;
   bool _initialized = false;
+  bool _saving = false;
 
   final List<String> _genderOptions = ['Male', 'Female', 'Other'];
 
@@ -33,8 +33,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _streetAddressController.dispose();
     _landmarkController.dispose();
     _postalCodeController.dispose();
-    _aboutMeController.dispose();
-    _qualificationsController.dispose();
     super.dispose();
   }
 
@@ -43,44 +41,27 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _initialized = true;
 
     final cwsn = profile.cwsnProfile!;
-    final caregiver = profile.caregiverProfile!;
-
     _nameController = TextEditingController(text: cwsn.name);
     _ageController = TextEditingController(text: cwsn.age.toString());
     _streetAddressController = TextEditingController(text: cwsn.streetAddress);
     _landmarkController = TextEditingController(text: cwsn.landmark);
     _postalCodeController = TextEditingController(text: cwsn.postalCode);
-    _aboutMeController = TextEditingController(text: caregiver.aboutMe);
-    _qualificationsController = TextEditingController(
-      text: caregiver.qualifications,
-    );
     _selectedGender = cwsn.gender;
   }
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final cwsnData = {
+    setState(() => _saving = true);
+
+    await ref.read(profileProvider.notifier).updateCwsnProfile({
       'name': _nameController.text.trim(),
       'age': int.parse(_ageController.text.trim()),
       'gender': _selectedGender,
       'street_address': _streetAddressController.text.trim(),
       'landmark': _landmarkController.text.trim(),
       'postal_code': _postalCodeController.text.trim(),
-    };
-
-    final caregiverData = {
-      'name': _nameController.text.trim(),
-      'age': int.parse(_ageController.text.trim()),
-      'gender': _selectedGender,
-      'about_me': _aboutMeController.text.trim(),
-      'qualifications': _qualificationsController.text.trim(),
-    };
-
-    await Future.wait([
-      ref.read(profileProvider.notifier).updateCwsnProfile(cwsnData),
-      ref.read(profileProvider.notifier).updateCaregiverProfile(caregiverData),
-    ]);
+    });
 
     if (mounted) context.pop();
   }
@@ -96,14 +77,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       data: (profile) {
         _initialize(profile);
         return Scaffold(
-          appBar: AppBar(title: const Text('Edit Profile')),
+          appBar: AppBar(title: const Text('Edit Personal Info')),
           body: Form(
             key: _formKey,
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                _SectionTitle('Personal Info'),
-                const SizedBox(height: 12),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -167,51 +146,22 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
-                const SizedBox(height: 24),
-                _SectionTitle('Caregiver Info'),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _aboutMeController,
-                  decoration: const InputDecoration(
-                    labelText: 'About Me',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _qualificationsController,
-                  decoration: const InputDecoration(
-                    labelText: 'Qualifications',
-                    border: OutlineInputBorder(),
-                  ),
-                  maxLines: 3,
-                ),
                 const SizedBox(height: 32),
                 ElevatedButton(
-                  onPressed: _save,
-                  child: const Text('Save Changes'),
+                  onPressed: _saving ? null : _save,
+                  child: _saving
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save Changes'),
                 ),
               ],
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _SectionTitle extends StatelessWidget {
-  final String title;
-  const _SectionTitle(this.title);
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: Theme.of(
-        context,
-      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 }

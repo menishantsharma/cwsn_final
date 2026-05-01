@@ -14,7 +14,8 @@ import 'package:frontend/features/services/presentation/pages/editable_service_d
 import 'package:frontend/features/services/presentation/pages/service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
 import 'package:frontend/features/profile/presentation/pages/profile_page.dart';
-import 'package:frontend/features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:frontend/features/profile/presentation/pages/edit_personal_info_page.dart';
+import 'package:frontend/features/profile/presentation/pages/edit_caregiver_info_page.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -30,8 +31,9 @@ class AppRoutes {
   static const String serviceDetail = '/service-detail';
   static const String editableServiceDetail = '/my-service';
   static const String profile = '/profile';
-  static const String editProfile = '/edit-profile';
   static const String createService = '/create-service';
+  static const String editPersonalInfo = '/edit-personal-info';
+  static const String editCaregiverInfo = '/edit-caregiver-info';
 
   AppRoutes._();
 }
@@ -122,8 +124,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
       GoRoute(
-        path: AppRoutes.editProfile,
-        builder: (_, _) => const EditProfilePage(),
+        path: AppRoutes.editPersonalInfo,
+        builder: (_, _) => const EditPersonalInfoPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.editCaregiverInfo,
+        builder: (_, _) => const EditCaregiverInfoPage(),
       ),
       GoRoute(
         path: AppRoutes.createService,
