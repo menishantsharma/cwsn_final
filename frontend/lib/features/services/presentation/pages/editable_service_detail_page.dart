@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class EditableServiceDetailPage extends ConsumerStatefulWidget {
   final ServiceModel service;
@@ -204,11 +206,29 @@ class _EditableServiceDetailPageState
               ),
             ),
 
-            // Provider section (read-only, same as ServiceDetailPage)
             if (service.caregiverProfile != null) ...[
               const SizedBox(height: AppDimensions.spacing24),
               const _SectionDivider(),
-              const SizedBox(height: AppDimensions.spacing24),
+              const SizedBox(height: AppDimensions.spacing8),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.info_outline,
+                    size: 13,
+                    color: AppColors.textHint,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      'Your profile is shared across all services. Changes here will reflect everywhere.',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textHint,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacing16),
               _ProviderSection(profile: service.caregiverProfile!),
             ],
 
@@ -476,7 +496,7 @@ class _ServiceHero extends StatelessWidget {
   }
 }
 
-// ── Provider Section (read-only) ──────────────────────────
+// ── Provider Section (editable) ───────────────────────────
 
 class _ProviderSection extends StatelessWidget {
   final CaregiverProfileModel profile;
@@ -507,13 +527,62 @@ class _ProviderSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ProviderHeader(profile: profile),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(child: _ProviderHeader(profile: profile)),
+              GestureDetector(
+                onTap: () => context.push(AppRoutes.editPersonalInfo),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.edit_outlined,
+                      size: 14,
+                      color: AppColors.primary,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Edit',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacing16),
+          const Divider(color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacing16),
           if (_hasContent()) ...[
-            const SizedBox(height: AppDimensions.spacing16),
-            const Divider(color: AppColors.border),
-            const SizedBox(height: AppDimensions.spacing16),
             _ProviderDetails(profile: profile),
+            const SizedBox(height: AppDimensions.spacing16),
           ],
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () => context.push(AppRoutes.editCaregiverInfo),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.edit_outlined,
+                    size: 14,
+                    color: AppColors.primary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Edit caregiver info',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -22,4 +22,14 @@ class UpvoteRemoteSource {
   Future<void> removeUpvote(int upvoteId) async {
     await _dio.delete('/api/interactions/upvotes/$upvoteId/');
   }
+
+  Future<void> reportService({
+    required int reportedUserId,
+    required String reason,
+  }) async {
+    await _dio.post(
+      '/api/interactions/reports/',
+      data: {'reported_user': reportedUserId, 'reason': reason},
+    );
+  }
 }

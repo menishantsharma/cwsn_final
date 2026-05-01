@@ -17,11 +17,35 @@ class ServiceDetailPage extends ConsumerWidget {
 
   const ServiceDetailPage({super.key, required this.service});
 
+  void _showReportSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusXl),
+        ),
+      ),
+      builder: (_) => _ReportSheet(service: service),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(backgroundColor: AppColors.background, elevation: 0),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
+            tooltip: 'Report service',
+            onPressed: () => _showReportSheet(context),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(
           horizontal: 20,
@@ -883,6 +907,148 @@ class _Chip extends StatelessWidget {
             label,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.primaryDark,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Report Sheet ──────────────────────────────────────────
+
+class _ReportSheet extends ConsumerStatefulWidget {
+  final ServiceModel service;
+  const _ReportSheet({required this.service});
+
+  @override
+  ConsumerState<_ReportSheet> createState() => _ReportSheetState();
+}
+
+class _ReportSheetState extends ConsumerState<_ReportSheet> {
+  final _reasonController = TextEditingController();
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final reason = _reasonController.text.trim();
+    if (reason.isEmpty) return;
+
+    setState(() => _loading = true);
+    try {
+      await ref.read(reportProvider).reportService(
+            reportedUserId: widget.service.caregiverId,
+            reason: reason,
+          );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Report submitted. Thank you.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to submit report. Try again.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        24,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 24,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing20),
+          Row(
+            children: [
+              const Icon(Icons.flag_outlined, color: Colors.red, size: 20),
+              const SizedBox(width: AppDimensions.spacing8),
+              Text('Report Service', style: AppTextStyles.titleMedium),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacing4),
+          Text(
+            'Describe the issue with this service. Our team will review it.',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
+          ),
+          const SizedBox(height: AppDimensions.spacing16),
+          TextField(
+            controller: _reasonController,
+            maxLines: 4,
+            autofocus: true,
+            style: AppTextStyles.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'Explain what\'s wrong...',
+              hintStyle: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textHint,
+              ),
+              filled: true,
+              fillColor: AppColors.background,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderSide: const BorderSide(color: AppColors.primary),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing20),
+          SizedBox(
+            width: double.infinity,
+            height: AppDimensions.buttonHeight,
+            child: ElevatedButton(
+              onPressed: _loading ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppColors.border,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                ),
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Text('Submit Report'),
             ),
           ),
         ],

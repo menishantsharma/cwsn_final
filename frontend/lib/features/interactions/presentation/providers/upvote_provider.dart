@@ -67,3 +67,7 @@ final upvoteCountDeltaProvider = Provider.family<int, int>((ref, serviceId) {
         orElse: () => 0,
       );
 });
+
+final reportProvider = Provider(
+  (ref) => ref.read(upvoteRemoteSourceProvider),
+);
