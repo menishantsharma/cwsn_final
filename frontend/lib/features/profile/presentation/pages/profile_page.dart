@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_dimensions.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/profile/domain/models/profile_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -14,6 +17,10 @@ class ProfilePage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusXl)),
+      ),
       builder: (_) => _AddChildSheet(
         onSave: (data) => ref.read(profileProvider.notifier).addChild(data),
       ),
@@ -28,6 +35,10 @@ class ProfilePage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radiusXl)),
+      ),
       builder: (_) => _AddChildSheet(
         initial: child,
         onSave: (data) =>
@@ -44,8 +55,8 @@ class ProfilePage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Child'),
-        content: Text('Remove ${child.name} from your profile?'),
+        title: const Text('Remove child?'),
+        content: Text('${child.name} will be removed from your profile.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -56,107 +67,10 @@ class ProfilePage extends ConsumerWidget {
               Navigator.pop(context);
               ref.read(profileProvider.notifier).deleteChild(child.id);
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Delete'),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Remove'),
           ),
         ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(profileProvider);
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('My Profile')),
-      body: profileAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Failed to load profile: $e')),
-        data: (profile) => ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _AvatarSection(name: profile.cwsnProfile?.name ?? ''),
-            const SizedBox(height: 24),
-            _InfoCard(
-              title: 'Personal Info',
-              onEdit: () => context.push(AppRoutes.editPersonalInfo),
-              children: [
-                _InfoRow(
-                  label: 'Phone',
-                  value: profile.cwsnProfile?.phoneNumber ?? '',
-                ),
-                _InfoRow(
-                  label: 'Age',
-                  value: profile.cwsnProfile?.age.toString() ?? '',
-                ),
-                _InfoRow(
-                  label: 'Gender',
-                  value: profile.cwsnProfile?.gender ?? '',
-                ),
-                _InfoRow(
-                  label: 'Street Address',
-                  value: profile.cwsnProfile?.streetAddress ?? '',
-                ),
-                _InfoRow(
-                  label: 'Landmark',
-                  value: profile.cwsnProfile?.landmark ?? '',
-                ),
-                _InfoRow(
-                  label: 'Postal Code',
-                  value: profile.cwsnProfile?.postalCode ?? '',
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _ChildrenCard(
-              children: profile.cwsnProfile?.children ?? [],
-              onAdd: () => _showAddChildSheet(context, ref),
-              onEdit: (child) => _showEditChildSheet(context, ref, child),
-              onDelete: (child) => _confirmDeleteChild(context, ref, child),
-            ),
-
-            const SizedBox(height: 16),
-            _InfoCard(
-              title: 'Caregiver Info',
-              onEdit: () => context.push(AppRoutes.editCaregiverInfo),
-              children: [
-                _InfoRow(
-                  label: 'About Me',
-                  value: profile.caregiverProfile?.aboutMe ?? '',
-                ),
-                _InfoRow(
-                  label: 'Qualifications',
-                  value: profile.caregiverProfile?.qualifications ?? '',
-                ),
-                _InfoRow(
-                  label: 'Languages',
-                  value: profile.caregiverProfile?.languages.join(', ') ?? '',
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _MyServicesCard(),
-            const SizedBox(height: 32),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.logout),
-              label: const Text('Logout'),
-              onPressed: () => _confirmLogout(context, ref),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              icon: const Icon(Icons.delete_forever, color: Colors.red),
-              label: const Text(
-                'Delete Account',
-                style: TextStyle(color: Colors.red),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Colors.red),
-              ),
-              onPressed: () => _confirmDeleteAccount(context, ref),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -165,8 +79,8 @@ class ProfilePage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Logout'),
-        content: const Text('Are you sure you want to logout?'),
+        title: const Text('Logout?'),
+        content: const Text('You will be signed out of your account.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -188,9 +102,9 @@ class ProfilePage extends ConsumerWidget {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete Account'),
+        title: const Text('Delete account?'),
         content: const Text(
-          'This will permanently delete your account and all your data. This action cannot be undone.',
+          'This permanently deletes your account and all data. This cannot be undone.',
         ),
         actions: [
           TextButton(
@@ -202,81 +116,153 @@ class ProfilePage extends ConsumerWidget {
               Navigator.pop(context);
               ref.read(profileProvider.notifier).deleteAccount();
             },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],
       ),
     );
   }
-}
-
-class _AvatarSection extends StatelessWidget {
-  final String name;
-
-  const _AvatarSection({required this.name});
 
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 48,
-          backgroundColor: Theme.of(context).colorScheme.primary,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text('Profile', style: AppTextStyles.titleMedium),
+      ),
+      body: profileAsync.when(
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+        error: (e, _) => Center(
           child: Text(
-            name.isNotEmpty ? name[0].toUpperCase() : '?',
-            style: const TextStyle(fontSize: 40, color: Colors.white),
+            'Failed to load profile',
+            style: AppTextStyles.bodyMedium,
           ),
         ),
-        const SizedBox(height: 12),
-        Text(
-          name,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoCard extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-  final VoidCallback? onEdit;
-
-  const _InfoCard({required this.title, required this.children, this.onEdit});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        data: (profile) => ListView(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacing20,
+          ),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(context)
-                      .textTheme
-                      .titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                if (onEdit != null)
-                  IconButton(
-                    icon: const Icon(Icons.edit, size: 20),
-                    onPressed: onEdit,
-                    tooltip: 'Edit',
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+            const SizedBox(height: AppDimensions.spacing24),
+
+            // Avatar
+            Center(
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 36,
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.12),
+                    child: Text(
+                      (profile.cwsnProfile?.name.isNotEmpty == true)
+                          ? profile.cwsnProfile!.name[0].toUpperCase()
+                          : '?',
+                      style: AppTextStyles.displaySmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: AppDimensions.spacing12),
+                  Text(
+                    profile.cwsnProfile?.name ?? '',
+                    style: AppTextStyles.titleLarge,
+                  ),
+                  if (profile.cwsnProfile?.phoneNumber != null)
+                    Text(
+                      profile.cwsnProfile!.phoneNumber,
+                      style: AppTextStyles.bodySmall,
+                    ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppDimensions.spacing32),
+
+            _SectionCard(
+              title: 'Personal Info',
+              onEdit: () => context.push(AppRoutes.editPersonalInfo),
+              children: [
+                _InfoRow('Age', profile.cwsnProfile?.age.toString()),
+                _InfoRow('Gender', profile.cwsnProfile?.gender),
+                _InfoRow('Address', profile.cwsnProfile?.streetAddress),
+                _InfoRow('Landmark', profile.cwsnProfile?.landmark),
+                _InfoRow('Postal Code', profile.cwsnProfile?.postalCode),
               ],
             ),
-            const Divider(),
-            ...children,
+
+            const SizedBox(height: AppDimensions.spacing12),
+
+            _SectionCard(
+              title: 'Children',
+              trailing: GestureDetector(
+                onTap: () => _showAddChildSheet(context, ref),
+                child: Text(
+                  'Add',
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
+              ),
+              children: profile.cwsnProfile?.children.isEmpty != false
+                  ? [_EmptyRow('No children added yet')]
+                  : profile.cwsnProfile!.children
+                        .map(
+                          (child) => _ChildRow(
+                            child: child,
+                            onEdit: () =>
+                                _showEditChildSheet(context, ref, child),
+                            onDelete: () =>
+                                _confirmDeleteChild(context, ref, child),
+                          ),
+                        )
+                        .toList(),
+            ),
+
+            const SizedBox(height: AppDimensions.spacing12),
+
+            _SectionCard(
+              title: 'Caregiver Info',
+              onEdit: () => context.push(AppRoutes.editCaregiverInfo),
+              children: [
+                _InfoRow('About', profile.caregiverProfile?.aboutMe),
+                _InfoRow(
+                  'Qualifications',
+                  profile.caregiverProfile?.qualifications,
+                ),
+                _InfoRow(
+                  'Languages',
+                  profile.caregiverProfile?.languages.join(', '),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppDimensions.spacing12),
+
+            _MyServicesCard(),
+
+            const SizedBox(height: AppDimensions.spacing32),
+
+            _ActionRow(
+              icon: Icons.logout_rounded,
+              label: 'Logout',
+              onTap: () => _confirmLogout(context, ref),
+            ),
+            const SizedBox(height: AppDimensions.spacing8),
+            _ActionRow(
+              icon: Icons.delete_outline_rounded,
+              label: 'Delete Account',
+              color: AppColors.error,
+              onTap: () => _confirmDeleteAccount(context, ref),
+            ),
+
+            const SizedBox(height: AppDimensions.spacing40),
           ],
         ),
       ),
@@ -284,108 +270,209 @@ class _InfoCard extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+  final VoidCallback? onEdit;
+  final Widget? trailing;
 
-  const _InfoRow({required this.label, required this.value});
+  const _SectionCard({
+    required this.title,
+    required this.children,
+    this.onEdit,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(label, style: const TextStyle(color: Colors.grey)),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.spacing16,
+              AppDimensions.spacing16,
+              AppDimensions.spacing8,
+              AppDimensions.spacing12,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.labelMedium.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                if (onEdit != null)
+                  GestureDetector(
+                    onTap: onEdit,
+                    child: Text(
+                      'Edit',
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                if (trailing != null) trailing!,
+              ],
+            ),
           ),
-          Expanded(child: Text(value.isNotEmpty ? value : '—')),
+          const Divider(height: 1, color: AppColors.border),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.spacing16,
+              vertical: AppDimensions.spacing8,
+            ),
+            child: Column(children: children),
+          ),
         ],
       ),
     );
   }
 }
 
-class _ChildrenCard extends StatelessWidget {
-  final List<ChildProfileModel> children;
-  final VoidCallback onAdd;
-  final void Function(ChildProfileModel) onEdit;
-  final void Function(ChildProfileModel) onDelete;
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String? value;
 
-  const _ChildrenCard({
-    required this.children,
-    required this.onAdd,
+  const _InfoRow(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: AppTextStyles.bodySmall),
+          ),
+          Expanded(
+            child: Text(
+              (value?.isNotEmpty == true) ? value! : '—',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textPrimary,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyRow extends StatelessWidget {
+  final String message;
+  const _EmptyRow(this.message);
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing8),
+      child: Text(message, style: AppTextStyles.bodySmall),
+    );
+  }
+}
+
+class _ChildRow extends StatelessWidget {
+  final ChildProfileModel child;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _ChildRow({
+    required this.child,
     required this.onEdit,
     required this.onDelete,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Children',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                  child.name,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: onAdd,
-                  tooltip: 'Add Child',
+                Text(
+                  '${child.age} yrs · ${child.gender}',
+                  style: AppTextStyles.labelSmall,
                 ),
               ],
             ),
-            const Divider(),
-            if (children.isEmpty)
-              const Text(
-                'No children added yet.',
-                style: TextStyle(color: Colors.grey),
-              )
-            else
-              ...children.map(
-                (child) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.child_care,
-                        size: 20,
-                        color: Colors.blueGrey,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${child.name}  •  Age ${child.age}  •  ${child.gender}',
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.edit, size: 18),
-                        onPressed: () => onEdit(child),
-                        tooltip: 'Edit',
-                      ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.delete,
-                          size: 18,
-                          color: Colors.red,
-                        ),
-                        onPressed: () => onDelete(child),
-                        tooltip: 'Delete',
-                      ),
-                    ],
-                  ),
-                ),
+          ),
+          GestureDetector(
+            onTap: onEdit,
+            child: Text(
+              'Edit',
+              style: AppTextStyles.labelSmall.copyWith(
+                color: AppColors.primary,
               ),
+            ),
+          ),
+          const SizedBox(width: AppDimensions.spacing16),
+          GestureDetector(
+            onTap: onDelete,
+            child: Text(
+              'Remove',
+              style: AppTextStyles.labelSmall.copyWith(color: AppColors.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color color;
+
+  const _ActionRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color = AppColors.textSecondary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacing16,
+          vertical: AppDimensions.spacing16,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: color),
+            const SizedBox(width: AppDimensions.spacing12),
+            Text(label, style: AppTextStyles.bodySmall.copyWith(color: color)),
           ],
         ),
       ),
@@ -398,57 +485,106 @@ class _MyServicesCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final servicesAsync = ref.watch(allMyServicesProvider);
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'My Services',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.bold),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.spacing16,
+              AppDimensions.spacing16,
+              AppDimensions.spacing16,
+              AppDimensions.spacing12,
             ),
-            const Divider(),
-            servicesAsync.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => const Text('Failed to load services', style: TextStyle(color: Colors.grey)),
-              data: (services) => services.isEmpty
-                  ? const Text(
-                      'No services added yet.',
-                      style: TextStyle(color: Colors.grey),
-                    )
-                  : Column(
-                      children: services
-                          .map(
-                            (service) => ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: const Icon(
-                                Icons.design_services_outlined,
-                                color: Colors.blueGrey,
+            child: Text(
+              'My Services',
+              style: AppTextStyles.labelMedium.copyWith(
+                color: AppColors.textSecondary,
+                letterSpacing: 0.8,
+              ),
+            ),
+          ),
+          const Divider(height: 1, color: AppColors.border),
+          servicesAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.all(AppDimensions.spacing16),
+              child: Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                  strokeWidth: 2,
+                ),
+              ),
+            ),
+            error: (e, _) => Padding(
+              padding: const EdgeInsets.all(AppDimensions.spacing16),
+              child: Text(
+                'Failed to load services',
+                style: AppTextStyles.bodySmall,
+              ),
+            ),
+            data: (services) => services.isEmpty
+                ? Padding(
+                    padding: const EdgeInsets.all(AppDimensions.spacing16),
+                    child: Text(
+                      'No services added yet',
+                      style: AppTextStyles.bodySmall,
+                    ),
+                  )
+                : Column(
+                    children: services
+                        .map(
+                          (service) => InkWell(
+                            onTap: () => context.push(
+                              AppRoutes.editableServiceDetail,
+                              extra: service,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: AppDimensions.spacing16,
+                                vertical: AppDimensions.spacing12,
                               ),
-                              title: Text(service.title),
-                              subtitle: Text(
-                                '${service.serviceType} · ${service.paymentType}',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                              trailing: const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 14,
-                              ),
-                              onTap: () => context.push(
-                                AppRoutes.editableServiceDetail,
-                                extra: service,
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          service.title,
+                                          style: AppTextStyles.bodySmall
+                                              .copyWith(
+                                                color: AppColors.textPrimary,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          '${service.serviceType} · ${service.paymentType}',
+                                          style: AppTextStyles.labelSmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 12,
+                                    color: AppColors.textHint,
+                                  ),
+                                ],
                               ),
                             ),
-                          )
-                          .toList(),
-                    ),
-            ),
-          ],
-        ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -502,7 +638,7 @@ class _AddChildSheetState extends State<_AddChildSheet> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Failed to save child: $e')));
+        ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -514,10 +650,10 @@ class _AddChildSheetState extends State<_AddChildSheet> {
     final isEdit = widget.initial != null;
     return Padding(
       padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        top: 16,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+        left: AppDimensions.spacing20,
+        right: AppDimensions.spacing20,
+        top: AppDimensions.spacing24,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppDimensions.spacing24,
       ),
       child: Form(
         key: _formKey,
@@ -525,54 +661,141 @@ class _AddChildSheetState extends State<_AddChildSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppDimensions.spacing20),
+                decoration: BoxDecoration(
+                  color: AppColors.border,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                ),
+              ),
+            ),
+
             Text(
               isEdit ? 'Edit Child' : 'Add Child',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              style: AppTextStyles.titleMedium,
             ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
-              validator: (v) =>
-                  (v == null || v.trim().isEmpty) ? 'Required' : null,
+            const SizedBox(height: AppDimensions.spacing24),
+
+            _SheetField(
+              label: 'Name',
+              child: TextFormField(
+                controller: _nameController,
+                decoration: _sheetInputDecoration('Child\'s full name'),
+                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+              ),
             ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _ageController,
-              decoration: const InputDecoration(labelText: 'Age'),
-              keyboardType: TextInputType.number,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Required';
-                if (int.tryParse(v.trim()) == null) return 'Must be a number';
-                return null;
-              },
+            _SheetField(
+              label: 'Age',
+              child: TextFormField(
+                controller: _ageController,
+                decoration: _sheetInputDecoration('e.g. 7'),
+                keyboardType: TextInputType.number,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return 'Required';
+                  if (int.tryParse(v.trim()) == null) return 'Must be a number';
+                  return null;
+                },
+              ),
             ),
-            const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: _gender,
-              decoration: const InputDecoration(labelText: 'Gender'),
-              items: [
-                'Male',
-                'Female',
-                'Other',
-              ].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
-              onChanged: (v) => setState(() => _gender = v!),
+            _SheetField(
+              label: 'Gender',
+              child: DropdownButtonFormField<String>(
+                initialValue: _gender,
+                decoration: _sheetInputDecoration('Select'),
+                items: ['Male', 'Female', 'Other']
+                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
+                    .toList(),
+                onChanged: (v) => setState(() => _gender = v!),
+              ),
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loading ? null : _submit,
-              child: _loading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : Text(isEdit ? 'Update' : 'Save'),
+
+            const SizedBox(height: AppDimensions.spacing8),
+
+            SizedBox(
+              height: AppDimensions.buttonHeight,
+              child: Material(
+                color: AppColors.primary,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                child: InkWell(
+                  onTap: _loading ? null : _submit,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                  child: Center(
+                    child: _loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                          )
+                        : Text(
+                            isEdit ? 'Update' : 'Save',
+                            style: AppTextStyles.labelLarge.copyWith(color: Colors.white, fontSize: 16),
+                          ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+InputDecoration _sheetInputDecoration(String hint) => InputDecoration(
+      hintText: hint,
+      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+      filled: true,
+      fillColor: AppColors.background,
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacing16,
+        vertical: AppDimensions.spacing12,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        borderSide: const BorderSide(color: AppColors.error),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
+      ),
+    );
+
+class _SheetField extends StatelessWidget {
+  final String label;
+  final Widget child;
+
+  const _SheetField({required this.label, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.spacing16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AppTextStyles.labelMedium.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.5,
+          )),
+          const SizedBox(height: AppDimensions.spacing6),
+          child,
+        ],
       ),
     );
   }
