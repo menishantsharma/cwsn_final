@@ -6,7 +6,6 @@ import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:pinput/pinput.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class OtpVerifyPage extends ConsumerStatefulWidget {
   const OtpVerifyPage({super.key});
@@ -18,6 +17,7 @@ class OtpVerifyPage extends ConsumerStatefulWidget {
 class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
   final _pinController = TextEditingController();
   final _focusNode = FocusNode();
+  String? _errorText;
 
   @override
   void dispose() {
@@ -25,43 +25,6 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
     _focusNode.dispose();
     super.dispose();
   }
-
-  PinTheme get _defaultTheme => PinTheme(
-    width: 48,
-    height: 52,
-    textStyle: AppTextStyles.titleLarge.copyWith(
-      color: AppColors.textPrimary, // ✅
-    ),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceVariant,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(color: AppColors.border, width: 1.5),
-    ),
-  );
-
-  PinTheme get _focusedTheme => _defaultTheme.copyWith(
-    decoration: BoxDecoration(
-      color: AppColors.surface,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(color: AppColors.border, width: 1.5),
-    ),
-  );
-
-  PinTheme get _submittedTheme => _defaultTheme.copyWith(
-    decoration: BoxDecoration(
-      color: AppColors.primaryLight,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(color: AppColors.border, width: 1.5),
-    ),
-  );
-
-  PinTheme get _errorTheme => _defaultTheme.copyWith(
-    decoration: BoxDecoration(
-      color: AppColors.errorLight,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(color: AppColors.border, width: 1.5),
-    ),
-  );
 
   @override
   Widget build(BuildContext context) {
@@ -72,9 +35,8 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
     ref.listen<AsyncValue<AuthState>>(authProvider, (_, next) {
       next.whenOrNull(
         error: (error, _) {
-          _pinController.clear();
+          setState(() => _errorText = 'Invalid code. Please try again.');
           _focusNode.requestFocus();
-
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(error.toString()),
@@ -83,105 +45,108 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               ),
-              margin: EdgeInsets.all(AppDimensions.spacing16),
+              margin: const EdgeInsets.all(AppDimensions.spacing16),
             ),
           );
         },
       );
     });
 
+    final baseDecoration = BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+      border: Border.all(color: AppColors.border),
+    );
+
+    final defaultTheme = PinTheme(
+      width: 46,
+      height: 52,
+      textStyle: AppTextStyles.bodyLarge.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: baseDecoration,
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         backgroundColor: AppColors.background,
-        title: const Text('Verification'),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: Text('OTP Verification', style: AppTextStyles.titleMedium),
       ),
       body: SafeArea(
         child: Padding(
           padding: AppDimensions.pagePadding,
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: AppDimensions.spacing32),
-              Text('Enter the code', style: AppTextStyles.displayMedium),
-              const SizedBox(height: AppDimensions.spacing8),
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppDimensions.spacing6),
-                    decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusSm,
-                      ),
-                    ),
-                    child: const FaIcon(
-                      FontAwesomeIcons.whatsapp,
-                      color: AppColors.primary,
-                      size: 14,
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.spacing8),
-                  Expanded(
-                    child: RichText(
-                      text: TextSpan(
-                        style: AppTextStyles.bodySmall,
-                        children: [
-                          const TextSpan(text: 'Code sent to '),
-                          TextSpan(
-                            text:
-                                phoneNumber, // ✅ ADDED — shows actual phone number
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const TextSpan(text: ' via WhatsApp'),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+
+              Text(
+                'Enter the code sent to\n$phoneNumber',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMedium,
               ),
 
-              const SizedBox(height: AppDimensions.spacing40),
+              const SizedBox(height: AppDimensions.spacing32),
 
-              Pinput(
+              Center(child: Pinput(
                 controller: _pinController,
                 focusNode: _focusNode,
                 enabled: !isLoading,
                 length: 6,
-                defaultPinTheme: _defaultTheme,
-                focusedPinTheme: _focusedTheme,
-                submittedPinTheme: _submittedTheme,
+                defaultPinTheme: defaultTheme,
+                focusedPinTheme: defaultTheme.copyWith(
+                  decoration: baseDecoration.copyWith(
+                    border: Border.all(color: AppColors.primary, width: 1.5),
+                  ),
+                ),
+                submittedPinTheme: defaultTheme.copyWith(
+                  decoration: baseDecoration.copyWith(
+                    border: Border.all(color: AppColors.primary, width: 1.5),
+                  ),
+                ),
+                errorPinTheme: defaultTheme.copyWith(
+                  decoration: baseDecoration.copyWith(
+                    color: AppColors.errorLight,
+                    border: Border.all(color: AppColors.error),
+                  ),
+                ),
                 autofocus: true,
-                errorPinTheme: _errorTheme,
                 pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                showCursor: true,
-                cursor: Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(width: 2, height: 22, color: AppColors.primary),
-                  ],
-                ),
+                showCursor: false,
+                onChanged: (_) {
+                  if (_errorText != null) setState(() => _errorText = null);
+                },
                 onCompleted: (code) {
                   ref.read(authProvider.notifier).verifyOtp(code);
                 },
-              ),
-              const SizedBox(height: AppDimensions.spacing16),
-              if (isLoading)
-                const Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: AppColors.primary,
-                    ),
+              )),
+
+              if (_errorText != null) ...[
+                const SizedBox(height: AppDimensions.spacing8),
+                Text(
+                  _errorText!,
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                ),
+              ],
+
+              if (isLoading) ...[
+                const SizedBox(height: AppDimensions.spacing24),
+                const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
                   ),
                 ),
+              ],
+
             ],
           ),
         ),
