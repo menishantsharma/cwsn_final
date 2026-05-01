@@ -34,7 +34,8 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
+    final authState = ref.watch(authProvider);
+    final isLoading = authState.isLoading;
 
     ref.listen<AsyncValue<AuthState>>(authProvider, (_, next) {
       next.whenOrNull(
