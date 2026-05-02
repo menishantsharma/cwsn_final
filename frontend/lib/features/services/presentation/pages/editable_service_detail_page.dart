@@ -4,6 +4,7 @@ import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
+import 'package:frontend/core/widgets/confirm_dialog.dart';
 import 'package:frontend/features/profile/domain/models/profile_model.dart' as profile_model;
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
@@ -30,32 +31,21 @@ class _EditableServiceDetailPageState
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context) async {
-    final navigator = Navigator.of(context); // capture before await
-
-    final confirmed = await showDialog<bool>(
+  void _confirmDelete(BuildContext context) {
+    final navigator = Navigator.of(context);
+    showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Delete service?'),
-        content: const Text(
-          'This will archive the service and remove it from all listings.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Colors.red)),
-          ),
-        ],
+      builder: (_) => ConfirmDialog(
+        title: 'Delete service?',
+        message: 'This will archive the service and remove it from all listings.',
+        confirmLabel: 'Delete',
+        isDanger: true,
+        onConfirm: () async {
+          await ref.read(editableServiceProvider.notifier).deleteService();
+          navigator.pop();
+        },
       ),
     );
-
-    if (confirmed != true) return;
-    await ref.read(editableServiceProvider.notifier).deleteService();
-    navigator.pop();
   }
 
   @override
@@ -66,177 +56,195 @@ class _EditableServiceDetailPageState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        actions: [
-          if (isSaving)
-            const Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: Center(
-                child: SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ),
-            )
-          else
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: () => _confirmDelete(context),
-            ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: AppDimensions.spacing8,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ServiceHero(image: service.image),
-            const SizedBox(height: AppDimensions.spacing20),
-
-            // Title
-            _EditableRow(
-              value: service.title,
-              hint: 'Add title',
-              style: AppTextStyles.displaySmall,
-              onEdit: () => _showTextSheet(
-                context,
-                label: 'Title',
-                value: service.title,
-                onSave: (val) => _save(service.copyWith(title: val)),
-              ),
-            ),
-
-            const SizedBox(height: AppDimensions.spacing12),
-
-            // Service type + payment type chips
-            Row(
-              children: [
-                _EditableChip(
-                  label: service.serviceType,
-                  icon: Icons.location_on_outlined,
-                  onEdit: () => _showChipSheet(
-                    context,
-                    label: 'Service Type',
-                    options: const ['Online', 'Offline', 'Hybrid'],
-                    selected: service.serviceType,
-                    onSave: (val) => _save(service.copyWith(serviceType: val)),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            pinned: true,
+            actions: [
+              if (isSaving)
+                const Padding(
+                  padding: EdgeInsets.only(right: 16),
+                  child: Center(
+                    child: SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ),
+                )
+              else
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: AppColors.error),
+                  onPressed: () => _confirmDelete(context),
                 ),
-                const SizedBox(width: AppDimensions.spacing8),
-                _EditableChip(
-                  label: service.paymentType,
-                  icon: Icons.payments_outlined,
-                  onEdit: () => _showChipSheet(
-                    context,
-                    label: 'Payment Type',
-                    options: const ['Paid', 'Unpaid'],
-                    selected: service.paymentType,
-                    onSave: (val) => _save(service.copyWith(paymentType: val)),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ServiceHero(image: service.image),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      _EditableRow(
+                        value: service.title,
+                        hint: 'Add title',
+                        style: AppTextStyles.displaySmall,
+                        onEdit: () => _showTextSheet(
+                          context,
+                          label: 'Title',
+                          value: service.title,
+                          onSave: (val) => _save(service.copyWith(title: val)),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing12),
+
+                      // Chips
+                      Row(
+                        children: [
+                          _EditableChip(
+                            label: service.serviceType,
+                            icon: Icons.location_on_outlined,
+                            onEdit: () => _showChipSheet(
+                              context,
+                              label: 'Service Type',
+                              options: const ['Online', 'Offline', 'Hybrid'],
+                              selected: service.serviceType,
+                              onSave: (val) =>
+                                  _save(service.copyWith(serviceType: val)),
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.spacing8),
+                          _EditableChip(
+                            label: service.paymentType,
+                            icon: Icons.payments_outlined,
+                            onEdit: () => _showChipSheet(
+                              context,
+                              label: 'Payment Type',
+                              options: const ['Paid', 'Unpaid'],
+                              selected: service.paymentType,
+                              onSave: (val) =>
+                                  _save(service.copyWith(paymentType: val)),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spacing20),
+
+                      // Description
+                      _SectionLabel('About this service'),
+                      const SizedBox(height: AppDimensions.spacing8),
+                      _EditableRow(
+                        value: service.description,
+                        hint: 'Add a description',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                        onEdit: () => _showTextSheet(
+                          context,
+                          label: 'Description',
+                          value: service.description,
+                          maxLines: 5,
+                          onSave: (val) =>
+                              _save(service.copyWith(description: val)),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing20),
+
+                      // Target audience
+                      _SectionLabel('Target audience'),
+                      const SizedBox(height: AppDimensions.spacing12),
+                      _EditableRow(
+                        value: service.targetGender == 'Any'
+                            ? null
+                            : service.targetGender,
+                        hint: 'Set target gender',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        prefix: const Icon(
+                          Icons.person_outline,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        onEdit: () => _showChipSheet(
+                          context,
+                          label: 'Target Gender',
+                          options: const ['Male', 'Female', 'Any'],
+                          selected: service.targetGender,
+                          onSave: (val) =>
+                              _save(service.copyWith(targetGender: val)),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing8),
+                      _EditableRow(
+                        value:
+                            _ageLabel(service.targetAgeMin, service.targetAgeMax),
+                        hint: 'Set age range',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        prefix: const Icon(
+                          Icons.cake_outlined,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        onEdit: () => _showAgeSheet(
+                          context,
+                          minAge: service.targetAgeMin,
+                          maxAge: service.targetAgeMax,
+                          onSave: (min, max) => _save(
+                            service.copyWith(
+                                targetAgeMin: min, targetAgeMax: max),
+                          ),
+                        ),
+                      ),
+
+                      if (service.caregiverProfile != null) ...[
+                        const SizedBox(height: AppDimensions.spacing32),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.info_outline,
+                              size: 13,
+                              color: AppColors.textHint,
+                            ),
+                            const SizedBox(width: AppDimensions.spacing4),
+                            Expanded(
+                              child: Text(
+                                'Your profile is shared across all services.',
+                                style: AppTextStyles.bodySmall.copyWith(
+                                  color: AppColors.textHint,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppDimensions.spacing16),
+                        _SectionLabel('About the provider'),
+                        const SizedBox(height: AppDimensions.spacing12),
+                        const _ProviderSection(),
+                      ],
+
+                      const SizedBox(height: AppDimensions.spacing32),
+                    ],
                   ),
                 ),
               ],
             ),
-
-            const SizedBox(height: AppDimensions.spacing20),
-
-            // Description
-            _SectionLabel(label: 'About this service'),
-            const SizedBox(height: AppDimensions.spacing8),
-            _EditableRow(
-              value: service.description,
-              hint: 'Add a description',
-              style: AppTextStyles.bodyMedium,
-              onEdit: () => _showTextSheet(
-                context,
-                label: 'Description',
-                value: service.description,
-                maxLines: 5,
-                onSave: (val) => _save(service.copyWith(description: val)),
-              ),
-            ),
-
-            const SizedBox(height: AppDimensions.spacing20),
-
-            // Target audience
-            _SectionLabel(label: 'Target audience'),
-            const SizedBox(height: AppDimensions.spacing12),
-
-            _EditableRow(
-              value: service.targetGender == 'Any'
-                  ? null
-                  : service.targetGender,
-              hint: 'Set target gender',
-              style: AppTextStyles.bodyMedium,
-              prefix: const Icon(
-                Icons.person_outline,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              onEdit: () => _showChipSheet(
-                context,
-                label: 'Target Gender',
-                options: const ['Male', 'Female', 'Any'],
-                selected: service.targetGender,
-                onSave: (val) => _save(service.copyWith(targetGender: val)),
-              ),
-            ),
-
-            const SizedBox(height: AppDimensions.spacing8),
-
-            _EditableRow(
-              value: _ageLabel(service.targetAgeMin, service.targetAgeMax),
-              hint: 'Set age range',
-              style: AppTextStyles.bodyMedium,
-              prefix: const Icon(
-                Icons.cake_outlined,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              onEdit: () => _showAgeSheet(
-                context,
-                minAge: service.targetAgeMin,
-                maxAge: service.targetAgeMax,
-                onSave: (min, max) => _save(
-                  service.copyWith(targetAgeMin: min, targetAgeMax: max),
-                ),
-              ),
-            ),
-
-            if (service.caregiverProfile != null) ...[
-              const SizedBox(height: AppDimensions.spacing24),
-              const _SectionDivider(),
-              const SizedBox(height: AppDimensions.spacing8),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.info_outline,
-                    size: 13,
-                    color: AppColors.textHint,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      'Your profile is shared across all services. Changes here will reflect everywhere.',
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textHint,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.spacing16),
-              const _ProviderSection(),
-            ],
-
-            const SizedBox(height: AppDimensions.spacing32),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -262,8 +270,6 @@ class _EditableServiceDetailPageState
     });
   }
 
-  // ── Bottom Sheets ─────────────────────────────────────────
-
   void _showTextSheet(
     BuildContext context, {
     required String label,
@@ -274,7 +280,7 @@ class _EditableServiceDetailPageState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -298,7 +304,7 @@ class _EditableServiceDetailPageState
   }) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -322,7 +328,7 @@ class _EditableServiceDetailPageState
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -330,6 +336,31 @@ class _EditableServiceDetailPageState
       ),
       builder: (_) =>
           _AgeSheetContent(minAge: minAge, maxAge: maxAge, onSave: onSave),
+    );
+  }
+}
+
+// ── Service Hero ──────────────────────────────────────────
+
+class _ServiceHero extends StatelessWidget {
+  final String? image;
+  const _ServiceHero({required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      color: AppColors.primary.withValues(alpha: 0.08),
+      child: image != null
+          ? Image.network(image!, fit: BoxFit.cover)
+          : Center(
+              child: Icon(
+                Icons.design_services_outlined,
+                size: 56,
+                color: AppColors.primary.withValues(alpha: 0.4),
+              ),
+            ),
     );
   }
 }
@@ -376,7 +407,7 @@ class _EditableRow extends StatelessWidget {
                 : Text(value!, style: style),
           ),
           const SizedBox(width: AppDimensions.spacing8),
-          const Icon(Icons.edit_outlined, size: 16, color: AppColors.textHint),
+          const Icon(Icons.edit_outlined, size: 15, color: AppColors.textHint),
         ],
       ),
     );
@@ -421,11 +452,7 @@ class _EditableChip extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppDimensions.spacing4),
-            const Icon(
-              Icons.edit_outlined,
-              size: 11,
-              color: AppColors.primaryDark,
-            ),
+            const Icon(Icons.edit_outlined, size: 11, color: AppColors.primaryDark),
           ],
         ),
       ),
@@ -436,69 +463,22 @@ class _EditableChip extends StatelessWidget {
 // ── Section Label ─────────────────────────────────────────
 
 class _SectionLabel extends StatelessWidget {
-  final String label;
-  const _SectionLabel({required this.label});
+  final String text;
+  const _SectionLabel(this.text);
 
   @override
   Widget build(BuildContext context) {
-    return Text(label, style: AppTextStyles.titleSmall);
-  }
-}
-
-// ── Section Divider ───────────────────────────────────────
-
-class _SectionDivider extends StatelessWidget {
-  const _SectionDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: Divider(color: AppColors.border)),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.spacing12,
-          ),
-          child: Text('Provided by', style: AppTextStyles.labelMedium),
-        ),
-        const Expanded(child: Divider(color: AppColors.border)),
-      ],
-    );
-  }
-}
-
-// ── Service Hero ──────────────────────────────────────────
-
-class _ServiceHero extends StatelessWidget {
-  final String? image;
-  const _ServiceHero({required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        image: image != null
-            ? DecorationImage(image: NetworkImage(image!), fit: BoxFit.cover)
-            : null,
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.labelSmall.copyWith(
+        color: AppColors.textSecondary,
+        letterSpacing: 1,
       ),
-      child: image == null
-          ? Center(
-              child: Icon(
-                Icons.design_services_outlined,
-                size: 64,
-                color: AppColors.primary.withValues(alpha: 0.5),
-              ),
-            )
-          : null,
     );
   }
 }
 
-// ── Provider Section (editable) ───────────────────────────
+// ── Provider Section ──────────────────────────────────────
 
 class _ProviderSection extends ConsumerWidget {
   const _ProviderSection();
@@ -509,7 +489,7 @@ class _ProviderSection extends ConsumerWidget {
 
     return profileAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
+      error: (_, e) => const SizedBox.shrink(),
       data: (profile) {
         final cwsn = profile.cwsnProfile;
         final caregiver = profile.caregiverProfile;
@@ -524,16 +504,9 @@ class _ProviderSection extends ConsumerWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(AppDimensions.spacing20),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
             border: Border.all(color: AppColors.border),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -544,35 +517,31 @@ class _ProviderSection extends ConsumerWidget {
                   Expanded(child: _ProviderHeader(name: name, gender: gender)),
                   GestureDetector(
                     onTap: () => context.push(AppRoutes.editPersonalInfo),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
-                        const SizedBox(width: 4),
-                        Text('Edit', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
-                      ],
+                    child: Text(
+                      'Edit',
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: AppDimensions.spacing16),
-              const Divider(color: AppColors.border),
-              const SizedBox(height: AppDimensions.spacing16),
               if (hasContent) ...[
-                _ProviderDetails(profile: caregiver),
                 const SizedBox(height: AppDimensions.spacing16),
+                const Divider(height: 1, color: AppColors.border),
+                const SizedBox(height: AppDimensions.spacing16),
+                _ProviderDetails(profile: caregiver),
               ],
+              const SizedBox(height: AppDimensions.spacing16),
               Align(
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: () => context.push(AppRoutes.editCaregiverInfo),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
-                      const SizedBox(width: 4),
-                      Text('Edit caregiver info', style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary)),
-                    ],
+                  child: Text(
+                    'Edit caregiver info',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
               ),
@@ -622,7 +591,12 @@ class _ProviderHeader extends StatelessWidget {
               Text(name, style: AppTextStyles.titleSmall),
               if (gender != null && gender!.isNotEmpty) ...[
                 const SizedBox(height: AppDimensions.spacing4),
-                Text(gender!, style: AppTextStyles.bodySmall),
+                Text(
+                  gender!,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
               ],
             ],
           ),
@@ -643,11 +617,11 @@ class _ProviderDetails extends StatelessWidget {
       children: [
         if (profile.aboutMe.isNotEmpty) ...[
           _DetailRow(label: 'About', value: profile.aboutMe),
-          const SizedBox(height: AppDimensions.spacing12),
+          const SizedBox(height: AppDimensions.spacing16),
         ],
         if (profile.qualifications.isNotEmpty) ...[
           _DetailRow(label: 'Qualifications', value: profile.qualifications),
-          const SizedBox(height: AppDimensions.spacing12),
+          const SizedBox(height: AppDimensions.spacing16),
         ],
         if (profile.languages.isNotEmpty)
           _LanguagesRow(languages: profile.languages),
@@ -666,9 +640,21 @@ class _DetailRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: AppTextStyles.labelMedium),
-        const SizedBox(height: AppDimensions.spacing4),
-        Text(value, style: AppTextStyles.bodyMedium),
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing6),
+        Text(
+          value,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
       ],
     );
   }
@@ -683,157 +669,38 @@ class _LanguagesRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Languages', style: AppTextStyles.labelMedium),
+        Text(
+          'LANGUAGES',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
         const SizedBox(height: AppDimensions.spacing8),
         Wrap(
-          spacing: AppDimensions.spacing8,
-          runSpacing: AppDimensions.spacing8,
+          spacing: AppDimensions.spacing6,
+          runSpacing: AppDimensions.spacing6,
           children: languages
-              .map(
-                (lang) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spacing12,
-                    vertical: AppDimensions.spacing4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
+              .map((lang) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spacing12,
+                      vertical: AppDimensions.spacing4,
                     ),
-                  ),
-                  child: Text(lang, style: AppTextStyles.labelMedium),
-                ),
-              )
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusFull),
+                    ),
+                    child: Text(
+                      lang,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ))
               .toList(),
         ),
       ],
-    );
-  }
-}
-
-class _AgeSheetContent extends StatefulWidget {
-  final int? minAge;
-  final int? maxAge;
-  final void Function(int?, int?) onSave;
-
-  const _AgeSheetContent({required this.onSave, this.minAge, this.maxAge});
-
-  @override
-  State<_AgeSheetContent> createState() => _AgeSheetContentState();
-}
-
-class _AgeSheetContentState extends State<_AgeSheetContent> {
-  late final TextEditingController _minController;
-  late final TextEditingController _maxController;
-
-  @override
-  void initState() {
-    super.initState();
-    _minController = TextEditingController(
-      text: widget.minAge?.toString() ?? '',
-    );
-    _maxController = TextEditingController(
-      text: widget.maxAge?.toString() ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _minController.dispose();
-    _maxController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('Target Age Range', style: AppTextStyles.titleSmall),
-          const SizedBox(height: AppDimensions.spacing12),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _minController,
-                  keyboardType: TextInputType.number,
-                  style: AppTextStyles.bodyLarge,
-                  decoration: InputDecoration(
-                    labelText: 'Min age',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.primary),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.spacing12),
-              Expanded(
-                child: TextField(
-                  controller: _maxController,
-                  keyboardType: TextInputType.number,
-                  style: AppTextStyles.bodyLarge,
-                  decoration: InputDecoration(
-                    labelText: 'Max age',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.primary),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.spacing16),
-          SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onSave(
-                  int.tryParse(_minController.text),
-                  int.tryParse(_maxController.text),
-                );
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -875,16 +742,27 @@ class _TextSheetContentState extends State<_TextSheetContent> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
           Text(widget.label, style: AppTextStyles.titleSmall),
           const SizedBox(height: AppDimensions.spacing12),
           TextField(
@@ -893,36 +771,28 @@ class _TextSheetContentState extends State<_TextSheetContent> {
             autofocus: true,
             style: AppTextStyles.bodyLarge,
             decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 borderSide: const BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing16),
-          SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onSave(_controller.text.trim());
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-              ),
-            ),
+          const SizedBox(height: AppDimensions.spacing20),
+          _SaveButton(
+            onTap: () {
+              widget.onSave(_controller.text.trim());
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -961,11 +831,22 @@ class _ChipSheetContentState extends State<_ChipSheetContent> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
           Text(widget.label, style: AppTextStyles.titleSmall),
           const SizedBox(height: AppDimensions.spacing16),
           Wrap(
@@ -981,47 +862,177 @@ class _ChipSheetContentState extends State<_ChipSheetContent> {
                     vertical: AppDimensions.spacing8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
+                    color: isSelected ? AppColors.primary : Colors.white,
+                    borderRadius:
+                        BorderRadius.circular(AppDimensions.radiusFull),
+                    border: Border.all(
+                      color: isSelected ? AppColors.primary : AppColors.border,
                     ),
                   ),
                   child: Text(
                     opt,
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color:
+                          isSelected ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: AppDimensions.spacing20),
-          SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onSave(_current);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
+          const SizedBox(height: AppDimensions.spacing24),
+          _SaveButton(
+            onTap: () {
+              widget.onSave(_current);
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Age Sheet ─────────────────────────────────────────────
+
+class _AgeSheetContent extends StatefulWidget {
+  final int? minAge;
+  final int? maxAge;
+  final void Function(int?, int?) onSave;
+
+  const _AgeSheetContent({required this.onSave, this.minAge, this.maxAge});
+
+  @override
+  State<_AgeSheetContent> createState() => _AgeSheetContentState();
+}
+
+class _AgeSheetContentState extends State<_AgeSheetContent> {
+  late final TextEditingController _minController;
+  late final TextEditingController _maxController;
+
+  @override
+  void initState() {
+    super.initState();
+    _minController =
+        TextEditingController(text: widget.minAge?.toString() ?? '');
+    _maxController =
+        TextEditingController(text: widget.maxAge?.toString() ?? '');
+  }
+
+  @override
+  void dispose() {
+    _minController.dispose();
+    _maxController.dispose();
+    super.dispose();
+  }
+
+  InputDecoration _fieldDecoration(String label) => InputDecoration(
+        labelText: label,
+        labelStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+        filled: true,
+        fillColor: AppColors.background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
               ),
             ),
           ),
+          Text('Target Age Range', style: AppTextStyles.titleSmall),
+          const SizedBox(height: AppDimensions.spacing16),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _minController,
+                  keyboardType: TextInputType.number,
+                  style: AppTextStyles.bodyLarge,
+                  decoration: _fieldDecoration('Min age'),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.spacing12),
+              Expanded(
+                child: TextField(
+                  controller: _maxController,
+                  keyboardType: TextInputType.number,
+                  style: AppTextStyles.bodyLarge,
+                  decoration: _fieldDecoration('Max age'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.spacing20),
+          _SaveButton(
+            onTap: () {
+              widget.onSave(
+                int.tryParse(_minController.text),
+                int.tryParse(_maxController.text),
+              );
+              Navigator.pop(context);
+            },
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Save Button ───────────────────────────────────────────
+
+class _SaveButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SaveButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: AppDimensions.buttonHeight,
+      child: Material(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          child: Center(
+            child: Text(
+              'Save',
+              style: AppTextStyles.labelLarge
+                  .copyWith(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -21,7 +21,7 @@ class ServiceDetailPage extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -35,36 +35,70 @@ class ServiceDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
-            tooltip: 'Report service',
-            onPressed: () => _showReportSheet(context),
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            pinned: true,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
+                tooltip: 'Report service',
+                onPressed: () => _showReportSheet(context),
+              ),
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _ServiceHero(image: service.image),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ServiceInfoSection(service: service),
+                      if (service.caregiverProfile != null) ...[
+                        const SizedBox(height: AppDimensions.spacing32),
+                        _ProviderSection(service: service),
+                      ],
+                      const SizedBox(height: AppDimensions.spacing32),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: AppDimensions.spacing8,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _ServiceInfoSection(service: service),
-            const SizedBox(height: AppDimensions.spacing24),
-            if (service.caregiverProfile != null) ...[
-              const _Divider(),
-              const SizedBox(height: AppDimensions.spacing24),
-              _ProviderSection(service: service),
-              const SizedBox(height: AppDimensions.spacing32),
-            ],
-          ],
-        ),
-      ),
+    );
+  }
+}
+
+// ── Service Hero ──────────────────────────────────────────
+
+class _ServiceHero extends StatelessWidget {
+  final String? image;
+  const _ServiceHero({required this.image});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      color: AppColors.primary.withValues(alpha: 0.08),
+      child: image != null
+          ? Image.network(image!, fit: BoxFit.cover)
+          : Center(
+              child: Icon(
+                Icons.design_services_outlined,
+                size: 56,
+                color: AppColors.primary.withValues(alpha: 0.4),
+              ),
+            ),
     );
   }
 }
@@ -84,15 +118,13 @@ class _ServiceInfoSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ServiceHero(image: service.image),
-        const SizedBox(height: AppDimensions.spacing20),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Text(service.title, style: AppTextStyles.displaySmall),
             ),
-            const SizedBox(width: AppDimensions.spacing8),
+            const SizedBox(width: AppDimensions.spacing12),
             GestureDetector(
               onTap: () async {
                 try {
@@ -117,7 +149,7 @@ class _ServiceInfoSection extends ConsumerWidget {
                   isUpvoted: false,
                   loading: true,
                 ),
-                error: (_, _) =>
+                error: (_, e) =>
                     _UpvotePill(count: service.upvoteCount, isUpvoted: false),
                 data: (_) => _UpvotePill(
                   count: service.upvoteCount + delta,
@@ -137,9 +169,15 @@ class _ServiceInfoSection extends ConsumerWidget {
         ),
         if (service.description != null) ...[
           const SizedBox(height: AppDimensions.spacing20),
-          Text('About this service', style: AppTextStyles.titleSmall),
+          _SectionLabel('About this service'),
           const SizedBox(height: AppDimensions.spacing8),
-          Text(service.description!, style: AppTextStyles.bodyMedium),
+          Text(
+            service.description!,
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.5,
+            ),
+          ),
         ],
         const SizedBox(height: AppDimensions.spacing20),
         _InfoGrid(service: service),
@@ -147,6 +185,8 @@ class _ServiceInfoSection extends ConsumerWidget {
     );
   }
 }
+
+// ── Upvote Pill ───────────────────────────────────────────
 
 class _UpvotePill extends StatelessWidget {
   final int count;
@@ -163,13 +203,13 @@ class _UpvotePill extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spacing8,
+        horizontal: AppDimensions.spacing12,
         vertical: AppDimensions.spacing6,
       ),
       decoration: BoxDecoration(
         color: isUpvoted
             ? AppColors.primary.withValues(alpha: 0.1)
-            : AppColors.surface,
+            : Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
         border: Border.all(
           color: isUpvoted ? AppColors.primary : AppColors.border,
@@ -179,7 +219,7 @@ class _UpvotePill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           loading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 14,
                   height: 14,
                   child: CircularProgressIndicator(
@@ -190,9 +230,7 @@ class _UpvotePill extends StatelessWidget {
               : Icon(
                   isUpvoted ? Icons.thumb_up : Icons.thumb_up_outlined,
                   size: 14,
-                  color: isUpvoted
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
+                  color: isUpvoted ? AppColors.primary : AppColors.textSecondary,
                 ),
           const SizedBox(width: AppDimensions.spacing4),
           Text(
@@ -207,34 +245,7 @@ class _UpvotePill extends StatelessWidget {
   }
 }
 
-class _ServiceHero extends StatelessWidget {
-  final String? image;
-  const _ServiceHero({required this.image});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        image: image != null
-            ? DecorationImage(image: NetworkImage(image!), fit: BoxFit.cover)
-            : null,
-      ),
-      child: image == null
-          ? Center(
-              child: Icon(
-                Icons.design_services_outlined,
-                size: 64,
-                color: AppColors.primary.withValues(alpha: 0.5),
-              ),
-            )
-          : null,
-    );
-  }
-}
+// ── Info Grid ─────────────────────────────────────────────
 
 class _InfoGrid extends StatelessWidget {
   final ServiceModel service;
@@ -253,19 +264,15 @@ class _InfoGrid extends StatelessWidget {
           : min != null
           ? '$min+ years'
           : 'Up to $max years';
-      items.add(
-        _InfoItem(icon: Icons.cake_outlined, label: 'Age', value: label),
-      );
+      items.add(_InfoItem(icon: Icons.cake_outlined, label: 'Age', value: label));
     }
 
     if (service.targetGender != 'Any') {
-      items.add(
-        _InfoItem(
-          icon: Icons.person_outline,
-          label: 'Gender',
-          value: service.targetGender,
-        ),
-      );
+      items.add(_InfoItem(
+        icon: Icons.person_outline,
+        label: 'Gender',
+        value: service.targetGender,
+      ));
     }
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -273,7 +280,7 @@ class _InfoGrid extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Target audience', style: AppTextStyles.titleSmall),
+        _SectionLabel('Target audience'),
         const SizedBox(height: AppDimensions.spacing12),
         Wrap(
           spacing: AppDimensions.spacing12,
@@ -289,11 +296,7 @@ class _InfoItem {
   final IconData icon;
   final String label;
   final String value;
-  const _InfoItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-  });
+  const _InfoItem({required this.icon, required this.label, required this.value});
 }
 
 class _InfoTile extends StatelessWidget {
@@ -308,46 +311,31 @@ class _InfoTile extends StatelessWidget {
         vertical: AppDimensions.spacing8,
       ),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         border: Border.all(color: AppColors.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(item.icon, size: 16, color: AppColors.primary),
+          Icon(item.icon, size: 15, color: AppColors.primary),
           const SizedBox(width: AppDimensions.spacing6),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.label, style: AppTextStyles.labelSmall),
+              Text(
+                item.label.toUpperCase(),
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.textHint,
+                  fontSize: 9,
+                  letterSpacing: 0.8,
+                ),
+              ),
               Text(item.value, style: AppTextStyles.labelMedium),
             ],
           ),
         ],
       ),
-    );
-  }
-}
-
-// ── Divider ───────────────────────────────────────────────
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(child: Divider(color: AppColors.border)),
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.spacing12,
-          ),
-          child: Text('Provided by', style: AppTextStyles.labelMedium),
-        ),
-        const Expanded(child: Divider(color: AppColors.border)),
-      ],
     );
   }
 }
@@ -363,76 +351,226 @@ class _ProviderSection extends ConsumerWidget {
     final profile = service.caregiverProfile!;
     final requestAsync = ref.watch(parentRequestsProvider);
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.spacing20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-        border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SectionLabel('About the provider'),
+        const SizedBox(height: AppDimensions.spacing12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppDimensions.spacing20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            border: Border.all(color: AppColors.border),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _ProviderHeader(profile: profile),
-          const SizedBox(height: AppDimensions.spacing16),
-          const Divider(color: AppColors.border),
-          const SizedBox(height: AppDimensions.spacing16),
-          if (profile.aboutMe != null && profile.aboutMe!.isNotEmpty ||
-              profile.qualifications != null &&
-                  profile.qualifications!.isNotEmpty ||
-              profile.languages.isNotEmpty)
-            _ProviderDetails(profile: profile),
-          const SizedBox(height: AppDimensions.spacing16),
-          // Request contact section
-          requestAsync.when(
-            loading: () => const Center(
-              child: SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primary,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ProviderHeader(profile: profile),
+              if (profile.aboutMe != null && profile.aboutMe!.isNotEmpty ||
+                  profile.qualifications != null &&
+                      profile.qualifications!.isNotEmpty ||
+                  profile.languages.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacing16),
+                const Divider(height: 1, color: AppColors.border),
+                const SizedBox(height: AppDimensions.spacing16),
+                _ProviderDetails(profile: profile),
+              ],
+              const SizedBox(height: AppDimensions.spacing16),
+              requestAsync.when(
+                loading: () => const Center(
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ),
+                error: (_, e) => _RequestButton(serviceId: service.id),
+                data: (allRequests) {
+                  final serviceRequest = allRequests
+                      .where((r) => r.serviceId == service.id)
+                      .firstOrNull;
+                  final acceptedForCaregiver = allRequests
+                      .where(
+                        (r) =>
+                            r.caregiverId == service.caregiverId &&
+                            r.status == 'Accepted',
+                      )
+                      .firstOrNull;
+
+                  if (acceptedForCaregiver != null) {
+                    return _RequestStatus(request: acceptedForCaregiver);
+                  }
+                  if (serviceRequest != null) {
+                    return _RequestStatus(request: serviceRequest);
+                  }
+                  return _RequestButton(serviceId: service.id);
+                },
               ),
-            ),
-            error: (_, _) => _RequestButton(serviceId: service.id),
-            data: (allRequests) {
-              // exact request for this service
-              final serviceRequest = allRequests
-                  .where((r) => r.serviceId == service.id)
-                  .firstOrNull;
-
-              // any accepted request for this caregiver
-              final acceptedForCaregiver = allRequests
-                  .where(
-                    (r) =>
-                        r.caregiverId == service.caregiverId &&
-                        r.status == 'Accepted',
-                  )
-                  .firstOrNull;
-
-              if (acceptedForCaregiver != null) {
-                return _RequestStatus(request: acceptedForCaregiver);
-              }
-              if (serviceRequest != null) {
-                return _RequestStatus(request: serviceRequest);
-              }
-              return _RequestButton(serviceId: service.id);
-            },
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
+
+class _ProviderHeader extends StatelessWidget {
+  final CaregiverProfileModel profile;
+  const _ProviderHeader({required this.profile});
+
+  String _initials(String name) {
+    final parts = name.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
+    return '?';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              _initials(profile.name),
+              style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppDimensions.spacing12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(profile.name, style: AppTextStyles.titleSmall),
+              if (profile.gender != null && profile.gender!.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacing4),
+                Text(
+                  profile.gender!,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProviderDetails extends StatelessWidget {
+  final CaregiverProfileModel profile;
+  const _ProviderDetails({required this.profile});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (profile.aboutMe != null && profile.aboutMe!.isNotEmpty) ...[
+          _DetailRow(label: 'About', value: profile.aboutMe!),
+          const SizedBox(height: AppDimensions.spacing16),
+        ],
+        if (profile.qualifications != null &&
+            profile.qualifications!.isNotEmpty) ...[
+          _DetailRow(label: 'Qualifications', value: profile.qualifications!),
+          const SizedBox(height: AppDimensions.spacing16),
+        ],
+        if (profile.languages.isNotEmpty) _LanguagesRow(languages: profile.languages),
+      ],
+    );
+  }
+}
+
+class _DetailRow extends StatelessWidget {
+  final String label;
+  final String value;
+  const _DetailRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing6),
+        Text(
+          value,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: AppColors.textSecondary,
+            height: 1.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LanguagesRow extends StatelessWidget {
+  final List<String> languages;
+  const _LanguagesRow({required this.languages});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'LANGUAGES',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing8),
+        Wrap(
+          spacing: AppDimensions.spacing6,
+          runSpacing: AppDimensions.spacing6,
+          children: languages
+              .map((lang) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spacing12,
+                      vertical: AppDimensions.spacing4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withValues(alpha: 0.08),
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusFull),
+                    ),
+                    child: Text(
+                      lang,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Request Button ────────────────────────────────────────
 
 class _RequestButton extends ConsumerWidget {
   final int serviceId;
@@ -442,17 +580,26 @@ class _RequestButton extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return SizedBox(
       width: double.infinity,
-      child: ElevatedButton.icon(
-        icon: const Icon(Icons.phone_outlined, size: 18),
-        label: const Text('Request Contact'),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+      height: AppDimensions.buttonHeight,
+      child: Material(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        child: InkWell(
+          onTap: () => _showRequestSheet(context, ref, serviceId),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.phone_outlined, size: 18, color: Colors.white),
+              const SizedBox(width: AppDimensions.spacing8),
+              Text(
+                'Request Contact',
+                style: AppTextStyles.labelLarge
+                    .copyWith(color: Colors.white, fontSize: 16),
+              ),
+            ],
           ),
         ),
-        onPressed: () => _showRequestSheet(context, ref, serviceId),
       ),
     );
   }
@@ -461,7 +608,7 @@ class _RequestButton extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -471,6 +618,89 @@ class _RequestButton extends ConsumerWidget {
     );
   }
 }
+
+// ── Request Status ────────────────────────────────────────
+
+class _RequestStatus extends StatelessWidget {
+  final RequestModel request;
+  const _RequestStatus({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final isAccepted = request.status == 'Accepted';
+    final isPending = request.status == 'Pending';
+
+    final (color, bg) = switch (request.status) {
+      'Accepted' => (const Color(0xFF2E7D32), const Color(0xFFE8F5E9)),
+      'Rejected' => (const Color(0xFFC62828), const Color(0xFFFFEBEE)),
+      _ => (AppColors.textSecondary, AppColors.background),
+    };
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacing12,
+            vertical: AppDimensions.spacing6,
+          ),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+          ),
+          child: Text(
+            isPending ? 'Request Pending' : request.status,
+            style: AppTextStyles.labelSmall.copyWith(color: color),
+          ),
+        ),
+        if (isAccepted && request.caregiverPhone != null) ...[
+          const SizedBox(height: AppDimensions.spacing12),
+          GestureDetector(
+            onLongPress: () {
+              Clipboard.setData(ClipboardData(text: request.caregiverPhone!));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Phone number copied')),
+              );
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.spacing16,
+                vertical: AppDimensions.spacing12,
+              ),
+              decoration: BoxDecoration(
+                color: const Color(0xFFE8F5E9),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                border: Border.all(color: const Color(0xFFA5D6A7)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.phone_outlined,
+                      size: 16, color: Color(0xFF2E7D32)),
+                  const SizedBox(width: AppDimensions.spacing8),
+                  Text(
+                    request.caregiverPhone!,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: const Color(0xFF2E7D32),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'Hold to copy',
+                    style: AppTextStyles.labelSmall
+                        .copyWith(color: AppColors.textHint),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ── Request Sheet ─────────────────────────────────────────
 
 class _RequestSheet extends ConsumerStatefulWidget {
   final int serviceId;
@@ -495,9 +725,7 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
     if (_selectedChild == null) return;
     setState(() => _loading = true);
     try {
-      await ref
-          .read(requestProvider.notifier)
-          .sendRequest(
+      await ref.read(requestProvider.notifier).sendRequest(
             serviceId: widget.serviceId,
             childId: _selectedChild!.id,
             note: _noteController.text.trim(),
@@ -506,9 +734,8 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
       if (mounted) Navigator.of(context).pop();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.toString())));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -523,7 +750,7 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
-        20,
+        12,
         20,
         MediaQuery.of(context).viewInsets.bottom + 32,
       ),
@@ -533,20 +760,21 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
         children: [
           Center(
             child: Container(
-              width: 40,
+              width: 36,
               height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: AppColors.border,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
               ),
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing20),
           Text('Request Contact', style: AppTextStyles.titleMedium),
           const SizedBox(height: AppDimensions.spacing4),
           Text(
             'Select the child this request is for',
-            style: AppTextStyles.bodySmall,
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.spacing20),
           if (children.isEmpty)
@@ -558,7 +786,8 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
               ),
               child: Text(
                 'No children added yet. Add a child from your profile first.',
-                style: AppTextStyles.bodySmall,
+                style: AppTextStyles.bodySmall
+                    .copyWith(color: AppColors.textSecondary),
               ),
             )
           else
@@ -569,48 +798,63 @@ class _RequestSheetState extends ConsumerState<_RequestSheet> {
                 onTap: () => setState(() => _selectedChild = child),
               ),
             ),
-          const SizedBox(height: AppDimensions.spacing16),
+          const SizedBox(height: AppDimensions.spacing12),
           TextField(
             controller: _noteController,
             maxLines: 3,
+            style: AppTextStyles.bodyMedium,
             decoration: InputDecoration(
               hintText: 'Add a note (optional)',
-              hintStyle: AppTextStyles.bodySmall,
+              hintStyle: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textHint),
               filled: true,
               fillColor: AppColors.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 borderSide: const BorderSide(color: AppColors.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 borderSide: const BorderSide(color: AppColors.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
           const SizedBox(height: AppDimensions.spacing20),
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton(
-              onPressed: (_selectedChild == null || _loading) ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.border,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            height: AppDimensions.buttonHeight,
+            child: Material(
+              color: _selectedChild == null
+                  ? AppColors.border
+                  : AppColors.primary,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              child: InkWell(
+                onTap: (_selectedChild == null || _loading) ? null : _submit,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                child: Center(
+                  child: _loading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Send Request',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
                 ),
               ),
-              child: _loading
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Send Request'),
             ),
           ),
         ],
@@ -642,7 +886,7 @@ class _ChildOption extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: selected
-              ? AppColors.primary.withValues(alpha: 0.08)
+              ? AppColors.primary.withValues(alpha: 0.06)
               : AppColors.background,
           borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
           border: Border.all(
@@ -668,214 +912,20 @@ class _ChildOption extends StatelessWidget {
   }
 }
 
-class _RequestStatus extends StatelessWidget {
-  final RequestModel request;
-  const _RequestStatus({required this.request});
+// ── Section Label ─────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
 
   @override
   Widget build(BuildContext context) {
-    final isAccepted = request.status == 'Accepted';
-    final isPending = request.status == 'Pending';
-
-    final statusColor = switch (request.status) {
-      'Accepted' => Colors.green,
-      'Rejected' => Colors.red,
-      _ => AppColors.textSecondary,
-    };
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.spacing8,
-            vertical: AppDimensions.spacing4,
-          ),
-          decoration: BoxDecoration(
-            color: statusColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
-          ),
-          child: Text(
-            isPending ? 'Request Pending' : request.status,
-            style: AppTextStyles.labelSmall.copyWith(color: statusColor),
-          ),
-        ),
-        if (isAccepted && request.caregiverPhone != null) ...[
-          const SizedBox(height: AppDimensions.spacing12),
-          GestureDetector(
-            onLongPress: () {
-              Clipboard.setData(ClipboardData(text: request.caregiverPhone!));
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Phone number copied')),
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.spacing12,
-                vertical: AppDimensions.spacing8,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.green.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                border: Border.all(color: Colors.green.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(
-                    Icons.phone_outlined,
-                    size: 16,
-                    color: Colors.green,
-                  ),
-                  const SizedBox(width: AppDimensions.spacing8),
-                  Text(
-                    request.caregiverPhone!,
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.green.shade700,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    'Hold to copy',
-                    style: AppTextStyles.labelSmall.copyWith(
-                      color: AppColors.textHint,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _ProviderHeader extends StatelessWidget {
-  final CaregiverProfileModel profile;
-  const _ProviderHeader({required this.profile});
-
-  String _initials(String name) {
-    final parts = name.trim().split(' ');
-    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
-    return '?';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              _initials(profile.name),
-              style: AppTextStyles.titleMedium.copyWith(
-                color: AppColors.primary,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: AppDimensions.spacing12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(profile.name, style: AppTextStyles.titleSmall),
-              if (profile.gender != null && profile.gender!.isNotEmpty) ...[
-                const SizedBox(height: AppDimensions.spacing4),
-                Text(profile.gender!, style: AppTextStyles.bodySmall),
-              ],
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _ProviderDetails extends StatelessWidget {
-  final CaregiverProfileModel profile;
-  const _ProviderDetails({required this.profile});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (profile.aboutMe != null && profile.aboutMe!.isNotEmpty) ...[
-          _DetailRow(label: 'About', value: profile.aboutMe!),
-          const SizedBox(height: AppDimensions.spacing12),
-        ],
-        if (profile.qualifications != null &&
-            profile.qualifications!.isNotEmpty) ...[
-          _DetailRow(label: 'Qualifications', value: profile.qualifications!),
-          const SizedBox(height: AppDimensions.spacing12),
-        ],
-        if (profile.languages.isNotEmpty)
-          _LanguagesRow(languages: profile.languages),
-        const SizedBox(height: AppDimensions.spacing12),
-      ],
-    );
-  }
-}
-
-class _DetailRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _DetailRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.labelMedium),
-        const SizedBox(height: AppDimensions.spacing4),
-        Text(value, style: AppTextStyles.bodyMedium),
-      ],
-    );
-  }
-}
-
-class _LanguagesRow extends StatelessWidget {
-  final List<String> languages;
-  const _LanguagesRow({required this.languages});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Languages', style: AppTextStyles.labelMedium),
-        const SizedBox(height: AppDimensions.spacing8),
-        Wrap(
-          spacing: AppDimensions.spacing8,
-          runSpacing: AppDimensions.spacing8,
-          children: languages
-              .map(
-                (lang) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spacing12,
-                    vertical: AppDimensions.spacing4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
-                    ),
-                  ),
-                  child: Text(lang, style: AppTextStyles.labelMedium),
-                ),
-              )
-              .toList(),
-        ),
-      ],
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.labelSmall.copyWith(
+        color: AppColors.textSecondary,
+        letterSpacing: 1,
+      ),
     );
   }
 }
@@ -967,7 +1017,7 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20,
-        24,
+        12,
         20,
         MediaQuery.of(context).viewInsets.bottom + 24,
       ),
@@ -977,26 +1027,27 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
         children: [
           Center(
             child: Container(
-              width: 40,
+              width: 36,
               height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
                 color: AppColors.border,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
               ),
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing20),
           Row(
             children: [
-              const Icon(Icons.flag_outlined, color: Colors.red, size: 20),
+              const Icon(Icons.flag_outlined, color: Color(0xFFC62828), size: 18),
               const SizedBox(width: AppDimensions.spacing8),
               Text('Report Service', style: AppTextStyles.titleMedium),
             ],
           ),
           const SizedBox(height: AppDimensions.spacing4),
           Text(
-            'Describe the issue with this service. Our team will review it.',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
+            'Describe the issue. Our team will review it.',
+            style: AppTextStyles.bodySmall
+                .copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.spacing16),
           TextField(
@@ -1006,22 +1057,22 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
             style: AppTextStyles.bodyMedium,
             decoration: InputDecoration(
               hintText: 'Explain what\'s wrong...',
-              hintStyle: AppTextStyles.bodySmall.copyWith(
-                color: AppColors.textHint,
-              ),
+              hintStyle: AppTextStyles.bodySmall
+                  .copyWith(color: AppColors.textHint),
               filled: true,
               fillColor: AppColors.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 borderSide: const BorderSide(color: AppColors.border),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 borderSide: const BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                borderSide:
+                    const BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
@@ -1029,26 +1080,31 @@ class _ReportSheetState extends ConsumerState<_ReportSheet> {
           SizedBox(
             width: double.infinity,
             height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: _loading ? null : _submit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppColors.border,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            child: Material(
+              color: const Color(0xFFC62828),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+              child: InkWell(
+                onTap: _loading ? null : _submit,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                child: Center(
+                  child: _loading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Submit Report',
+                          style: AppTextStyles.labelLarge.copyWith(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
                 ),
               ),
-              child: _loading
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Submit Report'),
             ),
           ),
         ],

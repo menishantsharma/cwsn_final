@@ -37,30 +37,16 @@ class CategoriesPage extends ConsumerWidget {
               );
             }
 
-            return CustomScrollView(
-              slivers: [
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
-                  sliver: SliverToBoxAdapter(child: _Header()),
-                ),
-                SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-                  sliver: SliverGrid(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          _CategoryCard(category: categories[index]),
-                      childCount: categories.length,
-                    ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppDimensions.spacing12,
-                      mainAxisSpacing: AppDimensions.spacing12,
-                      childAspectRatio: 0.85,
-                    ),
-                  ),
-                ),
-              ],
+            return ListView.separated(
+              padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
+              itemCount: categories.length + 1,
+              separatorBuilder: (_, i) => SizedBox(
+                height: i == 0 ? AppDimensions.spacing20 : AppDimensions.spacing8,
+              ),
+              itemBuilder: (context, index) {
+                if (index == 0) return _Header();
+                return _CategoryCard(category: categories[index - 1]);
+              },
             );
           },
         ),
@@ -142,67 +128,53 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final subCount = category.subcategories.length;
+
     return GestureDetector(
       onTap: () => context.push(AppRoutes.subcategories, extra: category),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           border: Border.all(color: AppColors.border),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(AppDimensions.spacing16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image / placeholder
             Expanded(
-              child: category.imageUrl != null
-                  ? Image.network(
-                      category.imageUrl!,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, e, s) => _PlaceholderBg(),
-                    )
-                  : _PlaceholderBg(),
-            ),
-            // Info
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(category.name, style: AppTextStyles.titleSmall),
+                  if (category.shortDescription != null) ...[
+                    const SizedBox(height: AppDimensions.spacing4),
+                    Text(
+                      category.shortDescription!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textSecondary,
+                        height: 1.4,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: AppDimensions.spacing8),
                   Text(
-                    category.name,
-                    style: AppTextStyles.titleSmall,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: AppDimensions.spacing4),
-                  Text(
-                    '${category.subcategories.length} subcategories',
+                    '$subCount ${subCount == 1 ? 'subcategory' : 'subcategories'}',
                     style: AppTextStyles.bodySmall.copyWith(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
+                      color: AppColors.primary,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
+            const SizedBox(width: AppDimensions.spacing12),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 13, color: AppColors.textHint),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PlaceholderBg extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      color: AppColors.primary.withValues(alpha: 0.07),
-      child: const Center(
-        child: Icon(Icons.category_outlined, color: AppColors.primary, size: 36),
       ),
     );
   }

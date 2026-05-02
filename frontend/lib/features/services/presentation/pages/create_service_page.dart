@@ -47,7 +47,6 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
               'sub_category': widget.subcategory.id,
             }..removeWhere((_, v) => v == null),
           );
-      // Invalidate so services_page refreshes
       ref.invalidate(
         myServiceProvider((
           widget.subcategory.categoryId,
@@ -68,165 +67,166 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text('New Service', style: AppTextStyles.titleSmall),
-        actions: [
-          _isLoading
-              ? const Padding(
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+            pinned: true,
+            actions: [
+              if (_isLoading)
+                const Padding(
                   padding: EdgeInsets.only(right: 16),
                   child: Center(
                     child: SizedBox(
                       width: 18,
                       height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
                     ),
                   ),
                 )
-              : TextButton(
+              else
+                TextButton(
                   onPressed: _canCreate ? _create : null,
                   child: Text(
                     'Create',
                     style: AppTextStyles.labelLarge.copyWith(
-                      color: _canCreate
-                          ? AppColors.primary
-                          : AppColors.textHint,
+                      color: _canCreate ? AppColors.primary : AppColors.textHint,
                     ),
                   ),
                 ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 20,
-          vertical: AppDimensions.spacing8,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Placeholder hero
-            Container(
-              height: 200,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
-              ),
-              child: Center(
-                child: Icon(
-                  Icons.design_services_outlined,
-                  size: 64,
-                  color: AppColors.primary.withValues(alpha: 0.5),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacing20),
-
-            // Title
-            _FieldRow(
-              value: _title.isEmpty ? null : _title,
-              hint: 'Add title *',
-              style: AppTextStyles.displaySmall,
-              onEdit: () => _showTextSheet(
-                context,
-                label: 'Title',
-                value: _title,
-                onSave: (v) => setState(() => _title = v),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacing12),
-
-            // Service type + payment type
-            Row(
+            ],
+          ),
+          SliverToBoxAdapter(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _ChipField(
-                  label: _serviceType,
-                  icon: Icons.location_on_outlined,
-                  onEdit: () => _showChipSheet(
-                    context,
-                    label: 'Service Type',
-                    options: const ['Online', 'Offline', 'Hybrid'],
-                    selected: _serviceType,
-                    onSave: (v) => setState(() => _serviceType = v),
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.spacing8),
-                _ChipField(
-                  label: _paymentType,
-                  icon: Icons.payments_outlined,
-                  onEdit: () => _showChipSheet(
-                    context,
-                    label: 'Payment Type',
-                    options: const ['Paid', 'Unpaid'],
-                    selected: _paymentType,
-                    onSave: (v) => setState(() => _paymentType = v),
+                _ServiceHero(),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title
+                      _FieldRow(
+                        value: _title.isEmpty ? null : _title,
+                        hint: 'Add title *',
+                        style: AppTextStyles.displaySmall,
+                        onEdit: () => _showTextSheet(
+                          context,
+                          label: 'Title',
+                          value: _title,
+                          onSave: (v) => setState(() => _title = v),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing12),
+
+                      // Chips
+                      Row(
+                        children: [
+                          _ChipField(
+                            label: _serviceType,
+                            icon: Icons.location_on_outlined,
+                            onEdit: () => _showChipSheet(
+                              context,
+                              label: 'Service Type',
+                              options: const ['Online', 'Offline', 'Hybrid'],
+                              selected: _serviceType,
+                              onSave: (v) => setState(() => _serviceType = v),
+                            ),
+                          ),
+                          const SizedBox(width: AppDimensions.spacing8),
+                          _ChipField(
+                            label: _paymentType,
+                            icon: Icons.payments_outlined,
+                            onEdit: () => _showChipSheet(
+                              context,
+                              label: 'Payment Type',
+                              options: const ['Paid', 'Unpaid'],
+                              selected: _paymentType,
+                              onSave: (v) => setState(() => _paymentType = v),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spacing20),
+
+                      // Description
+                      _SectionLabel('About this service'),
+                      const SizedBox(height: AppDimensions.spacing8),
+                      _FieldRow(
+                        value: _description.isEmpty ? null : _description,
+                        hint: 'Add a description *',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                          height: 1.5,
+                        ),
+                        onEdit: () => _showTextSheet(
+                          context,
+                          label: 'Description',
+                          value: _description,
+                          maxLines: 5,
+                          onSave: (v) => setState(() => _description = v),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing20),
+
+                      // Target audience
+                      _SectionLabel('Target audience'),
+                      const SizedBox(height: AppDimensions.spacing12),
+                      _FieldRow(
+                        value: _targetGender == 'Any' ? null : _targetGender,
+                        hint: 'Set target gender',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        prefix: const Icon(
+                          Icons.person_outline,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        onEdit: () => _showChipSheet(
+                          context,
+                          label: 'Target Gender',
+                          options: const ['Male', 'Female', 'Any'],
+                          selected: _targetGender,
+                          onSave: (v) => setState(() => _targetGender = v),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing8),
+                      _FieldRow(
+                        value: _ageLabel(_targetAgeMin, _targetAgeMax),
+                        hint: 'Set age range',
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        prefix: const Icon(
+                          Icons.cake_outlined,
+                          size: 16,
+                          color: AppColors.primary,
+                        ),
+                        onEdit: () => _showAgeSheet(
+                          context,
+                          minAge: _targetAgeMin,
+                          maxAge: _targetAgeMax,
+                          onSave: (min, max) => setState(() {
+                            _targetAgeMin = min;
+                            _targetAgeMax = max;
+                          }),
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.spacing32),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppDimensions.spacing20),
-
-            // Description
-            Text('About this service', style: AppTextStyles.titleSmall),
-            const SizedBox(height: AppDimensions.spacing8),
-            _FieldRow(
-              value: _description.isEmpty ? null : _description,
-              hint: 'Add a description *',
-              style: AppTextStyles.bodyMedium,
-              onEdit: () => _showTextSheet(
-                context,
-                label: 'Description',
-                value: _description,
-                maxLines: 5,
-                onSave: (v) => setState(() => _description = v),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacing20),
-
-            // Target audience
-            Text('Target audience', style: AppTextStyles.titleSmall),
-            const SizedBox(height: AppDimensions.spacing12),
-            _FieldRow(
-              value: _targetGender == 'Any' ? null : _targetGender,
-              hint: 'Set target gender',
-              style: AppTextStyles.bodyMedium,
-              prefix: const Icon(
-                Icons.person_outline,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              onEdit: () => _showChipSheet(
-                context,
-                label: 'Target Gender',
-                options: const ['Male', 'Female', 'Any'],
-                selected: _targetGender,
-                onSave: (v) => setState(() => _targetGender = v),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacing8),
-            _FieldRow(
-              value: _ageLabel(_targetAgeMin, _targetAgeMax),
-              hint: 'Set age range',
-              style: AppTextStyles.bodyMedium,
-              prefix: const Icon(
-                Icons.cake_outlined,
-                size: 16,
-                color: AppColors.primary,
-              ),
-              onEdit: () => _showAgeSheet(
-                context,
-                minAge: _targetAgeMin,
-                maxAge: _targetAgeMax,
-                onSave: (min, max) => setState(() {
-                  _targetAgeMin = min;
-                  _targetAgeMax = max;
-                }),
-              ),
-            ),
-            const SizedBox(height: AppDimensions.spacing32),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -248,7 +248,7 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -272,7 +272,7 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
   }) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -296,7 +296,7 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusXl),
@@ -307,7 +307,29 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
   }
 }
 
-// ── Field Row (same as _EditableRow) ─────────────────────
+// ── Service Hero ──────────────────────────────────────────
+
+class _ServiceHero extends StatelessWidget {
+  const _ServiceHero();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 200,
+      width: double.infinity,
+      color: AppColors.primary.withValues(alpha: 0.08),
+      child: Center(
+        child: Icon(
+          Icons.design_services_outlined,
+          size: 56,
+          color: AppColors.primary.withValues(alpha: 0.4),
+        ),
+      ),
+    );
+  }
+}
+
+// ── Field Row ─────────────────────────────────────────────
 
 class _FieldRow extends StatelessWidget {
   final String? value;
@@ -349,7 +371,7 @@ class _FieldRow extends StatelessWidget {
                 : Text(value!, style: style),
           ),
           const SizedBox(width: AppDimensions.spacing8),
-          const Icon(Icons.edit_outlined, size: 16, color: AppColors.textHint),
+          const Icon(Icons.edit_outlined, size: 15, color: AppColors.textHint),
         ],
       ),
     );
@@ -394,13 +416,27 @@ class _ChipField extends StatelessWidget {
               ),
             ),
             const SizedBox(width: AppDimensions.spacing4),
-            const Icon(
-              Icons.edit_outlined,
-              size: 11,
-              color: AppColors.primaryDark,
-            ),
+            const Icon(Icons.edit_outlined, size: 11, color: AppColors.primaryDark),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ── Section Label ─────────────────────────────────────────
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text.toUpperCase(),
+      style: AppTextStyles.labelSmall.copyWith(
+        color: AppColors.textSecondary,
+        letterSpacing: 1,
       ),
     );
   }
@@ -443,16 +479,27 @@ class _TextSheetState extends State<_TextSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
           Text(widget.label, style: AppTextStyles.titleSmall),
           const SizedBox(height: AppDimensions.spacing12),
           TextField(
@@ -461,36 +508,28 @@ class _TextSheetState extends State<_TextSheet> {
             autofocus: true,
             style: AppTextStyles.bodyLarge,
             decoration: InputDecoration(
+              filled: true,
+              fillColor: AppColors.background,
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                borderSide: const BorderSide(color: AppColors.border),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 borderSide: const BorderSide(color: AppColors.border),
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                borderSide: const BorderSide(color: AppColors.primary),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
               ),
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing16),
-          SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onSave(_controller.text.trim());
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-              ),
-            ),
+          const SizedBox(height: AppDimensions.spacing20),
+          _SaveButton(
+            onTap: () {
+              widget.onSave(_controller.text.trim());
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -529,11 +568,22 @@ class _ChipSheetState extends State<_ChipSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
           Text(widget.label, style: AppTextStyles.titleSmall),
           const SizedBox(height: AppDimensions.spacing16),
           Wrap(
@@ -549,45 +599,28 @@ class _ChipSheetState extends State<_ChipSheet> {
                     vertical: AppDimensions.spacing8,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppColors.primary
-                        : AppColors.surfaceVariant,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusFull,
+                    color: isSelected ? AppColors.primary : Colors.white,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    border: Border.all(
+                      color: isSelected ? AppColors.primary : AppColors.border,
                     ),
                   ),
                   child: Text(
                     opt,
-                    style: AppTextStyles.labelMedium.copyWith(
-                      color: isSelected
-                          ? Colors.white
-                          : AppColors.textSecondary,
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: isSelected ? Colors.white : AppColors.textPrimary,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: AppDimensions.spacing20),
-          SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onSave(_current);
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-              ),
-            ),
+          const SizedBox(height: AppDimensions.spacing24),
+          _SaveButton(
+            onTap: () {
+              widget.onSave(_current);
+              Navigator.pop(context);
+            },
           ),
         ],
       ),
@@ -615,12 +648,8 @@ class _AgeSheetState extends State<_AgeSheet> {
   @override
   void initState() {
     super.initState();
-    _minController = TextEditingController(
-      text: widget.minAge?.toString() ?? '',
-    );
-    _maxController = TextEditingController(
-      text: widget.maxAge?.toString() ?? '',
-    );
+    _minController = TextEditingController(text: widget.minAge?.toString() ?? '');
+    _maxController = TextEditingController(text: widget.maxAge?.toString() ?? '');
   }
 
   @override
@@ -630,21 +659,51 @@ class _AgeSheetState extends State<_AgeSheet> {
     super.dispose();
   }
 
+  InputDecoration _fieldDecoration(String label) => InputDecoration(
+        labelText: label,
+        labelStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+        filled: true,
+        fillColor: AppColors.background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          borderSide: const BorderSide(color: AppColors.border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+      padding: EdgeInsets.fromLTRB(
+        20,
+        12,
+        20,
+        MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+            ),
+          ),
           Text('Target Age Range', style: AppTextStyles.titleSmall),
-          const SizedBox(height: AppDimensions.spacing12),
+          const SizedBox(height: AppDimensions.spacing16),
           Row(
             children: [
               Expanded(
@@ -652,21 +711,7 @@ class _AgeSheetState extends State<_AgeSheet> {
                   controller: _minController,
                   keyboardType: TextInputType.number,
                   style: AppTextStyles.bodyLarge,
-                  decoration: InputDecoration(
-                    labelText: 'Min age',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.primary),
-                    ),
-                  ),
+                  decoration: _fieldDecoration('Min age'),
                 ),
               ),
               const SizedBox(width: AppDimensions.spacing12),
@@ -675,50 +720,52 @@ class _AgeSheetState extends State<_AgeSheet> {
                   controller: _maxController,
                   keyboardType: TextInputType.number,
                   style: AppTextStyles.bodyLarge,
-                  decoration: InputDecoration(
-                    labelText: 'Max age',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.border),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusMd,
-                      ),
-                      borderSide: const BorderSide(color: AppColors.primary),
-                    ),
-                  ),
+                  decoration: _fieldDecoration('Max age'),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.spacing16),
-          SizedBox(
-            width: double.infinity,
-            height: AppDimensions.buttonHeight,
-            child: ElevatedButton(
-              onPressed: () {
-                widget.onSave(
-                  int.tryParse(_minController.text),
-                  int.tryParse(_maxController.text),
-                );
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-              ),
-              child: Text(
-                'Save',
-                style: AppTextStyles.labelLarge.copyWith(color: Colors.white),
-              ),
-            ),
+          const SizedBox(height: AppDimensions.spacing20),
+          _SaveButton(
+            onTap: () {
+              widget.onSave(
+                int.tryParse(_minController.text),
+                int.tryParse(_maxController.text),
+              );
+              Navigator.pop(context);
+            },
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ── Save Button ───────────────────────────────────────────
+
+class _SaveButton extends StatelessWidget {
+  final VoidCallback onTap;
+  const _SaveButton({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: AppDimensions.buttonHeight,
+      child: Material(
+        color: AppColors.primary,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+          child: Center(
+            child: Text(
+              'Save',
+              style: AppTextStyles.labelLarge
+                  .copyWith(color: Colors.white, fontSize: 16),
+            ),
+          ),
+        ),
       ),
     );
   }

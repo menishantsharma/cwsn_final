@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
+import 'package:frontend/core/widgets/confirm_dialog.dart';
 import 'package:frontend/features/profile/domain/models/profile_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:go_router/go_router.dart';
@@ -54,23 +55,12 @@ class ProfilePage extends ConsumerWidget {
   ) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Remove child?'),
-        content: Text('${child.name} will be removed from your profile.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(profileProvider.notifier).deleteChild(child.id);
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remove'),
-          ),
-        ],
+      builder: (_) => ConfirmDialog(
+        title: 'Remove child?',
+        message: '${child.name} will be removed from your profile.',
+        confirmLabel: 'Remove',
+        isDanger: true,
+        onConfirm: () => ref.read(profileProvider.notifier).deleteChild(child.id),
       ),
     );
   }
@@ -78,22 +68,12 @@ class ProfilePage extends ConsumerWidget {
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Logout?'),
-        content: const Text('You will be signed out of your account.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(authProvider.notifier).logout();
-            },
-            child: const Text('Logout'),
-          ),
-        ],
+      builder: (_) => ConfirmDialog(
+        title: 'Log out?',
+        message: 'You will be signed out of your account.',
+        confirmLabel: 'Log out',
+        isDanger: false,
+        onConfirm: () => ref.read(authProvider.notifier).logout(),
       ),
     );
   }
@@ -101,25 +81,12 @@ class ProfilePage extends ConsumerWidget {
   void _confirmDeleteAccount(BuildContext context, WidgetRef ref) {
     showDialog(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Delete account?'),
-        content: const Text(
-          'This permanently deletes your account and all data. This cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(profileProvider.notifier).deleteAccount();
-            },
-            style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Delete'),
-          ),
-        ],
+      builder: (_) => ConfirmDialog(
+        title: 'Delete account?',
+        message: 'This permanently deletes your account and all data. This cannot be undone.',
+        confirmLabel: 'Delete',
+        isDanger: true,
+        onConfirm: () => ref.read(profileProvider.notifier).deleteAccount(),
       ),
     );
   }
@@ -800,3 +767,4 @@ class _SheetField extends StatelessWidget {
     );
   }
 }
+
