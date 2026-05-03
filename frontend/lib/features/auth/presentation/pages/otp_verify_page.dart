@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:pinput/pinput.dart';
+import 'package:frontend/features/auth/presentation/widgets/otp_pin_input.dart';
 
 class OtpVerifyPage extends ConsumerStatefulWidget {
   const OtpVerifyPage({super.key});
@@ -52,22 +51,6 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
       );
     });
 
-    final baseDecoration = BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(color: AppColors.border),
-    );
-
-    final defaultTheme = PinTheme(
-      width: 46,
-      height: 52,
-      textStyle: AppTextStyles.bodyLarge.copyWith(
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.w500,
-      ),
-      decoration: baseDecoration,
-    );
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -92,40 +75,20 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
 
               const SizedBox(height: AppDimensions.spacing32),
 
-              Center(child: Pinput(
-                controller: _pinController,
-                focusNode: _focusNode,
-                enabled: !isLoading,
-                length: 6,
-                defaultPinTheme: defaultTheme,
-                focusedPinTheme: defaultTheme.copyWith(
-                  decoration: baseDecoration.copyWith(
-                    border: Border.all(color: AppColors.primary, width: 1.5),
-                  ),
+              Center(
+                child: OtpPinInput(
+                  controller: _pinController,
+                  focusNode: _focusNode,
+                  enabled: !isLoading,
+                  hasError: _errorText != null,
+                  onChanged: (val) {
+                    if (_errorText != null) setState(() => _errorText = null);
+                  },
+                  onCompleted: (code) {
+                    ref.read(authProvider.notifier).verifyOtp(code);
+                  },
                 ),
-                submittedPinTheme: defaultTheme.copyWith(
-                  decoration: baseDecoration.copyWith(
-                    border: Border.all(color: AppColors.primary, width: 1.5),
-                  ),
-                ),
-                errorPinTheme: defaultTheme.copyWith(
-                  decoration: baseDecoration.copyWith(
-                    color: AppColors.errorLight,
-                    border: Border.all(color: AppColors.error),
-                  ),
-                ),
-                autofocus: true,
-                pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                showCursor: false,
-                onChanged: (_) {
-                  if (_errorText != null) setState(() => _errorText = null);
-                },
-                onCompleted: (code) {
-                  ref.read(authProvider.notifier).verifyOtp(code);
-                },
-              )),
+              ),
 
               if (_errorText != null) ...[
                 const SizedBox(height: AppDimensions.spacing8),
@@ -146,7 +109,6 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
                   ),
                 ),
               ],
-
             ],
           ),
         ),

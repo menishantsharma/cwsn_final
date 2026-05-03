@@ -5,7 +5,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:frontend/core/theme/app_colors.dart';
-import 'package:frontend/core/theme/app_dimensions.dart';
+import 'package:frontend/features/auth/presentation/widgets/map_address_bar.dart';
+import 'package:frontend/features/auth/presentation/widgets/map_control_buttons.dart';
 import 'package:latlong2/latlong.dart';
 
 class LocationPickerResult {
@@ -144,10 +145,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
     if (!mounted) return;
     setState(() => _isGeocoding = true);
     try {
-      final marks = await placemarkFromCoordinates(
-        loc.latitude,
-        loc.longitude,
-      );
+      final marks = await placemarkFromCoordinates(loc.latitude, loc.longitude);
       if (marks.isNotEmpty && mounted) {
         final p = marks.first;
         debugPrint('geocoding result: name=${p.name}, street=${p.street}, subLocality=${p.subLocality}, locality=${p.locality}, subAdminArea=${p.subAdministrativeArea}, adminArea=${p.administrativeArea}, country=${p.country}, postalCode=${p.postalCode}');
@@ -198,12 +196,9 @@ class _MapPickerPageState extends State<MapPickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pick your location'),
-      ),
+      appBar: AppBar(title: const Text('Pick your location')),
       body: Stack(
         children: [
-          // Map
           FlutterMap(
             mapController: _mapController,
             options: MapOptions(
@@ -219,7 +214,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
             ],
           ),
 
-          // Fixed center pin
           const Center(
             child: Padding(
               padding: EdgeInsets.only(bottom: 40),
@@ -238,7 +232,6 @@ class _MapPickerPageState extends State<MapPickerPage> {
             ),
           ),
 
-          // Pin shadow dot
           Center(
             child: Container(
               width: 6,
@@ -250,157 +243,28 @@ class _MapPickerPageState extends State<MapPickerPage> {
             ),
           ),
 
-          // Zoom + GPS buttons
           Positioned(
             right: 16,
             bottom: 160,
-            child: Column(
-              children: [
-                _mapButton(
-                  heroTag: 'zoom_in',
-                  icon: Icons.add,
-                  onTap: () => _mapController.move(
-                    _center,
-                    _mapController.camera.zoom + 1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _mapButton(
-                  heroTag: 'zoom_out',
-                  icon: Icons.remove,
-                  onTap: () => _mapController.move(
-                    _center,
-                    _mapController.camera.zoom - 1,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                _mapButton(
-                  heroTag: 'gps',
-                  icon: Icons.my_location_rounded,
-                  onTap: _isLocating ? null : _goToCurrentLocation,
-                  loading: _isLocating,
-                ),
-              ],
+            child: MapControlButtons(
+              mapController: _mapController,
+              center: _center,
+              isLocating: _isLocating,
+              onGoToCurrentLocation: _goToCurrentLocation,
             ),
           ),
 
-          // Bottom address bar + confirm button
           Positioned(
             left: 0,
             right: 0,
             bottom: 0,
-            child: Container(
-              color: AppColors.surface,
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on_rounded,
-                        size: 18,
-                        color: _address.isEmpty
-                            ? AppColors.textHint
-                            : AppColors.primary,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: _isGeocoding
-                            ? const Text(
-                                'Finding address...',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: AppColors.textHint,
-                                ),
-                              )
-                            : Text(
-                                _address.isEmpty
-                                    ? 'Move the map to select your area'
-                                    : _address,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: _address.isEmpty
-                                      ? AppColors.textHint
-                                      : AppColors.textPrimary,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: FilledButton(
-                      onPressed: _address.isNotEmpty && !_isGeocoding
-                          ? _confirm
-                          : null,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        disabledBackgroundColor: AppColors.border,
-                        disabledForegroundColor: AppColors.textHint,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppDimensions.radiusLg),
-                        ),
-                      ),
-                      child: const Text(
-                        'Confirm Location',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+            child: MapAddressBar(
+              address: _address,
+              isGeocoding: _isGeocoding,
+              onConfirm: _confirm,
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _mapButton({
-    required String heroTag,
-    required IconData icon,
-    required VoidCallback? onTap,
-    bool loading = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
-                )
-              : Icon(icon, color: AppColors.primary, size: 20),
-        ),
       ),
     );
   }

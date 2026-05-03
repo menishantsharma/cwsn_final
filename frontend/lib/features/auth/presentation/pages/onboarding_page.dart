@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:frontend/app/app_router.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/auth/presentation/widgets/location_picker_field.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 
 final _onboardingProvider =
@@ -78,9 +79,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
         ),
       ),
     );
-    if (result != null) {
-      setState(() => _location = result);
-    }
+    if (result != null) setState(() => _location = result);
   }
 
   Future<void> _submit() async {
@@ -186,53 +185,9 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                 const SizedBox(height: 24),
                 Text('Your Area', style: Theme.of(context).textTheme.labelLarge),
                 const SizedBox(height: 8),
-                InkWell(
+                LocationPickerField(
+                  location: _location,
                   onTap: _openMapPicker,
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: _location == null
-                            ? Colors.grey.shade400
-                            : Theme.of(context).colorScheme.primary,
-                        width: _location == null ? 1 : 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          _location == null
-                              ? Icons.map_outlined
-                              : Icons.location_on,
-                          color: _location == null
-                              ? Colors.grey
-                              : Theme.of(context).colorScheme.primary,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            _location?.displayLocation ?? 'Tap to pick your area on map',
-                            style: TextStyle(
-                              color: _location == null
-                                  ? Colors.grey[600]
-                                  : Colors.black87,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ),
-                        Icon(
-                          Icons.chevron_right,
-                          color: Colors.grey[400],
-                        ),
-                      ],
-                    ),
-                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
