@@ -5,7 +5,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
-import 'package:frontend/features/profile/presentation/pages/edit_form_widgets.dart';
+import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 
 class EditPersonalInfoPage extends ConsumerStatefulWidget {
