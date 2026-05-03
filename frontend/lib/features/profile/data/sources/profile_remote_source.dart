@@ -46,6 +46,14 @@ class ProfileRemoteSource {
     );
   }
 
+  Future<List<Map<String, dynamic>>> getSupportedLanguages() async {
+    final response = await _dio.get('/api/common/languages/');
+    final list = response.data is List
+        ? response.data as List
+        : response.data['results'] as List;
+    return list.cast<Map<String, dynamic>>();
+  }
+
   Future<void> deleteAccount() async {
     await _dio.delete('/api/users/delete-account/');
   }

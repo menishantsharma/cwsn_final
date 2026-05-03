@@ -11,6 +11,18 @@ final profileRemoteSourceProvider = Provider<ProfileRemoteSource>(
   (ref) => ProfileRemoteSource(ref.read(dioProvider)),
 );
 
+class LanguageOption {
+  final int id;
+  final String name;
+  const LanguageOption({required this.id, required this.name});
+}
+
+final supportedLanguagesProvider = FutureProvider<List<LanguageOption>>((ref) async {
+  final source = ref.read(profileRemoteSourceProvider);
+  final raw = await source.getSupportedLanguages();
+  return raw.map((e) => LanguageOption(id: e['id'] as int, name: e['name'] as String)).toList();
+});
+
 final profileRepositoryProvider = Provider<ProfileRepository>(
   (ref) => ProfileRepositoryImpl(ref.read(profileRemoteSourceProvider)),
 );
