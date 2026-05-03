@@ -16,6 +16,7 @@ import 'package:frontend/features/services/presentation/pages/services_page.dart
 import 'package:frontend/features/profile/presentation/pages/profile_page.dart';
 import 'package:frontend/features/profile/presentation/pages/edit_personal_info_page.dart';
 import 'package:frontend/features/profile/presentation/pages/edit_caregiver_info_page.dart';
+import 'package:frontend/features/auth/presentation/pages/onboarding_page.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -34,7 +35,7 @@ class AppRoutes {
   static const String createService = '/create-service';
   static const String editPersonalInfo = '/edit-personal-info';
   static const String editCaregiverInfo = '/edit-caregiver-info';
-
+  static const String onboarding = '/onboarding';
   AppRoutes._();
 }
 
@@ -71,7 +72,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       if (isVerified && (isOnAuth || isOnSplash)) {
-        return AppRoutes.categories;
+        return authState.isNewUser
+            ? AppRoutes.onboarding
+            : AppRoutes.categories;
       }
 
       if (!isVerified && !isOnAuth && !isOtpSent) {
@@ -135,6 +138,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.createService,
         builder: (_, state) =>
             CreateServicePage(subcategory: state.extra as SubcategoryModel),
+      ),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (_, _) => const OnboardingPage(),
       ),
     ],
   );

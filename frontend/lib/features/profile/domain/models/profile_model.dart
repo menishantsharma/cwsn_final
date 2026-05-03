@@ -7,6 +7,8 @@ class CwsnProfileModel {
   final String landmark;
   final String postalCode;
   final String phoneNumber;
+  final double? latitude;
+  final double? longitude;
   final List<ChildProfileModel> children;
 
   CwsnProfileModel({
@@ -18,6 +20,8 @@ class CwsnProfileModel {
     required this.landmark,
     required this.postalCode,
     required this.phoneNumber,
+    this.latitude,
+    this.longitude,
     this.children = const [],
   });
 
@@ -31,6 +35,8 @@ class CwsnProfileModel {
       landmark: json['landmark'] as String? ?? '',
       postalCode: json['postal_code'] as String? ?? '',
       phoneNumber: json['phone_number'] as String? ?? '',
+      latitude: double.tryParse(json['latitude']?.toString() ?? ''),
+      longitude: double.tryParse(json['longitude']?.toString() ?? ''),
       children: (json['children'] as List<dynamic>? ?? [])
           .map(
             (childJson) =>
@@ -50,6 +56,8 @@ class CwsnProfileModel {
       landmark: landmark,
       postalCode: postalCode,
       phoneNumber: phoneNumber,
+      latitude: latitude,
+      longitude: longitude,
       children: children ?? this.children,
     );
   }

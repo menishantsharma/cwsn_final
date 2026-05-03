@@ -20,22 +20,30 @@ class AuthState {
   final AuthStatus status;
   final String? phoneNumber;
   final AuthModel? user;
+  final bool isNewUser;
+  final int? userId;
 
   const AuthState({
     this.status = AuthStatus.initial,
     this.phoneNumber,
     this.user,
+    this.isNewUser = false,
+    this.userId,
   });
 
   AuthState copyWith({
     AuthStatus? status,
     String? phoneNumber,
     AuthModel? user,
+    bool? isNewUser,
+    int? userId,
   }) {
     return AuthState(
       status: status ?? this.status,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       user: user ?? this.user,
+      isNewUser: isNewUser ?? this.isNewUser,
+      userId: userId ?? this.userId,
     );
   }
 }
@@ -52,7 +60,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     final hasToken = await _storage.hasToken();
 
     if (hasToken) {
-      return AuthState(status: AuthStatus.verified);
+      final newUser = await _storage.isNewUser();
+      final userId = await _storage.getUserId();
+      return AuthState(status: AuthStatus.verified, isNewUser: newUser, userId: userId);
     }
 
     return const AuthState();
@@ -86,17 +96,29 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     state = await AsyncValue.guard(() async {
       final user = await _repository.verifyOtp(phoneNumber, code);
       await _storage.saveToken(user.token);
+      await _storage.saveUserId(user.userId);
+      if (user.isNewUser) await _storage.setNewUser();
 
       return AuthState(
         status: AuthStatus.verified,
         phoneNumber: phoneNumber,
         user: user,
+        isNewUser: user.isNewUser,
+        userId: user.userId,
       );
     });
   }
 
+  Future<void> completeOnboarding() async {
+    await _storage.clearNewUser();
+    final current = state.value ?? const AuthState();
+    state = AsyncData(current.copyWith(isNewUser: false));
+  }
+
   Future<void> logout() async {
     await _storage.deleteToken();
+    await _storage.deleteUserId();
+    await _storage.clearNewUser();
     state = const AsyncData(AuthState());
   }
 }

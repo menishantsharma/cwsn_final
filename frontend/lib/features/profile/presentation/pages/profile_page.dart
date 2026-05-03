@@ -158,9 +158,7 @@ class ProfilePage extends ConsumerWidget {
               children: [
                 _InfoRow('Age', profile.cwsnProfile?.age.toString()),
                 _InfoRow('Gender', profile.cwsnProfile?.gender),
-                _InfoRow('Address', profile.cwsnProfile?.streetAddress),
-                _InfoRow('Landmark', profile.cwsnProfile?.landmark),
-                _InfoRow('Postal Code', profile.cwsnProfile?.postalCode),
+                _InfoRow('Area', profile.cwsnProfile?.streetAddress),
               ],
             ),
 
