@@ -14,6 +14,7 @@ class ServiceRemoteSource {
     String? targetGender,
     String? caregiverGender,
     int? childAge,
+    int? distanceKm,
   }) async {
     final params = <String, dynamic>{
       'category': categoryId,
@@ -23,6 +24,7 @@ class ServiceRemoteSource {
       'target_gender': targetGender,
       'caregiver_gender': caregiverGender,
       'child_age': childAge,
+      'distance_km': distanceKm,
     }..removeWhere((_, v) => v == null);
     final response = await _dio.get(
       '/api/services/services/',

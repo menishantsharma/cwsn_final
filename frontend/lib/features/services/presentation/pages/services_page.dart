@@ -121,6 +121,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
   late String? _paymentType;
   late String? _targetGender;
   late String? _caregiverGender;
+  late int? _distanceKm;
 
   @override
   void initState() {
@@ -129,6 +130,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     _paymentType = widget.initialFilter.paymentType;
     _targetGender = widget.initialFilter.targetGender;
     _caregiverGender = widget.initialFilter.caregiverGender;
+    _distanceKm = widget.initialFilter.distanceKm;
   }
 
   void _apply() {
@@ -138,6 +140,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     notifier.setTargetGender(_targetGender);
     notifier.setCaregiverGender(_caregiverGender);
     notifier.setChildAge(null);
+    notifier.setDistanceKm(_serviceType == 'Offline' ? _distanceKm : null);
     Navigator.of(context).pop();
   }
 
@@ -147,6 +150,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
       _paymentType = null;
       _targetGender = null;
       _caregiverGender = null;
+      _distanceKm = null;
     });
     ref.read(serviceFilterProvider.notifier).clearAll();
     Navigator.of(context).pop();
@@ -191,8 +195,78 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             label: 'Service Type',
             options: const ['Online', 'Offline', 'Hybrid'],
             selected: _serviceType,
-            onSelected: (v) => setState(() => _serviceType = v),
+            onSelected: (v) => setState(() {
+              _serviceType = v;
+              if (v == 'Offline') {
+                _distanceKm ??= 10;
+              } else {
+                _distanceKm = null;
+              }
+            }),
           ),
+          if (_serviceType == 'Offline') ...[
+            const SizedBox(height: AppDimensions.spacing16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'DISTANCE',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.textSecondary,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: AppDimensions.spacing8),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 16, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Within $_distanceKm km of you',
+                      style: AppTextStyles.bodyMedium.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    trackHeight: 3,
+                    thumbShape:
+                        const RoundSliderThumbShape(enabledThumbRadius: 8),
+                    overlayShape:
+                        const RoundSliderOverlayShape(overlayRadius: 16),
+                    activeTrackColor: AppColors.primary,
+                    inactiveTrackColor:
+                        AppColors.primary.withValues(alpha: 0.15),
+                    thumbColor: AppColors.primary,
+                    overlayColor: AppColors.primary.withValues(alpha: 0.12),
+                  ),
+                  child: Slider(
+                    value: _distanceKm!.toDouble(),
+                    min: 5,
+                    max: 50,
+                    divisions: 9,
+                    onChanged: (v) =>
+                        setState(() => _distanceKm = v.round()),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('5 km',
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: AppColors.textHint)),
+                    Text('50 km',
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: AppColors.textHint)),
+                  ],
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: AppDimensions.spacing16),
           _FilterSection(
             label: 'Payment',

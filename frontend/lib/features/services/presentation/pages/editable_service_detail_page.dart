@@ -514,7 +514,13 @@ class _ProviderSection extends ConsumerWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: _ProviderHeader(name: name, gender: gender)),
+                  Expanded(
+                    child: _ProviderHeader(
+                      name: name,
+                      gender: gender,
+                      streetAddress: caregiver?.streetAddress,
+                    ),
+                  ),
                   GestureDetector(
                     onTap: () => context.push(AppRoutes.editPersonalInfo),
                     child: Text(
@@ -556,7 +562,13 @@ class _ProviderSection extends ConsumerWidget {
 class _ProviderHeader extends StatelessWidget {
   final String name;
   final String? gender;
-  const _ProviderHeader({required this.name, required this.gender});
+  final String? streetAddress;
+
+  const _ProviderHeader({
+    required this.name,
+    required this.gender,
+    this.streetAddress,
+  });
 
   String _initials(String n) {
     final parts = n.trim().split(' ');
@@ -596,6 +608,26 @@ class _ProviderHeader extends StatelessWidget {
                   style: AppTextStyles.bodySmall.copyWith(
                     color: AppColors.textSecondary,
                   ),
+                ),
+              ],
+              if (streetAddress != null && streetAddress!.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacing4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined,
+                        size: 13, color: AppColors.textHint),
+                    const SizedBox(width: 3),
+                    Expanded(
+                      child: Text(
+                        streetAddress!,
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ],

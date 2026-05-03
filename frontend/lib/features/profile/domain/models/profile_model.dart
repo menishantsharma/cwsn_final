@@ -71,6 +71,9 @@ class CaregiverProfileModel {
   final String aboutMe;
   final String qualifications;
   final List<String> languages;
+  final String streetAddress;
+  final double? latitude;
+  final double? longitude;
 
   CaregiverProfileModel({
     required this.id,
@@ -80,6 +83,9 @@ class CaregiverProfileModel {
     required this.aboutMe,
     required this.qualifications,
     required this.languages,
+    this.streetAddress = '',
+    this.latitude,
+    this.longitude,
   });
 
   factory CaregiverProfileModel.fromJson(Map<String, dynamic> json) {
@@ -91,6 +97,9 @@ class CaregiverProfileModel {
       aboutMe: json['about_me'] as String? ?? '',
       qualifications: json['qualifications'] as String? ?? '',
       languages: List<String>.from(json['languages'] ?? []),
+      streetAddress: json['street_address'] as String? ?? '',
+      latitude: double.tryParse(json['latitude']?.toString() ?? ''),
+      longitude: double.tryParse(json['longitude']?.toString() ?? ''),
     );
   }
 }

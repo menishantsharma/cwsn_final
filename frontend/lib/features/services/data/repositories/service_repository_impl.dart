@@ -21,6 +21,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
     String? targetGender,
     String? caregiverGender,
     int? childAge,
+    int? distanceKm,
   }) {
     return _remoteSource.getServices(
       categoryId: categoryId,
@@ -30,6 +31,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       targetGender: targetGender,
       caregiverGender: caregiverGender,
       childAge: childAge,
+      distanceKm: distanceKm,
     );
   }
 

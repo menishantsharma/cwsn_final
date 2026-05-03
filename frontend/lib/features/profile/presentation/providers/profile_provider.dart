@@ -60,9 +60,27 @@ class ProfileNotifier extends AsyncNotifier<ProfileState> {
         current.cwsnProfile!.id,
         data,
       );
-      return current.copyWith(cwsnProfile: updated);
+      // Keep caregiver location in sync with CWSN profile location
+      CaregiverProfileModel? updatedCaregiver = current.caregiverProfile;
+      if (current.caregiverProfile != null &&
+          data.containsKey('street_address')) {
+        final locationData = {
+          'street_address': data['street_address'],
+          if (data.containsKey('latitude')) 'latitude': data['latitude'],
+          if (data.containsKey('longitude')) 'longitude': data['longitude'],
+        };
+        updatedCaregiver = await _repository.updateCaregiverProfile(
+          current.caregiverProfile!.id,
+          locationData,
+        );
+      }
+      return current.copyWith(
+        cwsnProfile: updated,
+        caregiverProfile: updatedCaregiver,
+      );
     });
     ref.invalidate(myServiceProvider);
+    ref.invalidate(serviceProvider);
   }
 
   Future<void> updateCaregiverProfile(Map<String, dynamic> data) async {
@@ -75,6 +93,7 @@ class ProfileNotifier extends AsyncNotifier<ProfileState> {
       return current.copyWith(caregiverProfile: updated);
     });
     ref.invalidate(myServiceProvider);
+    ref.invalidate(serviceProvider);
   }
 
   Future<void> deleteAccount() async {

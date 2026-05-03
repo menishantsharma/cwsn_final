@@ -19,6 +19,7 @@ class ServiceFilter {
   final String? targetGender;
   final String? caregiverGender;
   final int? childAge;
+  final int? distanceKm;
 
   const ServiceFilter({
     this.serviceType,
@@ -26,6 +27,7 @@ class ServiceFilter {
     this.targetGender,
     this.caregiverGender,
     this.childAge,
+    this.distanceKm,
   });
 
   bool get isActive =>
@@ -33,7 +35,8 @@ class ServiceFilter {
       paymentType != null ||
       targetGender != null ||
       caregiverGender != null ||
-      childAge != null;
+      childAge != null ||
+      distanceKm != null;
 
   ServiceFilter copyWith({
     Object? serviceType = _sentinel,
@@ -41,6 +44,7 @@ class ServiceFilter {
     Object? targetGender = _sentinel,
     Object? caregiverGender = _sentinel,
     Object? childAge = _sentinel,
+    Object? distanceKm = _sentinel,
   }) {
     return ServiceFilter(
       serviceType: serviceType == _sentinel ? this.serviceType : serviceType as String?,
@@ -48,6 +52,7 @@ class ServiceFilter {
       targetGender: targetGender == _sentinel ? this.targetGender : targetGender as String?,
       caregiverGender: caregiverGender == _sentinel ? this.caregiverGender : caregiverGender as String?,
       childAge: childAge == _sentinel ? this.childAge : childAge as int?,
+      distanceKm: distanceKm == _sentinel ? this.distanceKm : distanceKm as int?,
     );
   }
 }
@@ -72,6 +77,7 @@ class ServiceFilterNotifier extends Notifier<ServiceFilter> {
   void setCaregiverGender(String? value) =>
       state = state.copyWith(caregiverGender: value);
   void setChildAge(int? value) => state = state.copyWith(childAge: value);
+  void setDistanceKm(int? value) => state = state.copyWith(distanceKm: value);
   void clearAll() => state = const ServiceFilter();
 }
 
@@ -89,6 +95,7 @@ final serviceProvider = FutureProvider.family<List<ServiceModel>, (int, int)>((
         targetGender: filter.targetGender,
         caregiverGender: filter.caregiverGender,
         childAge: filter.childAge,
+        distanceKm: filter.distanceKm,
       );
 });
 

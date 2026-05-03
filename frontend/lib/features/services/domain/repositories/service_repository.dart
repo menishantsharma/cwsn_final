@@ -11,6 +11,7 @@ abstract class ServiceRepository {
     String? targetGender,
     String? caregiverGender,
     int? childAge,
+    int? distanceKm,
   });
 
   Future<ServiceModel?> getMyServiceForSubcategory({
