@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
+import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
+import 'package:go_router/go_router.dart';
 
 class CreateServicePage extends ConsumerStatefulWidget {
   final SubcategoryModel subcategory;
@@ -219,6 +222,25 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
                           }),
                         ),
                       ),
+                      const SizedBox(height: AppDimensions.spacing32),
+                      Row(
+                        children: [
+                          const Icon(Icons.info_outline,
+                              size: 13, color: AppColors.textHint),
+                          const SizedBox(width: AppDimensions.spacing4),
+                          Expanded(
+                            child: Text(
+                              'Your profile is shared across all services.',
+                              style: AppTextStyles.bodySmall
+                                  .copyWith(color: AppColors.textHint),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spacing16),
+                      _SectionLabel('About the provider'),
+                      const SizedBox(height: AppDimensions.spacing12),
+                      const _ProviderSection(),
                       const SizedBox(height: AppDimensions.spacing32),
                     ],
                   ),
@@ -737,6 +759,251 @@ class _AgeSheetState extends State<_AgeSheet> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Provider Section ──────────────────────────────────────
+
+class _ProviderSection extends ConsumerWidget {
+  const _ProviderSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(profileProvider);
+
+    return profileAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (profile) {
+        final cwsn = profile.cwsnProfile;
+        final caregiver = profile.caregiverProfile;
+        final name = cwsn?.name ?? '';
+        final gender = cwsn?.gender;
+        final streetAddress = caregiver?.streetAddress;
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(AppDimensions.spacing20),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            border: Border.all(color: AppColors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _ProviderHeader(
+                      name: name,
+                      gender: gender,
+                      streetAddress: streetAddress,
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => context.push(AppRoutes.editPersonalInfo),
+                    child: Text(
+                      'Edit',
+                      style: AppTextStyles.labelSmall
+                          .copyWith(color: AppColors.primary),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppDimensions.spacing16),
+              const Divider(height: 1, color: AppColors.border),
+              const SizedBox(height: AppDimensions.spacing16),
+              _InfoRow(label: 'About', value: caregiver?.aboutMe),
+              const SizedBox(height: AppDimensions.spacing16),
+              _InfoRow(label: 'Qualifications', value: caregiver?.qualifications),
+              const SizedBox(height: AppDimensions.spacing16),
+              _LanguagesBlock(languages: caregiver?.languages ?? []),
+              const SizedBox(height: AppDimensions.spacing16),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: () => context.push(AppRoutes.editCaregiverInfo),
+                  child: Text(
+                    'Edit caregiver info',
+                    style: AppTextStyles.labelSmall
+                        .copyWith(color: AppColors.primary),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ProviderHeader extends StatelessWidget {
+  final String name;
+  final String? gender;
+  final String? streetAddress;
+
+  const _ProviderHeader({
+    required this.name,
+    required this.gender,
+    this.streetAddress,
+  });
+
+  String _initials(String n) {
+    final parts = n.trim().split(' ');
+    if (parts.length >= 2) return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    if (parts[0].isNotEmpty) return parts[0][0].toUpperCase();
+    return '?';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Center(
+            child: Text(
+              _initials(name),
+              style: AppTextStyles.titleMedium.copyWith(color: AppColors.primary),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppDimensions.spacing12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(name, style: AppTextStyles.titleSmall),
+              if (gender != null && gender!.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacing4),
+                Text(
+                  gender!,
+                  style: AppTextStyles.bodySmall
+                      .copyWith(color: AppColors.textSecondary),
+                ),
+              ],
+              if (streetAddress != null && streetAddress!.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacing4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined,
+                        size: 13, color: AppColors.textHint),
+                    const SizedBox(width: 3),
+                    Expanded(
+                      child: Text(
+                        streetAddress!,
+                        style: AppTextStyles.bodySmall
+                            .copyWith(color: AppColors.textSecondary),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Info Row ──────────────────────────────────────────────
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String? value;
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    final isEmpty = value == null || value!.isEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label.toUpperCase(),
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing6),
+        Text(
+          isEmpty ? 'Not provided' : value!,
+          style: AppTextStyles.bodyMedium.copyWith(
+            color: isEmpty ? AppColors.textHint : AppColors.textSecondary,
+            height: 1.5,
+            fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Languages Block ───────────────────────────────────────
+
+class _LanguagesBlock extends StatelessWidget {
+  final List<String> languages;
+  const _LanguagesBlock({required this.languages});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'LANGUAGES',
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.textSecondary,
+            letterSpacing: 0.8,
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing8),
+        if (languages.isEmpty)
+          Text(
+            'Not provided',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textHint,
+              fontStyle: FontStyle.italic,
+              height: 1.5,
+            ),
+          )
+        else
+          Wrap(
+            spacing: AppDimensions.spacing6,
+            runSpacing: AppDimensions.spacing6,
+            children: languages
+                .map((lang) => Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppDimensions.spacing12,
+                        vertical: AppDimensions.spacing4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius:
+                            BorderRadius.circular(AppDimensions.radiusFull),
+                      ),
+                      child: Text(
+                        lang,
+                        style: AppTextStyles.labelSmall
+                            .copyWith(color: AppColors.primary),
+                      ),
+                    ))
+                .toList(),
+          ),
+      ],
     );
   }
 }

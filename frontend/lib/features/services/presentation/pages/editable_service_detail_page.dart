@@ -495,10 +495,6 @@ class _ProviderSection extends ConsumerWidget {
         final caregiver = profile.caregiverProfile;
         final name = cwsn?.name ?? '';
         final gender = cwsn?.gender;
-        final hasContent = caregiver != null &&
-            (caregiver.aboutMe.isNotEmpty ||
-                caregiver.qualifications.isNotEmpty ||
-                caregiver.languages.isNotEmpty);
 
         return Container(
           width: double.infinity,
@@ -532,12 +528,10 @@ class _ProviderSection extends ConsumerWidget {
                   ),
                 ],
               ),
-              if (hasContent) ...[
-                const SizedBox(height: AppDimensions.spacing16),
-                const Divider(height: 1, color: AppColors.border),
-                const SizedBox(height: AppDimensions.spacing16),
-                _ProviderDetails(profile: caregiver),
-              ],
+              const SizedBox(height: AppDimensions.spacing16),
+              const Divider(height: 1, color: AppColors.border),
+              const SizedBox(height: AppDimensions.spacing16),
+              _ProviderDetails(profile: caregiver),
               const SizedBox(height: AppDimensions.spacing16),
               Align(
                 alignment: Alignment.centerRight,
@@ -639,7 +633,7 @@ class _ProviderHeader extends StatelessWidget {
 }
 
 class _ProviderDetails extends StatelessWidget {
-  final profile_model.CaregiverProfileModel profile;
+  final profile_model.CaregiverProfileModel? profile;
   const _ProviderDetails({required this.profile});
 
   @override
@@ -647,16 +641,17 @@ class _ProviderDetails extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (profile.aboutMe.isNotEmpty) ...[
-          _DetailRow(label: 'About', value: profile.aboutMe),
-          const SizedBox(height: AppDimensions.spacing16),
-        ],
-        if (profile.qualifications.isNotEmpty) ...[
-          _DetailRow(label: 'Qualifications', value: profile.qualifications),
-          const SizedBox(height: AppDimensions.spacing16),
-        ],
-        if (profile.languages.isNotEmpty)
-          _LanguagesRow(languages: profile.languages),
+        _DetailRow(
+          label: 'About',
+          value: profile?.aboutMe,
+        ),
+        const SizedBox(height: AppDimensions.spacing16),
+        _DetailRow(
+          label: 'Qualifications',
+          value: profile?.qualifications,
+        ),
+        const SizedBox(height: AppDimensions.spacing16),
+        _LanguagesRow(languages: profile?.languages ?? []),
       ],
     );
   }
@@ -664,11 +659,12 @@ class _ProviderDetails extends StatelessWidget {
 
 class _DetailRow extends StatelessWidget {
   final String label;
-  final String value;
+  final String? value;
   const _DetailRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
+    final isEmpty = value == null || value!.isEmpty;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -681,10 +677,11 @@ class _DetailRow extends StatelessWidget {
         ),
         const SizedBox(height: AppDimensions.spacing6),
         Text(
-          value,
+          isEmpty ? 'Not provided' : value!,
           style: AppTextStyles.bodyMedium.copyWith(
-            color: AppColors.textSecondary,
+            color: isEmpty ? AppColors.textHint : AppColors.textSecondary,
             height: 1.5,
+            fontStyle: isEmpty ? FontStyle.italic : FontStyle.normal,
           ),
         ),
       ],
@@ -709,6 +706,16 @@ class _LanguagesRow extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppDimensions.spacing8),
+        if (languages.isEmpty)
+          Text(
+            'Not provided',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textHint,
+              fontStyle: FontStyle.italic,
+              height: 1.5,
+            ),
+          )
+        else
         Wrap(
           spacing: AppDimensions.spacing6,
           runSpacing: AppDimensions.spacing6,
