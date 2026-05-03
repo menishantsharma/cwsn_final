@@ -483,14 +483,41 @@ class _ServiceCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: AppDimensions.spacing8),
                   Expanded(
-                    child: Text(
-                      caregiver.name,
-                      style: AppTextStyles.bodySmall.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          caregiver.name,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: AppColors.textSecondary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (caregiver.streetAddress != null &&
+                            caregiver.streetAddress!.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_on_outlined,
+                                  size: 11, color: AppColors.textHint),
+                              const SizedBox(width: 2),
+                              Expanded(
+                                child: Text(
+                                  caregiver.streetAddress!,
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: AppColors.textHint,
+                                    fontSize: 11,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
                   ),
                   const Icon(Icons.arrow_forward_ios_rounded,

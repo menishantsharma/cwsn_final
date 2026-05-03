@@ -463,6 +463,21 @@ class _ProviderHeader extends StatelessWidget {
                   ),
                 ),
               ],
+              if (profile.streetAddress != null && profile.streetAddress!.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.spacing4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 12, color: AppColors.textHint),
+                    const SizedBox(width: 3),
+                    Text(
+                      profile.streetAddress!,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textHint,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

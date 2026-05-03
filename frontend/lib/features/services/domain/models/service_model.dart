@@ -4,6 +4,7 @@ class CaregiverProfileModel {
   final String? gender;
   final String? aboutMe;
   final String? qualifications;
+  final String? streetAddress;
   final List<String> languages;
   final int upvoteCount;
 
@@ -13,6 +14,7 @@ class CaregiverProfileModel {
     this.gender,
     this.aboutMe,
     this.qualifications,
+    this.streetAddress,
     required this.languages,
     required this.upvoteCount,
   });
@@ -24,6 +26,7 @@ class CaregiverProfileModel {
       gender: json['gender'] as String?,
       aboutMe: json['about_me'] as String?,
       qualifications: json['qualifications'] as String?,
+      streetAddress: json['street_address'] as String?,
       languages: List<String>.from(json['languages'] ?? []),
       upvoteCount: (json['upvote_count'] as int?) ?? 0,
     );

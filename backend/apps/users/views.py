@@ -164,6 +164,11 @@ class CWSNProfileViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return CWSNProfile.objects.filter(user=self.request.user)
 
+    def get_serializer(self, *args, **kwargs):
+        if self.action in ('update', 'partial_update'):
+            kwargs['partial'] = True
+        return super().get_serializer(*args, **kwargs)
+
     def perform_create(self, serializer):
         lat = self.request.data.get('latitude')
         lon = self.request.data.get('longitude')
@@ -192,6 +197,11 @@ class ChildProfileViewSet(viewsets.ModelViewSet):
 class CaregiverProfileViewSet(viewsets.ModelViewSet):
     serializer_class = CaregiverProfileSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+    def get_serializer(self, *args, **kwargs):
+        if self.action in ('update', 'partial_update'):
+            kwargs['partial'] = True
+        return super().get_serializer(*args, **kwargs)
 
     def get_queryset(self):
         if (self.action == 'list' and self.request.query_params.get('mine') and self.request.user.is_authenticated):
