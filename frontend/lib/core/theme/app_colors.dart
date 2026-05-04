@@ -11,7 +11,7 @@ class AppColors {
   static const primaryLight = Color(0xFFDCF8C6);
 
   // ── Background ─────────────────────────────────────────
-  static const background = Color(0xFFF7F8FA);
+  static const background = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
   static const surfaceVariant = Color(0xFFF0F2F5);
 
