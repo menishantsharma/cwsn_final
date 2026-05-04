@@ -55,30 +55,40 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
     Navigator.of(context).pop();
   }
 
+  bool get _hasAnyFilter =>
+      _serviceType != null ||
+      _paymentType != null ||
+      _targetGender != null ||
+      _caregiverGender != null ||
+      _distanceKm != null;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 36),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SheetHandle(),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Filter Services', style: AppTextStyles.titleMedium),
-              GestureDetector(
-                onTap: _clear,
-                child: Text(
-                  'Clear all',
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary),
+              Text('Filters', style: AppTextStyles.titleMedium),
+              const Spacer(),
+              if (_hasAnyFilter)
+                TextButton(
+                  onPressed: _clear,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text('Clear all'),
                 ),
-              ),
             ],
           ),
           const SizedBox(height: AppDimensions.spacing20),
-          FilterSection(
+          _FilterSection(
             label: 'Service Type',
             options: const ['Online', 'Offline', 'Hybrid'],
             selected: _serviceType,
@@ -98,22 +108,28 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
               onChanged: (v) => setState(() => _distanceKm = v),
             ),
           ],
-          const SizedBox(height: AppDimensions.spacing16),
-          FilterSection(
+          const SizedBox(height: AppDimensions.spacing20),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacing20),
+          _FilterSection(
             label: 'Payment',
             options: const ['Paid', 'Unpaid'],
             selected: _paymentType,
             onSelected: (v) => setState(() => _paymentType = v),
           ),
-          const SizedBox(height: AppDimensions.spacing16),
-          FilterSection(
+          const SizedBox(height: AppDimensions.spacing20),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacing20),
+          _FilterSection(
             label: 'Child Gender',
             options: const ['Any', 'Male', 'Female'],
             selected: _targetGender,
             onSelected: (v) => setState(() => _targetGender = v),
           ),
-          const SizedBox(height: AppDimensions.spacing16),
-          FilterSection(
+          const SizedBox(height: AppDimensions.spacing20),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacing20),
+          _FilterSection(
             label: 'Caregiver Gender',
             options: const ['Male', 'Female'],
             selected: _caregiverGender,
@@ -127,14 +143,13 @@ class _FilterSheetState extends ConsumerState<FilterSheet> {
   }
 }
 
-class FilterSection extends StatelessWidget {
+class _FilterSection extends StatelessWidget {
   final String label;
   final List<String> options;
   final String? selected;
   final ValueChanged<String?> onSelected;
 
-  const FilterSection({
-    super.key,
+  const _FilterSection({
     required this.label,
     required this.options,
     required this.selected,
@@ -147,10 +162,10 @@ class FilterSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label.toUpperCase(),
-          style: AppTextStyles.labelSmall.copyWith(
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
             color: AppColors.textSecondary,
-            letterSpacing: 1,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: AppDimensions.spacing8),
@@ -161,23 +176,32 @@ class FilterSection extends StatelessWidget {
             final isSelected = selected == opt;
             return GestureDetector(
               onTap: () => onSelected(isSelected ? null : opt),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.spacing16,
-                  vertical: AppDimensions.spacing8,
-                ),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected ? AppColors.primary : Colors.white,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
                   border: Border.all(
                     color: isSelected ? AppColors.primary : AppColors.border,
+                    width: isSelected ? 1.5 : 1,
                   ),
                 ),
-                child: Text(
-                  opt,
-                  style: AppTextStyles.labelSmall.copyWith(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isSelected) ...[
+                      const Icon(Icons.check_rounded, size: 13, color: Colors.white),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      opt,
+                      style: AppTextStyles.labelSmall.copyWith(
+                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -199,27 +223,33 @@ class _DistanceSlider extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'DISTANCE',
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-            letterSpacing: 1,
-          ),
-        ),
-        const SizedBox(height: AppDimensions.spacing8),
         Row(
           children: [
-            const Icon(Icons.location_on, size: 16, color: AppColors.primary),
-            const SizedBox(width: 6),
             Text(
-              'Within $distanceKm km of you',
-              style: AppTextStyles.bodyMedium.copyWith(
-                color: AppColors.primary,
+              'Distance',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
                 fontWeight: FontWeight.w600,
+              ),
+            ),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+              ),
+              child: Text(
+                '$distanceKm km',
+                style: AppTextStyles.labelSmall.copyWith(
+                  color: AppColors.primaryDark,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
         ),
+        const SizedBox(height: AppDimensions.spacing8),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
             trackHeight: 3,

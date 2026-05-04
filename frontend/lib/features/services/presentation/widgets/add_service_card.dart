@@ -1,4 +1,3 @@
-import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/app_router.dart';
@@ -16,50 +15,53 @@ class AddServiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => context.push(AppRoutes.createService, extra: subcategory),
-      child: DottedBorder(
-        options: RoundedRectDottedBorderOptions(
-          color: AppColors.primary,
-          strokeWidth: 1.5,
-          dashPattern: const [6, 4],
-          radius: Radius.circular(AppDimensions.radiusLg),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-          ),
-          padding: const EdgeInsets.all(AppDimensions.spacing16),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-                ),
-                child: const Icon(Icons.add, color: Colors.white, size: 22),
+        padding: const EdgeInsets.all(AppDimensions.spacing16),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               ),
-              const SizedBox(width: AppDimensions.spacing12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Offer a Service', style: AppTextStyles.titleSmall),
-                    const SizedBox(height: AppDimensions.spacing2),
-                    Text(
-                      'Share your expertise with families',
-                      style: AppTextStyles.bodySmall
-                          .copyWith(color: AppColors.textSecondary),
+              child: const Icon(Icons.add_rounded, color: AppColors.primaryDark, size: 24),
+            ),
+            const SizedBox(width: AppDimensions.spacing12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Offer a Service', style: AppTextStyles.titleSmall),
+                  const SizedBox(height: AppDimensions.spacing2),
+                  Text(
+                    'Share your expertise with families',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppDimensions.spacing8),
-              const Icon(Icons.arrow_forward_ios_rounded,
-                  size: 13, color: AppColors.primary),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppDimensions.spacing8),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 13,
+              color: AppColors.textHint,
+            ),
+          ],
         ),
       ),
     );

@@ -20,9 +20,7 @@ class CategoriesPage extends ConsumerWidget {
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
-          error: (error, _) => Center(
-            child: Text('Error: $error'),
-          ),
+          error: (error, _) => Center(child: Text('Error: $error')),
           data: (categories) {
             if (categories.isEmpty) {
               return const EmptyState(
@@ -32,16 +30,34 @@ class CategoriesPage extends ConsumerWidget {
               );
             }
 
-            return ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 32, 20, 32),
-              itemCount: categories.length + 1,
-              separatorBuilder: (_, i) => SizedBox(
-                height: i == 0 ? AppDimensions.spacing20 : AppDimensions.spacing8,
-              ),
-              itemBuilder: (context, index) {
-                if (index == 0) return const CategoriesHeader();
-                return CategoryCard(category: categories[index - 1]);
-              },
+            return CustomScrollView(
+              slivers: [
+                SliverAppBar(
+                  floating: true,
+                  snap: true,
+                  backgroundColor: Colors.white,
+                  surfaceTintColor: Colors.transparent,
+                  elevation: 0,
+                  expandedHeight: 120,
+                  flexibleSpace: const FlexibleSpaceBar(
+                    collapseMode: CollapseMode.none,
+                    background: Padding(
+                      padding: EdgeInsets.fromLTRB(20, 32, 20, 0),
+                      child: CategoriesHeader(),
+                    ),
+                  ),
+                ),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                  sliver: SliverList.separated(
+                    itemCount: categories.length,
+                    separatorBuilder: (_, _) =>
+                        const SizedBox(height: AppDimensions.spacing12),
+                    itemBuilder: (context, index) =>
+                        CategoryCard(category: categories[index], index: index),
+                  ),
+                ),
+              ],
             );
           },
         ),

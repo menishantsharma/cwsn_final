@@ -17,9 +17,20 @@ class CategoriesHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Expanded(
-              child: Text('Find Services', style: AppTextStyles.titleLarge),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Find Services', style: AppTextStyles.displaySmall),
+                  const SizedBox(height: AppDimensions.spacing4),
+                  Text(
+                    'What are you looking for today?',
+                    style: AppTextStyles.bodyMedium,
+                  ),
+                ],
+              ),
             ),
             Consumer(
               builder: (context, ref, _) {
@@ -34,21 +45,21 @@ class CategoriesHeader extends StatelessWidget {
 
                 return Stack(
                   children: [
-                    IconButton(
-                      onPressed: () => context.push(AppRoutes.notifications),
-                      icon: const Icon(Icons.notifications_outlined),
-                      color: AppColors.textPrimary,
+                    _HeaderIconButton(
+                      icon: Icons.notifications_outlined,
+                      onTap: () => context.push(AppRoutes.notifications),
                     ),
                     if (totalBadge > 0)
                       Positioned(
-                        right: 8,
-                        top: 8,
+                        right: 6,
+                        top: 6,
                         child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
+                          width: 9,
+                          height: 9,
+                          decoration: BoxDecoration(
                             color: AppColors.primary,
                             shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                         ),
                       ),
@@ -56,20 +67,38 @@ class CategoriesHeader extends StatelessWidget {
                 );
               },
             ),
-            IconButton(
-              onPressed: () => context.push(AppRoutes.profile),
-              icon: const Icon(Icons.person_outline_rounded),
-              color: AppColors.textPrimary,
+            const SizedBox(width: AppDimensions.spacing8),
+            _HeaderIconButton(
+              icon: Icons.person_outline_rounded,
+              onTap: () => context.push(AppRoutes.profile),
             ),
           ],
         ),
-        const SizedBox(height: AppDimensions.spacing4),
-        Text(
-          'Select a category to get started',
-          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
-        ),
-        const SizedBox(height: AppDimensions.spacing20),
+        const SizedBox(height: AppDimensions.spacing24),
       ],
+    );
+  }
+}
+
+class _HeaderIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _HeaderIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+        ),
+        child: Icon(icon, size: 20, color: AppColors.textPrimary),
+      ),
     );
   }
 }

@@ -26,81 +26,85 @@ class MyServiceCard extends ConsumerWidget {
           color: AppColors.primary,
           strokeWidth: 1.5,
           dashPattern: const [6, 4],
-          radius: const Radius.circular(AppDimensions.radiusLg),
+          radius: Radius.circular(AppDimensions.radiusXl),
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
           ),
           padding: const EdgeInsets.all(AppDimensions.spacing16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'YOUR SERVICE',
-                          style: AppTextStyles.labelSmall.copyWith(
-                            color: AppColors.primary,
-                            fontSize: 10,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: AppDimensions.spacing4),
-                        Text(
-                          service.title,
-                          style: AppTextStyles.titleSmall,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppDimensions.spacing8),
-                  Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.thumb_up_outlined,
-                          size: 13, color: AppColors.primary),
-                      const SizedBox(width: 3),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: AppColors.primary.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                            ),
+                            child: Text(
+                              'YOUR SERVICE',
+                              style: AppTextStyles.labelSmall.copyWith(
+                                color: AppColors.primaryDark,
+                                fontSize: 9,
+                                letterSpacing: 0.8,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppDimensions.spacing6),
                       Text(
-                        '${service.upvoteCount + delta}',
-                        style: AppTextStyles.labelSmall
-                            .copyWith(color: AppColors.primary),
+                        service.title,
+                        style: AppTextStyles.titleSmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                ],
-              ),
-              if (service.description != null) ...[
-                const SizedBox(height: AppDimensions.spacing8),
-                Text(
-                  service.description!,
-                  style: AppTextStyles.bodySmall
-                      .copyWith(color: AppColors.textSecondary),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(width: AppDimensions.spacing8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.thumb_up_outlined, size: 13, color: AppColors.primary),
+                        const SizedBox(width: 3),
+                        Text(
+                          '${service.upvoteCount + delta}',
+                          style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimensions.spacing6),
+                    const Icon(Icons.edit_outlined, size: 14, color: AppColors.textHint),
+                  ],
                 ),
               ],
-              const SizedBox(height: AppDimensions.spacing12),
-              Row(
-                children: [
-                  ServiceChip(label: service.serviceType),
-                  const SizedBox(width: AppDimensions.spacing6),
-                  ServiceChip(label: service.paymentType),
-                  const Spacer(),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 13, color: AppColors.primary),
-                ],
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: AppDimensions.spacing12),
+            Row(
+              children: [
+                ServiceChip(label: service.serviceType),
+                const SizedBox(width: AppDimensions.spacing6),
+                ServiceChip(label: service.paymentType),
+              ],
+            ),
+          ],
         ),
+      ),
       ),
     );
   }

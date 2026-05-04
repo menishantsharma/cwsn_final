@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +9,7 @@ import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/widgets/service_chip.dart';
+
 
 class ServiceCard extends ConsumerWidget {
   final ServiceModel service;
@@ -24,8 +26,14 @@ class ServiceCard extends ConsumerWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         padding: const EdgeInsets.all(AppDimensions.spacing16),
         child: Column(
@@ -55,15 +63,6 @@ class ServiceCard extends ConsumerWidget {
                 ),
               ],
             ),
-            if (service.description != null) ...[
-              const SizedBox(height: AppDimensions.spacing6),
-              Text(
-                service.description!,
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
             const SizedBox(height: AppDimensions.spacing12),
             Row(
               children: [
@@ -118,8 +117,6 @@ class ServiceCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded,
-                      size: 13, color: AppColors.textHint),
                 ],
               ),
             ],
@@ -140,12 +137,13 @@ class CaregiverAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     if (imageUrl != null) {
       return ClipOval(
-        child: Image.network(
-          imageUrl!,
-          width: 28,
-          height: 28,
+        child: CachedNetworkImage(
+          imageUrl: imageUrl!,
+          width: 32,
+          height: 32,
           fit: BoxFit.cover,
-          errorBuilder: (_, e, s) => _initials(),
+          placeholder: (_, _) => _initials(),
+          errorWidget: (_, _, _) => _initials(),
         ),
       );
     }
@@ -155,8 +153,8 @@ class CaregiverAvatar extends StatelessWidget {
   Widget _initials() {
     final initial = name.isNotEmpty ? name[0].toUpperCase() : '?';
     return Container(
-      width: 28,
-      height: 28,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: AppColors.primary.withValues(alpha: 0.12),
@@ -166,7 +164,7 @@ class CaregiverAvatar extends StatelessWidget {
           initial,
           style: AppTextStyles.labelSmall.copyWith(
             color: AppColors.primary,
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
         ),
