@@ -166,13 +166,11 @@ class _EditableServiceDetailPageState
                         children: [
                           EditableChip(
                             label: service.serviceType,
-                            icon: Icons.location_on_outlined,
                             onEdit: () => _showChipSheet(context, label: 'Service Type', options: const ['Online', 'Offline', 'Hybrid'], selected: service.serviceType, onSave: (val) => _save(service.copyWith(serviceType: val))),
                           ),
                           const SizedBox(width: AppDimensions.spacing8),
                           EditableChip(
                             label: service.paymentType,
-                            icon: Icons.payments_outlined,
                             onEdit: () => _showChipSheet(context, label: 'Payment Type', options: const ['Paid', 'Unpaid'], selected: service.paymentType, onSave: (val) => _save(service.copyWith(paymentType: val))),
                           ),
                         ],

@@ -30,8 +30,14 @@ class ReadProviderSection extends ConsumerWidget {
           padding: const EdgeInsets.all(AppDimensions.spacing20),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-            border: Border.all(color: AppColors.border),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 12,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

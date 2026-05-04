@@ -52,21 +52,33 @@ class EditableFieldRow extends StatelessWidget {
   }
 }
 
+IconData _chipIcon(String label) {
+  switch (label.toLowerCase()) {
+    case 'online': return Icons.wifi_rounded;
+    case 'offline': return Icons.people_outlined;
+    case 'hybrid': return Icons.devices_rounded;
+    case 'paid': return Icons.attach_money_rounded;
+    case 'unpaid': return Icons.volunteer_activism_rounded;
+    default: return Icons.label_outline_rounded;
+  }
+}
+
 /// Tappable chip with an inline edit icon — used for service type, payment type, etc.
 class EditableChip extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final VoidCallback onEdit;
 
   const EditableChip({
     super.key,
     required this.label,
-    required this.icon,
+    this.icon,
     required this.onEdit,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedIcon = icon ?? _chipIcon(label);
     return GestureDetector(
       onTap: onEdit,
       child: Container(
@@ -81,7 +93,7 @@ class EditableChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 13, color: AppColors.primaryDark),
+            Icon(resolvedIcon, size: 13, color: AppColors.primaryDark),
             const SizedBox(width: AppDimensions.spacing4),
             Text(
               label,

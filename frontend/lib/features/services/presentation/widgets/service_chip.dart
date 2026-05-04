@@ -56,12 +56,13 @@ class ServiceChip extends StatelessWidget {
 /// Icon chip used on service detail / create pages.
 class ServiceDetailChip extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
 
-  const ServiceDetailChip({super.key, required this.label, required this.icon});
+  const ServiceDetailChip({super.key, required this.label, this.icon});
 
   @override
   Widget build(BuildContext context) {
+    final resolvedIcon = icon ?? _chipIcon(label);
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spacing12,
@@ -74,7 +75,7 @@ class ServiceDetailChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: AppColors.primaryDark),
+          Icon(resolvedIcon, size: 13, color: AppColors.primaryDark),
           const SizedBox(width: AppDimensions.spacing4),
           Text(
             label,

@@ -128,9 +128,9 @@ class _ServiceInfoSection extends ConsumerWidget {
         const SizedBox(height: AppDimensions.spacing12),
         Row(
           children: [
-            ServiceDetailChip(label: service.serviceType, icon: Icons.location_on_outlined),
+            ServiceDetailChip(label: service.serviceType),
             const SizedBox(width: AppDimensions.spacing8),
-            ServiceDetailChip(label: service.paymentType, icon: Icons.payments_outlined),
+            ServiceDetailChip(label: service.paymentType),
           ],
         ),
         if (service.description != null) ...[
