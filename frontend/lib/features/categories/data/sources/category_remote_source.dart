@@ -8,7 +8,8 @@ class CategoryRemoteSource {
 
   Future<List<CategoryModel>> getCategories() async {
     final res = await _dio.get('/api/common/categories/');
-    final result = res.data['results'] as List;
-    return result.map((e) => CategoryModel.fromJson(e)).toList();
+    final results = res.data['results'];
+    if (results == null) return [];
+    return (results as List).map((e) => CategoryModel.fromJson(e as Map<String, dynamic>)).toList();
   }
 }

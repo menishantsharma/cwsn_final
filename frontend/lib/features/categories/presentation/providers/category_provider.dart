@@ -6,17 +6,18 @@ import 'package:frontend/features/categories/domain/repositories/category_reposi
 import 'package:frontend/providers/core_providers.dart';
 
 final categoryRemoteSourceProvider = Provider<CategoryRemoteSource>(
-  (ref) => CategoryRemoteSource(ref.read(dioProvider)),
+  (ref) => CategoryRemoteSource(ref.watch(dioProvider)),
 );
 
 final categoryRepositoryProvider = Provider<CategoryRepository>(
-  (ref) => CategoryRepositoryImpl(ref.read(categoryRemoteSourceProvider)),
+  (ref) => CategoryRepositoryImpl(ref.watch(categoryRemoteSourceProvider)),
 );
 
 class CategoryNotifier extends AsyncNotifier<List<CategoryModel>> {
   @override
   Future<List<CategoryModel>> build() async {
-    return ref.read(categoryRepositoryProvider).getCategories();
+    ref.keepAlive();
+    return ref.watch(categoryRepositoryProvider).getCategories();
   }
 }
 
