@@ -339,18 +339,33 @@ class ReportSheet extends ConsumerStatefulWidget {
 }
 
 class _ReportSheetState extends ConsumerState<ReportSheet> {
-  final _reasonController = TextEditingController();
+  static const _reasons = [
+    'Inappropriate content',
+    'Fake or misleading',
+    'Spam',
+    'Harmful to children',
+    'Other',
+  ];
+
+  static const _red = Color(0xFFC62828);
+  static const _redLight = Color(0xFFFFEBEE);
+
+  String? _selectedReason;
+  final _noteController = TextEditingController();
   bool _loading = false;
+
+  bool get _canSubmit => _selectedReason != null;
 
   @override
   void dispose() {
-    _reasonController.dispose();
+    _noteController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
-    final reason = _reasonController.text.trim();
-    if (reason.isEmpty) return;
+    if (!_canSubmit) return;
+    final detail = _noteController.text.trim();
+    final reason = detail.isNotEmpty ? '$_selectedReason – $detail' : _selectedReason!;
     setState(() => _loading = true);
     try {
       await ref.read(reportProvider).reportService(
@@ -379,7 +394,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     return Padding(
       padding: EdgeInsets.fromLTRB(
         20, 12, 20,
-        MediaQuery.of(context).viewInsets.bottom + 24,
+        MediaQuery.of(context).viewInsets.bottom + 32,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -388,38 +403,95 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
           const SheetHandle(),
           Row(
             children: [
-              const Icon(Icons.flag_outlined, color: Color(0xFFC62828), size: 18),
-              const SizedBox(width: AppDimensions.spacing8),
-              Text('Report Service', style: AppTextStyles.titleMedium),
+              Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(color: _redLight, shape: BoxShape.circle),
+                child: const Icon(Icons.flag_rounded, color: _red, size: 20),
+              ),
+              const SizedBox(width: AppDimensions.spacing12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Report Service', style: AppTextStyles.titleSmall),
+                  Text(
+                    'Our team will review this report.',
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
             ],
           ),
-          const SizedBox(height: AppDimensions.spacing4),
+          const SizedBox(height: AppDimensions.spacing20),
+          const Divider(height: 1, color: AppColors.border),
+          const SizedBox(height: AppDimensions.spacing16),
           Text(
-            'Describe the issue. Our team will review it.',
-            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            'What\'s the issue?',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing12),
+          Wrap(
+            spacing: AppDimensions.spacing8,
+            runSpacing: AppDimensions.spacing8,
+            children: _reasons.map((r) {
+              final selected = _selectedReason == r;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedReason = selected ? null : r),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 150),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: selected ? _redLight : Colors.white,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                    border: Border.all(
+                      color: selected ? _red : AppColors.border,
+                      width: selected ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (selected) ...[
+                        const Icon(Icons.check_rounded, size: 13, color: _red),
+                        const SizedBox(width: 4),
+                      ],
+                      Text(
+                        r,
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: selected ? _red : AppColors.textPrimary,
+                          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
           ),
           const SizedBox(height: AppDimensions.spacing16),
           TextField(
-            controller: _reasonController,
-            maxLines: 4,
-            autofocus: true,
+            controller: _noteController,
+            maxLines: 3,
             style: AppTextStyles.bodyMedium,
             decoration: InputDecoration(
-              hintText: 'Explain what\'s wrong...',
+              hintText: 'Add more detail (optional)',
               hintStyle: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint),
               filled: true,
-              fillColor: AppColors.background,
+              fillColor: AppColors.surfaceVariant,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide.none,
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                borderSide: const BorderSide(color: AppColors.border),
+                borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+                borderSide: const BorderSide(color: _red, width: 1.5),
               ),
             ),
           ),
@@ -428,10 +500,10 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
             width: double.infinity,
             height: AppDimensions.buttonHeight,
             child: Material(
-              color: const Color(0xFFC62828),
+              color: _canSubmit ? _red : AppColors.border,
               borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
               child: InkWell(
-                onTap: _loading ? null : _submit,
+                onTap: (_canSubmit && !_loading) ? _submit : null,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
                 child: Center(
                   child: _loading

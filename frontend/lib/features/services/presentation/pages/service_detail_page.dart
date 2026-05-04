@@ -137,10 +137,7 @@ class _ServiceInfoSection extends ConsumerWidget {
           const SizedBox(height: AppDimensions.spacing20),
           SectionLabel('About this service'),
           const SizedBox(height: AppDimensions.spacing8),
-          Text(
-            service.description!,
-            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.5),
-          ),
+          _ExpandableText(text: service.description!),
         ],
         const SizedBox(height: AppDimensions.spacing20),
         _InfoGrid(service: service),
@@ -191,6 +188,57 @@ class _UpvotePill extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ExpandableText extends StatefulWidget {
+  final String text;
+  const _ExpandableText({required this.text});
+
+  @override
+  State<_ExpandableText> createState() => _ExpandableTextState();
+}
+
+class _ExpandableTextState extends State<_ExpandableText> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary, height: 1.5);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          widget.text,
+          style: style,
+          maxLines: _expanded ? null : 3,
+          overflow: _expanded ? TextOverflow.visible : TextOverflow.ellipsis,
+        ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final tp = TextPainter(
+              text: TextSpan(text: widget.text, style: style),
+              maxLines: 3,
+              textDirection: TextDirection.ltr,
+            )..layout(maxWidth: constraints.maxWidth);
+            if (!tp.didExceedMaxLines) return const SizedBox.shrink();
+            return GestureDetector(
+              onTap: () => setState(() => _expanded = !_expanded),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  _expanded ? 'See less' : 'See more',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 }

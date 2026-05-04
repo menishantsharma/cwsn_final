@@ -169,10 +169,10 @@ class ProviderDetailRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label.toUpperCase(),
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-            letterSpacing: 0.8,
+          label,
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: AppDimensions.spacing6),
@@ -200,10 +200,10 @@ class LanguagesBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'LANGUAGES',
-          style: AppTextStyles.labelSmall.copyWith(
-            color: AppColors.textSecondary,
-            letterSpacing: 0.8,
+          'Languages',
+          style: AppTextStyles.bodySmall.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: AppDimensions.spacing8),

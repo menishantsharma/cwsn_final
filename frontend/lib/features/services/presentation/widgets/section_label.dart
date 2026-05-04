@@ -8,12 +8,25 @@ class SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text.toUpperCase(),
-      style: AppTextStyles.labelSmall.copyWith(
-        color: AppColors.textSecondary,
-        letterSpacing: 1,
-      ),
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: AppTextStyles.titleSmall.copyWith(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+          ),
+        ),
+      ],
     );
   }
 }
