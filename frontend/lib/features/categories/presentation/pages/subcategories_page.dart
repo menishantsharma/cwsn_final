@@ -23,7 +23,7 @@ class SubcategoriesPage extends StatelessWidget {
               subtitle: 'This category has no subcategories yet',
             )
           : ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
               itemCount: subcategories.length,
               separatorBuilder: (_, _) => const SizedBox(height: AppDimensions.spacing8),
               itemBuilder: (context, index) => SubcategoryCard(subcategory: subcategories[index]),

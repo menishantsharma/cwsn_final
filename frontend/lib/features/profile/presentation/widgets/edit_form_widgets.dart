@@ -7,18 +7,18 @@ InputDecoration inputDecoration(String hint) => InputDecoration(
       hintText: hint,
       hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: AppColors.surfaceVariant,
       contentPadding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spacing16,
         vertical: AppDimensions.spacing16,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        borderSide: const BorderSide(color: AppColors.border),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
@@ -43,18 +43,18 @@ class LabeledField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppDimensions.spacing16),
+      padding: const EdgeInsets.only(bottom: AppDimensions.spacing20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 0.5,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing6),
+          const SizedBox(height: AppDimensions.spacing8),
           child,
         ],
       ),

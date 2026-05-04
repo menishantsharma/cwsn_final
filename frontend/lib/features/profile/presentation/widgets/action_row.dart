@@ -19,23 +19,48 @@ class ActionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDestructive = color == AppColors.error;
+    final iconBg = isDestructive
+        ? AppColors.errorLight
+        : AppColors.surfaceVariant;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.spacing16,
-          vertical: AppDimensions.spacing16,
+          vertical: AppDimensions.spacing12,
         ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-          border: Border.all(color: AppColors.border),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: color),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
+              child: Icon(icon, size: 17, color: color),
+            ),
             const SizedBox(width: AppDimensions.spacing12),
-            Text(label, style: AppTextStyles.bodySmall.copyWith(color: color)),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, size: 18, color: color.withValues(alpha: 0.5)),
           ],
         ),
       ),

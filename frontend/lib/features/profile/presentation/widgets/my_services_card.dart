@@ -5,6 +5,8 @@ import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
+import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
+import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 
 class MyServicesCard extends ConsumerWidget {
@@ -17,8 +19,14 @@ class MyServicesCard extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,13 +38,7 @@ class MyServicesCard extends ConsumerWidget {
               AppDimensions.spacing16,
               AppDimensions.spacing12,
             ),
-            child: Text(
-              'My Services',
-              style: AppTextStyles.labelMedium.copyWith(
-                color: AppColors.textSecondary,
-                letterSpacing: 0.8,
-              ),
-            ),
+            child: Text('My Services', style: AppTextStyles.titleSmall),
           ),
           const Divider(height: 1, color: AppColors.border),
           servicesAsync.when(
@@ -53,56 +55,77 @@ class MyServicesCard extends ConsumerWidget {
             data: (services) => services.isEmpty
                 ? Padding(
                     padding: const EdgeInsets.all(AppDimensions.spacing16),
-                    child: Text('No services added yet', style: AppTextStyles.bodySmall),
+                    child: Text(
+                      'No services added yet',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.textHint,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
                   )
                 : Column(
                     children: services
-                        .map(
-                          (service) => InkWell(
-                            onTap: () => context.push(
-                              AppRoutes.editableServiceDetail,
-                              extra: service,
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: AppDimensions.spacing16,
-                                vertical: AppDimensions.spacing12,
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          service.title,
-                                          style: AppTextStyles.bodySmall.copyWith(
-                                            color: AppColors.textPrimary,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          '${service.serviceType} · ${service.paymentType}',
-                                          style: AppTextStyles.labelSmall,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    size: 12,
-                                    color: AppColors.textHint,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
+                        .map((service) => _ServiceRow(service: service))
                         .toList(),
                   ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ServiceRow extends ConsumerWidget {
+  final ServiceModel service;
+  const _ServiceRow({required this.service});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final delta = ref.watch(upvoteCountDeltaProvider(service.id));
+
+    return InkWell(
+      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service),
+      borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacing16,
+          vertical: AppDimensions.spacing12,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    service.title,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    '${service.serviceType} · ${service.paymentType}',
+                    style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                const Icon(Icons.thumb_up_outlined, size: 12, color: AppColors.primary),
+                const SizedBox(width: 3),
+                Text(
+                  '${service.upvoteCount + delta}',
+                  style: AppTextStyles.labelSmall.copyWith(color: AppColors.primary),
+                ),
+                const SizedBox(width: AppDimensions.spacing12),
+                const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.textHint),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

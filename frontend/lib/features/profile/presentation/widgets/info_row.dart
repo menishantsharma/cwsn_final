@@ -11,19 +11,26 @@ class InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isEmpty = value == null || value!.isEmpty;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing8),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
             width: 110,
-            child: Text(label, style: AppTextStyles.bodySmall),
+            child: Text(
+              label,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            ),
           ),
           Expanded(
             child: Text(
-              (value?.isNotEmpty == true) ? value! : '—',
-              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textPrimary),
+              isEmpty ? '—' : value!,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: isEmpty ? AppColors.textHint : AppColors.textPrimary,
+                fontWeight: isEmpty ? FontWeight.w400 : FontWeight.w500,
+              ),
             ),
           ),
         ],
@@ -39,8 +46,14 @@ class EmptyRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing8),
-      child: Text(message, style: AppTextStyles.bodySmall),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing12),
+      child: Text(
+        message,
+        style: AppTextStyles.bodySmall.copyWith(
+          color: AppColors.textHint,
+          fontStyle: FontStyle.italic,
+        ),
+      ),
     );
   }
 }

@@ -94,6 +94,7 @@ class ProfilePage extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: const AppTopBar(title: 'Profile'),
       body: profileAsync.when(
         loading: () => const Center(
@@ -103,9 +104,8 @@ class ProfilePage extends ConsumerWidget {
           child: Text('Failed to load profile', style: AppTextStyles.bodyMedium),
         ),
         data: (profile) => ListView(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing20),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 40),
           children: [
-            const SizedBox(height: AppDimensions.spacing24),
             ProfileAvatar(profile: profile),
             const SizedBox(height: AppDimensions.spacing32),
             SectionCard(
@@ -117,14 +117,24 @@ class ProfilePage extends ConsumerWidget {
                 InfoRow('Area', profile.cwsnProfile?.streetAddress),
               ],
             ),
-            const SizedBox(height: AppDimensions.spacing12),
+            const SizedBox(height: AppDimensions.spacing16),
             SectionCard(
               title: 'Children',
               trailing: GestureDetector(
                 onTap: () => _showAddChildSheet(context, ref),
-                child: Text(
-                  'Add',
-                  style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                  ),
+                  child: Text(
+                    'Add',
+                    style: AppTextStyles.labelSmall.copyWith(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
               children: profile.cwsnProfile?.children.isEmpty != false
@@ -139,7 +149,7 @@ class ProfilePage extends ConsumerWidget {
                         )
                         .toList(),
             ),
-            const SizedBox(height: AppDimensions.spacing12),
+            const SizedBox(height: AppDimensions.spacing16),
             SectionCard(
               title: 'Caregiver Info',
               onEdit: () => context.push(AppRoutes.editCaregiverInfo),
@@ -149,7 +159,7 @@ class ProfilePage extends ConsumerWidget {
                 InfoRow('Languages', profile.caregiverProfile?.languages.join(', ')),
               ],
             ),
-            const SizedBox(height: AppDimensions.spacing12),
+            const SizedBox(height: AppDimensions.spacing16),
             const MyServicesCard(),
             const SizedBox(height: AppDimensions.spacing32),
             ActionRow(
@@ -157,14 +167,13 @@ class ProfilePage extends ConsumerWidget {
               label: 'Logout',
               onTap: () => _confirmLogout(context, ref),
             ),
-            const SizedBox(height: AppDimensions.spacing8),
+            const SizedBox(height: AppDimensions.spacing12),
             ActionRow(
               icon: Icons.delete_outline_rounded,
               label: 'Delete Account',
               color: AppColors.error,
               onTap: () => _confirmDeleteAccount(context, ref),
             ),
-            const SizedBox(height: AppDimensions.spacing40),
           ],
         ),
       ),

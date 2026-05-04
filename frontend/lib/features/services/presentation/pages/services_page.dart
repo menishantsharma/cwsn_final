@@ -43,6 +43,7 @@ class ServicesPage extends ConsumerWidget {
               final isEmpty = services.isEmpty && myService == null;
 
               return CustomScrollView(
+                clipBehavior: Clip.none,
                 slivers: [
                   SliverAppBar(
                     pinned: true,
@@ -100,7 +101,7 @@ class ServicesPage extends ConsumerWidget {
                     ],
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
                     sliver: SliverList.separated(
                       itemCount: isEmpty ? 2 : services.length + 1,
                       separatorBuilder: (_, _) =>

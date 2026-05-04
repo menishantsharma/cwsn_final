@@ -22,8 +22,14 @@ class SectionCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -32,28 +38,33 @@ class SectionCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(
               AppDimensions.spacing16,
               AppDimensions.spacing16,
-              AppDimensions.spacing8,
+              AppDimensions.spacing16,
               AppDimensions.spacing12,
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  title,
-                  style: AppTextStyles.labelMedium.copyWith(
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.8,
-                  ),
+                Expanded(
+                  child: Text(title, style: AppTextStyles.titleSmall),
                 ),
                 if (onEdit != null)
                   GestureDetector(
                     onTap: onEdit,
-                    child: Text(
-                      'Edit',
-                      style: AppTextStyles.labelMedium.copyWith(color: AppColors.primary),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                      ),
+                      child: Text(
+                        'Edit',
+                        style: AppTextStyles.labelSmall.copyWith(
+                          color: AppColors.primaryDark,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ),
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
           ),
@@ -61,7 +72,7 @@ class SectionCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: AppDimensions.spacing16,
-              vertical: AppDimensions.spacing8,
+              vertical: AppDimensions.spacing4,
             ),
             child: Column(children: children),
           ),
