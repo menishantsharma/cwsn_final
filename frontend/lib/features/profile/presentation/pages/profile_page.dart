@@ -93,11 +93,7 @@ class ProfilePage extends ConsumerWidget {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
         title: Text('Profile', style: AppTextStyles.titleMedium),
       ),
       body: profileAsync.when(

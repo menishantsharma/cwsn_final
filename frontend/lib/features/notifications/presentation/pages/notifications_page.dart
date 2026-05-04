@@ -13,11 +13,7 @@ class NotificationsPage extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: AppColors.background,
         appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          scrolledUnderElevation: 0,
           title: Text('Inbox', style: AppTextStyles.titleMedium),
           bottom: TabBar(
             labelStyle: AppTextStyles.labelMedium,

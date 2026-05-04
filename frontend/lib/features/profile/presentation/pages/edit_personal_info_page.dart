@@ -94,11 +94,7 @@ class _EditPersonalInfoPageState extends ConsumerState<EditPersonalInfoPage> {
       data: (profile) {
         _initialize(profile);
         return Scaffold(
-          backgroundColor: AppColors.background,
           appBar: AppBar(
-            backgroundColor: AppColors.background,
-            elevation: 0,
-            scrolledUnderElevation: 0,
             title: Text('Personal Info', style: AppTextStyles.titleMedium),
           ),
           body: Form(

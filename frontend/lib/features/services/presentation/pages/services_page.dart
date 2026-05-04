@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:frontend/features/services/presentation/widgets/add_service_card.dart';
 import 'package:frontend/features/services/presentation/widgets/filter_sheet.dart';
 import 'package:frontend/features/services/presentation/widgets/my_service_card.dart';
 import 'package:frontend/features/services/presentation/widgets/service_card.dart';
-import 'package:frontend/features/services/presentation/widgets/services_header.dart';
 
 class ServicesPage extends ConsumerWidget {
   final SubcategoryModel subcategory;
@@ -22,11 +22,8 @@ class ServicesPage extends ConsumerWidget {
     final filter = ref.watch(serviceFilterProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        title: Text(subcategory.name, style: AppTextStyles.titleMedium),
         actions: [
           Stack(
             alignment: Alignment.center,
@@ -75,19 +72,16 @@ class ServicesPage extends ConsumerWidget {
             ),
             error: (e, _) => const Center(child: Text('Something went wrong')),
             data: (myService) => ListView.separated(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
-              itemCount: services.length + 2,
-              separatorBuilder: (_, i) => SizedBox(
-                height: i == 0 ? 20 : 8,
-              ),
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              itemCount: services.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
-                if (index == 0) return ServicesHeader(subcategory: subcategory);
-                if (index == 1) {
+                if (index == 0) {
                   return myService != null
                       ? MyServiceCard(service: myService)
                       : AddServiceCard(subcategory: subcategory);
                 }
-                return ServiceCard(service: services[index - 2]);
+                return ServiceCard(service: services[index - 1]);
               },
             ),
           ),

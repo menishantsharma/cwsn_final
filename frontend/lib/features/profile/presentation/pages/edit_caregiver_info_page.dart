@@ -74,11 +74,7 @@ class _EditCaregiverInfoPageState extends ConsumerState<EditCaregiverInfoPage> {
         data: (allLanguages) {
           _initialize(profile, allLanguages);
           return Scaffold(
-            backgroundColor: AppColors.background,
             appBar: AppBar(
-              backgroundColor: AppColors.background,
-              elevation: 0,
-              scrolledUnderElevation: 0,
               title: Text('Caregiver Info', style: AppTextStyles.titleMedium),
             ),
             body: Form(

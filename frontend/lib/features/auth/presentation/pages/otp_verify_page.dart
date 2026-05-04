@@ -52,11 +52,7 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        scrolledUnderElevation: 0,
         title: Text('OTP Verification', style: AppTextStyles.titleMedium),
       ),
       body: SafeArea(

@@ -19,7 +19,7 @@ class CategoriesHeader extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text('Find Services', style: AppTextStyles.displaySmall),
+              child: Text('Find Services', style: AppTextStyles.titleLarge),
             ),
             Consumer(
               builder: (context, ref, _) {

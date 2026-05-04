@@ -52,7 +52,6 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).unfocus(),

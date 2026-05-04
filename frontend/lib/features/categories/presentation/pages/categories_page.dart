@@ -15,7 +15,6 @@ class CategoriesPage extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoryProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
       body: SafeArea(
         child: categoriesAsync.when(
           loading: () => const Center(
