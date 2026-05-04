@@ -112,6 +112,12 @@ class _CreateServicePageState extends ConsumerState<CreateServicePage> {
             elevation: 0,
             scrolledUnderElevation: 0,
             pinned: true,
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              icon: const Icon(Icons.chevron_left, size: 28),
+              color: AppColors.textPrimary,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             actions: [
               if (_isLoading)
                 const Padding(

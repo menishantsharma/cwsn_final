@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
@@ -196,7 +197,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pick your location')),
+      appBar: const AppTopBar(title: 'Pick your location'),
       body: Stack(
         children: [
           FlutterMap(

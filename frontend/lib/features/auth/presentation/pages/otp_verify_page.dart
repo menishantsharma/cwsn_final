@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
@@ -52,9 +53,7 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('OTP Verification', style: AppTextStyles.titleMedium),
-      ),
+      appBar: const AppTopBar(title: 'OTP Verification'),
       body: SafeArea(
         child: Padding(
           padding: AppDimensions.pagePadding,

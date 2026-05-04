@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
-import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/presentation/widgets/subcategory_card.dart';
@@ -15,9 +15,7 @@ class SubcategoriesPage extends StatelessWidget {
     final subcategories = category.subcategories;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(category.name, style: AppTextStyles.titleMedium),
-      ),
+      appBar: AppTopBar(title: category.name),
       body: subcategories.isEmpty
           ? const EmptyState(
               icon: Icons.list_outlined,

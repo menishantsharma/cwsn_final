@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
-import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
 import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
@@ -94,9 +94,7 @@ class _EditPersonalInfoPageState extends ConsumerState<EditPersonalInfoPage> {
       data: (profile) {
         _initialize(profile);
         return Scaffold(
-          appBar: AppBar(
-            title: Text('Personal Info', style: AppTextStyles.titleMedium),
-          ),
+          appBar: const AppTopBar(title: 'Personal Info'),
           body: Form(
             key: _formKey,
             child: ListView(

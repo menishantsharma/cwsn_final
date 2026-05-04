@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
@@ -74,9 +75,7 @@ class _EditCaregiverInfoPageState extends ConsumerState<EditCaregiverInfoPage> {
         data: (allLanguages) {
           _initialize(profile, allLanguages);
           return Scaffold(
-            appBar: AppBar(
-              title: Text('Caregiver Info', style: AppTextStyles.titleMedium),
-            ),
+            appBar: const AppTopBar(title: 'Caregiver Info'),
             body: Form(
               key: _formKey,
               child: ListView(

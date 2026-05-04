@@ -33,7 +33,11 @@ class AppTheme {
           statusBarIconBrightness: Brightness.dark,
         ),
         titleTextStyle: AppTextStyles.titleMedium,
-        iconTheme: IconThemeData(color: AppColors.textPrimary, size: 20),
+        iconTheme: IconThemeData(color: AppColors.textPrimary, size: 28),
+        actionsIconTheme: IconThemeData(color: AppColors.textPrimary, size: 20),
+      ),
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(padding: EdgeInsets.zero),
       ),
 
       // ── Input ────────────────────────────────────────

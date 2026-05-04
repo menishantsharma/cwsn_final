@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
-import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:frontend/features/services/presentation/widgets/add_service_card.dart';
@@ -22,8 +22,8 @@ class ServicesPage extends ConsumerWidget {
     final filter = ref.watch(serviceFilterProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(subcategory.name, style: AppTextStyles.titleMedium),
+      appBar: AppTopBar(
+        title: subcategory.name,
         actions: [
           Stack(
             alignment: Alignment.center,

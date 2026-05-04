@@ -27,6 +27,12 @@ class ServiceDetailPage extends ConsumerWidget {
             elevation: 0,
             scrolledUnderElevation: 0,
             pinned: true,
+            automaticallyImplyLeading: false,
+            leading: IconButton(
+              icon: const Icon(Icons.chevron_left, size: 28),
+              color: AppColors.textPrimary,
+              onPressed: () => Navigator.of(context).pop(),
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
