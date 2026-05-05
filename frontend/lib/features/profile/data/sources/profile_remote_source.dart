@@ -54,6 +54,20 @@ class ProfileRemoteSource {
     return list.cast<Map<String, dynamic>>();
   }
 
+  Future<void> changePhoneRequest(String newPhoneNumber) async {
+    await _dio.post(
+      '/api/users/change-phone/request/',
+      data: {'new_phone_number': newPhoneNumber},
+    );
+  }
+
+  Future<void> changePhoneConfirm(String newPhoneNumber, String code) async {
+    await _dio.post(
+      '/api/users/change-phone/confirm/',
+      data: {'new_phone_number': newPhoneNumber, 'code': code},
+    );
+  }
+
   Future<void> deleteAccount() async {
     await _dio.delete('/api/users/delete-account/');
   }

@@ -144,6 +144,65 @@ def switch_role(request):
         status=status.HTTP_400_BAD_REQUEST,
     )
 
+class ChangePhoneRequestView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        new_phone = request.data.get('new_phone_number')
+        if not new_phone:
+            return Response({'error': 'new_phone_number is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(phone_number=new_phone).exclude(pk=request.user.pk).exists():
+            return Response({'error': 'This phone number is already in use.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        client.http_client.timeout = 5.0
+        try:
+            verification = client.verify \
+                .v2 \
+                .services(settings.TWILIO_VERIFY_SERVICE_SID) \
+                .verifications \
+                .create(to=new_phone, channel='sms')
+            return Response({'status': 'OTP sent', 'sid': verification.sid}, status=status.HTTP_200_OK)
+        except TwilioRestException as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except requests.exceptions.Timeout:
+            return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+
+class ChangePhoneConfirmView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        new_phone = request.data.get('new_phone_number')
+        code = request.data.get('code')
+        if not new_phone or not code:
+            return Response({'error': 'new_phone_number and code are required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if User.objects.filter(phone_number=new_phone).exclude(pk=request.user.pk).exists():
+            return Response({'error': 'This phone number is already in use.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
+        client.http_client.timeout = 5.0
+        try:
+            check = client.verify \
+                .v2 \
+                .services(settings.TWILIO_VERIFY_SERVICE_SID) \
+                .verification_checks \
+                .create(to=new_phone, code=code)
+
+            if check.status == 'approved':
+                request.user.phone_number = new_phone
+                request.user.save(update_fields=['phone_number'])
+                return Response({'status': 'Phone number updated successfully'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
+        except TwilioRestException as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except requests.exceptions.Timeout:
+            return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+
 @api_view(['DELETE'])
 @perm([permissions.IsAuthenticated])
 def delete_account(request):

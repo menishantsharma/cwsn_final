@@ -16,4 +16,8 @@ urlpatterns = [
     # Core Auth Routes
     path('auth/send-otp/', views.SendOTPView.as_view(), name='send_otp'),
     path('auth/verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
+
+    # Change Phone
+    path('change-phone/request/', views.ChangePhoneRequestView.as_view(), name='change_phone_request'),
+    path('change-phone/confirm/', views.ChangePhoneConfirmView.as_view(), name='change_phone_confirm'),
 ]
