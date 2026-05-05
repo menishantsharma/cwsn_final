@@ -71,41 +71,46 @@ class RequestsTabView extends ConsumerWidget {
             .where((r) => r.status != 'Pending')
             .toList();
 
-        return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-          children: [
-            if (pending.isNotEmpty) ...[
-              SectionLabel('Pending'),
-              const SizedBox(height: AppDimensions.spacing12),
-              ...pending.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.spacing8,
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () => ref.read(requestProvider.notifier).refresh(),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            children: [
+              if (pending.isNotEmpty) ...[
+                SectionLabel('Pending'),
+                const SizedBox(height: AppDimensions.spacing12),
+                ...pending.map(
+                  (r) => Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppDimensions.spacing8,
+                    ),
+                    child: RequestCard(request: r),
                   ),
-                  child: RequestCard(request: r),
                 ),
-              ),
-            ],
-            if (history.isNotEmpty) ...[
-              if (pending.isNotEmpty)
-                const SizedBox(height: AppDimensions.spacing8),
-              SectionLabel('History'),
-              const SizedBox(height: AppDimensions.spacing12),
-              ...history.map(
-                (r) => Padding(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.spacing8,
+              ],
+              if (history.isNotEmpty) ...[
+                if (pending.isNotEmpty)
+                  const SizedBox(height: AppDimensions.spacing8),
+                SectionLabel('History'),
+                const SizedBox(height: AppDimensions.spacing12),
+                ...history.map(
+                  (r) => Padding(
+                    padding: const EdgeInsets.only(
+                      bottom: AppDimensions.spacing8,
+                    ),
+                    child: RequestCard(request: r),
                   ),
-                  child: RequestCard(request: r),
                 ),
-              ),
+              ],
+              if (state.hasMore)
+                LoadMoreButton(
+                  isLoading: state.isLoadingMore,
+                  onPressed: () =>
+                      ref.read(requestProvider.notifier).loadMore(),
+                ),
             ],
-            if (state.hasMore)
-              LoadMoreButton(
-                isLoading: state.isLoadingMore,
-                onPressed: () => ref.read(requestProvider.notifier).loadMore(),
-              ),
-          ],
+          ),
         );
       },
     );

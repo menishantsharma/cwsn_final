@@ -29,27 +29,32 @@ class NotificationsTab extends ConsumerWidget {
             subtitle: 'You\'re all caught up!',
           );
         }
-        return ListView.builder(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-          itemCount: state.items.length + (state.hasMore ? 1 : 0),
-          itemBuilder: (_, i) {
-            if (i == state.items.length) {
-              return LoadMoreButton(
-                isLoading: state.isLoadingMore,
-                onPressed: () =>
-                    ref.read(notificationProvider.notifier).loadMore(),
+        return RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: () =>
+              ref.read(notificationProvider.notifier).refresh(),
+          child: ListView.builder(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+            itemCount: state.items.length + (state.hasMore ? 1 : 0),
+            itemBuilder: (_, i) {
+              if (i == state.items.length) {
+                return LoadMoreButton(
+                  isLoading: state.isLoadingMore,
+                  onPressed: () =>
+                      ref.read(notificationProvider.notifier).loadMore(),
+                );
+              }
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
+                child: NotificationCard(
+                  notification: state.items[i],
+                  onTap: () => ref
+                      .read(notificationProvider.notifier)
+                      .markAsRead(state.items[i].id),
+                ),
               );
-            }
-            return Padding(
-              padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
-              child: NotificationCard(
-                notification: state.items[i],
-                onTap: () => ref
-                    .read(notificationProvider.notifier)
-                    .markAsRead(state.items[i].id),
-              ),
-            );
-          },
+            },
+          ),
         );
       },
     );

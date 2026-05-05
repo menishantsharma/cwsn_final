@@ -43,6 +43,20 @@ class RequestNotifier extends AsyncNotifier<PaginatedState<RequestModel>> {
     );
   }
 
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final page = await ref
+          .read(requestRemoteSourceProvider)
+          .getRequests(page: 1);
+      return PaginatedState(
+        items: page.results,
+        hasMore: page.hasMore,
+        currentPage: 1,
+      );
+    });
+  }
+
   Future<void> accept(int id) async {
     final updated = await ref
         .read(requestRemoteSourceProvider)

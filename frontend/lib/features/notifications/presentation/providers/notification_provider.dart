@@ -44,6 +44,20 @@ class NotificationNotifier
     );
   }
 
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final page = await ref
+          .read(notificationRemoteSourceProvider)
+          .getNotifications(page: 1);
+      return PaginatedState(
+        items: page.results,
+        hasMore: page.hasMore,
+        currentPage: 1,
+      );
+    });
+  }
+
   Future<void> markAsRead(int id) async {
     await ref.read(notificationRemoteSourceProvider).markAsRead(id);
     final current = state.asData?.value;
