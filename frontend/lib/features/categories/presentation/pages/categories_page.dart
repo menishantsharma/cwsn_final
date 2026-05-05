@@ -16,6 +16,7 @@ class CategoriesPage extends ConsumerWidget {
     final categoriesAsync = ref.watch(categoryProvider);
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: categoriesAsync.when(
           loading: () => const Center(
@@ -33,23 +34,18 @@ class CategoriesPage extends ConsumerWidget {
 
             return CustomScrollView(
               slivers: [
-                SliverAppBar(
-                  floating: true,
-                  snap: true,
-                  backgroundColor: Colors.white,
-                  surfaceTintColor: Colors.transparent,
-                  elevation: 0,
-                  expandedHeight: 172,
-                  flexibleSpace: const FlexibleSpaceBar(
-                    collapseMode: CollapseMode.none,
-                    background: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 32, 20, 0),
-                      child: CategoriesHeader(),
-                    ),
-                  ),
+                // Greeting — scrolls away
+                const SliverToBoxAdapter(child: CategoriesGreeting()),
+
+                // Search bar — pinned
+                const SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SearchBarDelegate(),
                 ),
+
+                // Category list
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
                   sliver: SliverList.separated(
                     itemCount: state.items.length,
                     separatorBuilder: (_, _) =>
@@ -60,6 +56,7 @@ class CategoriesPage extends ConsumerWidget {
                     ),
                   ),
                 ),
+
                 SliverToBoxAdapter(
                   child: state.hasMore
                       ? LoadMoreButton(
@@ -76,4 +73,29 @@ class CategoriesPage extends ConsumerWidget {
       ),
     );
   }
+}
+
+class _SearchBarDelegate extends SliverPersistentHeaderDelegate {
+  const _SearchBarDelegate();
+
+  // height = 8 (top pad) + 44 (bar) + 12 (bottom pad)
+  static const double _height = 64;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return const CategoriesSearchBar();
+  }
+
+  @override
+  bool shouldRebuild(_SearchBarDelegate old) => false;
 }
