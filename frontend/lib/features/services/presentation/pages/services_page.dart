@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
@@ -30,7 +31,7 @@ class ServicesPage extends ConsumerWidget {
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
           error: (e, _) => const Center(child: Text('Something went wrong')),
-          data: (services) => myServiceAsync.when(
+          data: (state) => myServiceAsync.when(
             loading: () => const Center(
               child: CircularProgressIndicator(color: AppColors.primary),
             ),
@@ -40,7 +41,8 @@ class ServicesPage extends ConsumerWidget {
                   ? MyServiceCard(service: myService)
                   : AddServiceCard(subcategory: subcategory);
 
-              final isEmpty = services.isEmpty && myService == null;
+              final isEmpty =
+                  state.items.isEmpty && myService == null && !state.hasMore;
 
               return CustomScrollView(
                 clipBehavior: Clip.none,
@@ -77,7 +79,8 @@ class ServicesPage extends ConsumerWidget {
                               backgroundColor: Colors.white,
                               shape: const RoundedRectangleBorder(
                                 borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(24)),
+                                  top: Radius.circular(24),
+                                ),
                               ),
                               builder: (_) =>
                                   FilterSheet(initialFilter: filter),
@@ -101,9 +104,9 @@ class ServicesPage extends ConsumerWidget {
                     ],
                   ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                     sliver: SliverList.separated(
-                      itemCount: isEmpty ? 2 : services.length + 1,
+                      itemCount: isEmpty ? 2 : state.items.length + 1,
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: AppDimensions.spacing12),
                       itemBuilder: (context, index) {
@@ -115,9 +118,19 @@ class ServicesPage extends ConsumerWidget {
                             subtitle: 'Be the first to offer a service here',
                           );
                         }
-                        return ServiceCard(service: services[index - 1]);
+                        return ServiceCard(service: state.items[index - 1]);
                       },
                     ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: state.hasMore
+                        ? LoadMoreButton(
+                            isLoading: state.isLoadingMore,
+                            onPressed: () => ref
+                                .read(serviceProvider(args).notifier)
+                                .loadMore(),
+                          )
+                        : const SizedBox(height: 32),
                   ),
                 ],
               );

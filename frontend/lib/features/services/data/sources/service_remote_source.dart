@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 
 class ServiceRemoteSource {
@@ -6,7 +7,7 @@ class ServiceRemoteSource {
 
   ServiceRemoteSource(this._dio);
 
-  Future<List<ServiceModel>> getServices({
+  Future<PagedResponse<ServiceModel>> getServices({
     required int categoryId,
     required int subCategoryId,
     String? serviceType,
@@ -15,6 +16,7 @@ class ServiceRemoteSource {
     String? caregiverGender,
     int? childAge,
     int? distanceKm,
+    int page = 1,
   }) async {
     final params = <String, dynamic>{
       'category': categoryId,
@@ -25,27 +27,35 @@ class ServiceRemoteSource {
       'caregiver_gender': caregiverGender,
       'child_age': childAge,
       'distance_km': distanceKm,
+      'page': page,
     }..removeWhere((_, v) => v == null);
-    final response = await _dio.get(
+
+    final res = await _dio.get(
       '/api/services/services/',
       queryParameters: params,
     );
 
-    final results = response.data['results'] as List<dynamic>;
-    return results
-        .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final results = res.data['results'] as List<dynamic>;
+    return PagedResponse(
+      results: results
+          .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      hasMore: res.data['next'] != null,
+    );
   }
 
-  Future<List<ServiceModel>> getAllMyServices() async {
-    final response = await _dio.get(
+  Future<PagedResponse<ServiceModel>> getAllMyServices({int page = 1}) async {
+    final res = await _dio.get(
       '/api/services/services/',
-      queryParameters: {'mine': 'true'},
+      queryParameters: {'mine': 'true', 'page': page},
     );
-    final results = response.data['results'] as List<dynamic>;
-    return results
-        .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
-        .toList();
+    final results = res.data['results'] as List<dynamic>;
+    return PagedResponse(
+      results: results
+          .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      hasMore: res.data['next'] != null,
+    );
   }
 
   Future<ServiceModel?> getMyServiceForSubcategory({

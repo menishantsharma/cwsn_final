@@ -52,7 +52,7 @@ class MyServicesCard extends ConsumerWidget {
               padding: const EdgeInsets.all(AppDimensions.spacing16),
               child: Text('Failed to load services', style: AppTextStyles.bodySmall),
             ),
-            data: (services) => services.isEmpty
+            data: (state) => state.items.isEmpty
                 ? Padding(
                     padding: const EdgeInsets.all(AppDimensions.spacing16),
                     child: Text(
@@ -64,7 +64,7 @@ class MyServicesCard extends ConsumerWidget {
                     ),
                   )
                 : Column(
-                    children: services
+                    children: state.items
                         .map((service) => _ServiceRow(service: service))
                         .toList(),
                   ),

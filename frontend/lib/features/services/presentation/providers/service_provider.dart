@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/services/data/repositories/service_repository_impl.dart';
 import 'package:frontend/features/services/data/sources/service_remote_source.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
@@ -47,12 +48,22 @@ class ServiceFilter {
     Object? distanceKm = _sentinel,
   }) {
     return ServiceFilter(
-      serviceType: serviceType == _sentinel ? this.serviceType : serviceType as String?,
-      paymentType: paymentType == _sentinel ? this.paymentType : paymentType as String?,
-      targetGender: targetGender == _sentinel ? this.targetGender : targetGender as String?,
-      caregiverGender: caregiverGender == _sentinel ? this.caregiverGender : caregiverGender as String?,
+      serviceType: serviceType == _sentinel
+          ? this.serviceType
+          : serviceType as String?,
+      paymentType: paymentType == _sentinel
+          ? this.paymentType
+          : paymentType as String?,
+      targetGender: targetGender == _sentinel
+          ? this.targetGender
+          : targetGender as String?,
+      caregiverGender: caregiverGender == _sentinel
+          ? this.caregiverGender
+          : caregiverGender as String?,
       childAge: childAge == _sentinel ? this.childAge : childAge as int?,
-      distanceKm: distanceKm == _sentinel ? this.distanceKm : distanceKm as int?,
+      distanceKm: distanceKm == _sentinel
+          ? this.distanceKm
+          : distanceKm as int?,
     );
   }
 }
@@ -61,8 +72,8 @@ const _sentinel = Object();
 
 final serviceFilterProvider =
     NotifierProvider<ServiceFilterNotifier, ServiceFilter>(
-  ServiceFilterNotifier.new,
-);
+      ServiceFilterNotifier.new,
+    );
 
 class ServiceFilterNotifier extends Notifier<ServiceFilter> {
   @override
@@ -81,27 +92,117 @@ class ServiceFilterNotifier extends Notifier<ServiceFilter> {
   void clearAll() => state = const ServiceFilter();
 }
 
-final serviceProvider = FutureProvider.family<List<ServiceModel>, (int, int)>((
-  ref,
-  args,
-) {
-  final (categoryId, subCategoryId) = args;
-  final filter = ref.watch(serviceFilterProvider);
-  return ref.watch(serviceRepositoryProvider).getServices(
-        categoryId: categoryId,
-        subCategoryId: subCategoryId,
-        serviceType: filter.serviceType,
-        paymentType: filter.paymentType,
-        targetGender: filter.targetGender,
-        caregiverGender: filter.caregiverGender,
-        childAge: filter.childAge,
-        distanceKm: filter.distanceKm,
-      );
-});
+class ServiceNotifier extends AsyncNotifier<PaginatedState<ServiceModel>> {
+  final int categoryId;
+  final int subCategoryId;
+  ServiceNotifier(this.categoryId, this.subCategoryId);
 
-final allMyServicesProvider = FutureProvider<List<ServiceModel>>((ref) {
-  return ref.watch(serviceRepositoryProvider).getAllMyServices();
-});
+  @override
+  Future<PaginatedState<ServiceModel>> build() async {
+    // Watching filter here means any filter change auto-resets to page 1
+    final filter = ref.watch(serviceFilterProvider);
+    final page = await ref
+        .read(serviceRepositoryProvider)
+        .getServices(
+          categoryId: categoryId,
+          subCategoryId: subCategoryId,
+          serviceType: filter.serviceType,
+          paymentType: filter.paymentType,
+          targetGender: filter.targetGender,
+          caregiverGender: filter.caregiverGender,
+          childAge: filter.childAge,
+          distanceKm: filter.distanceKm,
+          page: 1,
+        );
+    return PaginatedState(
+      items: page.results,
+      hasMore: page.hasMore,
+      currentPage: 1,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    final filter = ref.read(serviceFilterProvider);
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final nextPage = current.currentPage + 1;
+    final page = await ref
+        .read(serviceRepositoryProvider)
+        .getServices(
+          categoryId: categoryId,
+          subCategoryId: subCategoryId,
+          serviceType: filter.serviceType,
+          paymentType: filter.paymentType,
+          targetGender: filter.targetGender,
+          caregiverGender: filter.caregiverGender,
+          childAge: filter.childAge,
+          distanceKm: filter.distanceKm,
+          page: nextPage,
+        );
+
+    final latest = state.asData?.value;
+    if (latest == null || !latest.isLoadingMore) return;
+    state = AsyncData(
+      latest.copyWith(
+        items: [...current.items, ...page.results],
+        hasMore: page.hasMore,
+        isLoadingMore: false,
+        currentPage: nextPage,
+      ),
+    );
+  }
+}
+
+final serviceProvider =
+    AsyncNotifierProvider.family<
+      ServiceNotifier,
+      PaginatedState<ServiceModel>,
+      (int, int)
+    >((args) => ServiceNotifier(args.$1, args.$2));
+
+class AllMyServicesNotifier
+    extends AsyncNotifier<PaginatedState<ServiceModel>> {
+  @override
+  Future<PaginatedState<ServiceModel>> build() async {
+    final page = await ref
+        .read(serviceRepositoryProvider)
+        .getAllMyServices(page: 1);
+    return PaginatedState(
+      items: page.results,
+      hasMore: page.hasMore,
+      currentPage: 1,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final nextPage = current.currentPage + 1;
+    final page = await ref
+        .read(serviceRepositoryProvider)
+        .getAllMyServices(page: nextPage);
+
+    final latest = state.asData?.value;
+    if (latest == null || !latest.isLoadingMore) return;
+    state = AsyncData(
+      latest.copyWith(
+        items: [...current.items, ...page.results],
+        hasMore: page.hasMore,
+        isLoadingMore: false,
+        currentPage: nextPage,
+      ),
+    );
+  }
+}
+
+final allMyServicesProvider =
+    AsyncNotifierProvider<AllMyServicesNotifier, PaginatedState<ServiceModel>>(
+      AllMyServicesNotifier.new,
+    );
 
 final myServiceProvider = FutureProvider.family<ServiceModel?, (int, int)>((
   ref,

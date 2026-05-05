@@ -1,9 +1,10 @@
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 
 abstract class ServiceRepository {
-  Future<List<ServiceModel>> getAllMyServices();
+  Future<PagedResponse<ServiceModel>> getAllMyServices({int page = 1});
 
-  Future<List<ServiceModel>> getServices({
+  Future<PagedResponse<ServiceModel>> getServices({
     required int categoryId,
     required int subCategoryId,
     String? serviceType,
@@ -12,6 +13,7 @@ abstract class ServiceRepository {
     String? caregiverGender,
     int? childAge,
     int? distanceKm,
+    int page = 1,
   });
 
   Future<ServiceModel?> getMyServiceForSubcategory({

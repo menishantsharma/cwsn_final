@@ -1,3 +1,4 @@
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/services/data/sources/service_remote_source.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/domain/repositories/service_repository.dart';
@@ -8,12 +9,12 @@ class ServiceRepositoryImpl implements ServiceRepository {
   ServiceRepositoryImpl(this._remoteSource);
 
   @override
-  Future<List<ServiceModel>> getAllMyServices() {
-    return _remoteSource.getAllMyServices();
+  Future<PagedResponse<ServiceModel>> getAllMyServices({int page = 1}) {
+    return _remoteSource.getAllMyServices(page: page);
   }
 
   @override
-  Future<List<ServiceModel>> getServices({
+  Future<PagedResponse<ServiceModel>> getServices({
     required int categoryId,
     required int subCategoryId,
     String? serviceType,
@@ -22,6 +23,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
     String? caregiverGender,
     int? childAge,
     int? distanceKm,
+    int page = 1,
   }) {
     return _remoteSource.getServices(
       categoryId: categoryId,
@@ -32,6 +34,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
       caregiverGender: caregiverGender,
       childAge: childAge,
       distanceKm: distanceKm,
+      page: page,
     );
   }
 
