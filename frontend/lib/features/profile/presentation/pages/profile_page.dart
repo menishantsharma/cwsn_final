@@ -8,68 +8,10 @@ import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/confirm_dialog.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/profile/domain/models/profile_model.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
-import 'package:frontend/features/profile/presentation/widgets/add_child_sheet.dart';
-import 'package:frontend/features/profile/presentation/widgets/child_row.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key});
-
-  void _showAddChildSheet(BuildContext context, WidgetRef ref) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusXl),
-        ),
-      ),
-      builder: (_) => AddChildSheet(
-        onSave: (data) => ref.read(profileProvider.notifier).addChild(data),
-      ),
-    );
-  }
-
-  void _showEditChildSheet(
-    BuildContext context,
-    WidgetRef ref,
-    ChildProfileModel child,
-  ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusXl),
-        ),
-      ),
-      builder: (_) => AddChildSheet(
-        initial: child,
-        onSave: (data) =>
-            ref.read(profileProvider.notifier).updateChild(child.id, data),
-      ),
-    );
-  }
-
-  void _confirmDeleteChild(
-    BuildContext context,
-    WidgetRef ref,
-    ChildProfileModel child,
-  ) {
-    showDialog(
-      context: context,
-      builder: (_) => ConfirmDialog(
-        title: 'Remove child?',
-        message: '${child.name} will be removed from your profile.',
-        confirmLabel: 'Remove',
-        isDanger: true,
-        onConfirm: () => ref.read(profileProvider.notifier).deleteChild(child.id),
-      ),
-    );
-  }
 
   void _confirmLogout(BuildContext context, WidgetRef ref) {
     showDialog(
@@ -113,7 +55,6 @@ class ProfilePage extends ConsumerWidget {
         data: (profile) {
           final name = profile.cwsnProfile?.name ?? '';
           final phone = profile.cwsnProfile?.phoneNumber;
-          final children = profile.cwsnProfile?.children ?? [];
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(20, 28, 20, 48),
@@ -159,8 +100,8 @@ class ProfilePage extends ConsumerWidget {
 
               const SizedBox(height: AppDimensions.spacing32),
 
-              // ── Account section ──────────────────────────
-              _SectionLabel('Account'),
+              // ── Personal section ─────────────────────────
+              _SectionLabel('Personal'),
               const SizedBox(height: AppDimensions.spacing8),
               _MenuGroup(
                 children: [
@@ -170,6 +111,21 @@ class ProfilePage extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.editPersonalInfo),
                   ),
                   _MenuRow(
+                    icon: Icons.child_care_outlined,
+                    label: 'My Children',
+                    onTap: () => context.push(AppRoutes.myChildren),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppDimensions.spacing24),
+
+              // ── Caregiver section ────────────────────────
+              _SectionLabel('Caregiver'),
+              const SizedBox(height: AppDimensions.spacing8),
+              _MenuGroup(
+                children: [
+                  _MenuRow(
                     icon: Icons.medical_services_outlined,
                     label: 'Caregiver Info',
                     onTap: () => context.push(AppRoutes.editCaregiverInfo),
@@ -178,54 +134,6 @@ class ProfilePage extends ConsumerWidget {
                     icon: Icons.home_repair_service_outlined,
                     label: 'My Services',
                     onTap: () => context.push(AppRoutes.myServices),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: AppDimensions.spacing24),
-
-              // ── Children section ─────────────────────────
-              _SectionLabel('Children'),
-              const SizedBox(height: AppDimensions.spacing8),
-              _MenuGroup(
-                children: [
-                  if (children.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppDimensions.spacing16,
-                        vertical: AppDimensions.spacing16,
-                      ),
-                      child: Text(
-                        'No children added yet',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.textHint,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    )
-                  else
-                    ...children.map(
-                      (child) => Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.spacing16,
-                          vertical: AppDimensions.spacing4,
-                        ),
-                        child: ChildRow(
-                          child: child,
-                          onEdit: () => _showEditChildSheet(context, ref, child),
-                          onDelete: () =>
-                              _confirmDeleteChild(context, ref, child),
-                        ),
-                      ),
-                    ),
-                  const Divider(height: 1, color: AppColors.border),
-                  _MenuRow(
-                    icon: Icons.add_rounded,
-                    label: 'Add Child',
-                    iconColor: AppColors.primary,
-                    labelColor: AppColors.primary,
-                    showChevron: false,
-                    onTap: () => _showAddChildSheet(context, ref),
                   ),
                 ],
               ),
@@ -287,8 +195,15 @@ class _MenuGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.border),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -301,7 +216,6 @@ class _MenuGroup extends StatelessWidget {
     final result = <Widget>[];
     for (var i = 0; i < items.length; i++) {
       result.add(items[i]);
-      // don't add a divider after an item that is itself a Divider
       if (i < items.length - 1 && items[i] is! Divider) {
         final next = items[i + 1];
         if (next is! Divider) {
@@ -323,7 +237,6 @@ class _MenuRow extends StatelessWidget {
   final VoidCallback onTap;
   final Color iconColor;
   final Color labelColor;
-  final bool showChevron;
 
   const _MenuRow({
     required this.icon,
@@ -331,7 +244,6 @@ class _MenuRow extends StatelessWidget {
     required this.onTap,
     this.iconColor = AppColors.textSecondary,
     this.labelColor = AppColors.textPrimary,
-    this.showChevron = true,
   });
 
   @override
@@ -365,12 +277,11 @@ class _MenuRow extends StatelessWidget {
                 ),
               ),
             ),
-            if (showChevron)
-              const Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: AppColors.textHint,
-              ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: AppColors.textHint,
+            ),
           ],
         ),
       ),

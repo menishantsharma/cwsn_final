@@ -64,70 +64,76 @@ class _AddChildSheetState extends State<AddChildSheet> {
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: AppDimensions.spacing20,
-        right: AppDimensions.spacing20,
-        top: AppDimensions.spacing20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppDimensions.spacing32,
+    final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: AppDimensions.spacing20),
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+      child: SingleChildScrollView(
+        padding: EdgeInsets.only(
+          left: AppDimensions.spacing20,
+          right: AppDimensions.spacing20,
+          top: AppDimensions.spacing20,
+          bottom: keyboardHeight + AppDimensions.spacing32,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: AppDimensions.spacing20),
+                  decoration: BoxDecoration(
+                    color: AppColors.border,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+                  ),
                 ),
               ),
-            ),
-            Text(
-              isEdit ? 'Edit Child' : 'Add Child',
-              style: AppTextStyles.titleMedium,
-            ),
-            const SizedBox(height: AppDimensions.spacing24),
-            LabeledField(
-              label: 'Name',
-              child: TextFormField(
-                controller: _nameController,
-                decoration: inputDecoration("Child's full name"),
-                textCapitalization: TextCapitalization.words,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Required' : null,
+              Text(
+                isEdit ? 'Edit Child' : 'Add Child',
+                style: AppTextStyles.titleMedium,
               ),
-            ),
-            LabeledField(
-              label: 'Age',
-              child: TextFormField(
-                controller: _ageController,
-                decoration: inputDecoration('e.g. 7'),
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return 'Required';
-                  final age = int.tryParse(v.trim());
-                  if (age == null || age < 1 || age > 18) return 'Enter a valid age (1–18)';
-                  return null;
-                },
+              const SizedBox(height: AppDimensions.spacing24),
+              LabeledField(
+                label: 'Name',
+                child: TextFormField(
+                  controller: _nameController,
+                  decoration: inputDecoration("Child's full name"),
+                  textCapitalization: TextCapitalization.words,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? 'Required' : null,
+                ),
               ),
-            ),
-            _GenderField(
-              selected: _gender,
-              onChanged: (g) => setState(() => _gender = g),
-            ),
-            const SizedBox(height: AppDimensions.spacing20),
-            SaveButton(
-              saving: _loading,
-              onTap: _submit,
-            ),
-          ],
+              LabeledField(
+                label: 'Age',
+                child: TextFormField(
+                  controller: _ageController,
+                  decoration: inputDecoration('e.g. 7'),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Required';
+                    final age = int.tryParse(v.trim());
+                    if (age == null || age < 1 || age > 18) return 'Enter a valid age (1–18)';
+                    return null;
+                  },
+                ),
+              ),
+              _GenderField(
+                selected: _gender,
+                onChanged: (g) => setState(() => _gender = g),
+              ),
+              const SizedBox(height: AppDimensions.spacing20),
+              SaveButton(
+                saving: _loading,
+                onTap: _submit,
+              ),
+            ],
+          ),
         ),
       ),
     );
