@@ -37,7 +37,8 @@ class CategoriesHeader extends StatelessWidget {
                 final unreadNotifs = ref
                     .watch(notificationProvider)
                     .maybeWhen(
-                      data: (list) => list.where((n) => !n.isRead).length,
+                      data: (state) =>
+                          state.items.where((n) => !n.isRead).length,
                       orElse: () => 0,
                     );
                 final pendingRequests = ref.watch(pendingRequestCountProvider);

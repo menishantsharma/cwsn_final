@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
@@ -20,24 +21,35 @@ class NotificationsTab extends ConsumerWidget {
       ),
       error: (e, _) =>
           Center(child: Text('Error: $e', style: AppTextStyles.bodyMedium)),
-      data: (notifications) {
-        if (notifications.isEmpty) {
+      data: (state) {
+        if (state.items.isEmpty && !state.hasMore) {
           return const EmptyState(
             icon: Icons.notifications_outlined,
             title: 'No notifications yet',
             subtitle: 'You\'re all caught up!',
           );
         }
-        return ListView.separated(
+        return ListView.builder(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-          itemCount: notifications.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppDimensions.spacing8),
-          itemBuilder: (_, i) => NotificationCard(
-            notification: notifications[i],
-            onTap: () => ref
-                .read(notificationProvider.notifier)
-                .markAsRead(notifications[i].id),
-          ),
+          itemCount: state.items.length + (state.hasMore ? 1 : 0),
+          itemBuilder: (_, i) {
+            if (i == state.items.length) {
+              return LoadMoreButton(
+                isLoading: state.isLoadingMore,
+                onPressed: () =>
+                    ref.read(notificationProvider.notifier).loadMore(),
+              );
+            }
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
+              child: NotificationCard(
+                notification: state.items[i],
+                onTap: () => ref
+                    .read(notificationProvider.notifier)
+                    .markAsRead(state.items[i].id),
+              ),
+            );
+          },
         );
       },
     );

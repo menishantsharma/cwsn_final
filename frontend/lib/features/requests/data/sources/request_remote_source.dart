@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/requests/domain/models/request_model.dart';
 
 class RequestRemoteSource {
@@ -6,10 +7,18 @@ class RequestRemoteSource {
 
   RequestRemoteSource(this._dio);
 
-  Future<List<RequestModel>> getRequests() async {
-    final res = await _dio.get('/api/interactions/requests/');
+  Future<PagedResponse<RequestModel>> getRequests({int page = 1}) async {
+    final res = await _dio.get(
+      '/api/interactions/requests/',
+      queryParameters: {'page': page},
+    );
+
     final results = res.data['results'] as List;
-    return results.map((e) => RequestModel.fromJson(e)).toList();
+
+    return PagedResponse(
+      results: results.map((e) => RequestModel.fromJson(e)).toList(),
+      hasMore: res.data['next'] != null,
+    );
   }
 
   Future<RequestModel> acceptRequest(int id) async {
@@ -38,15 +47,22 @@ class RequestRemoteSource {
     return RequestModel.fromJson(res.data);
   }
 
-  Future<List<RequestModel>> getRequestsAsParent({int? serviceId}) async {
+  Future<PagedResponse<RequestModel>> getRequestsAsParent({
+    int? serviceId,
+    int page = 1,
+  }) async {
     final res = await _dio.get(
       '/api/interactions/requests/',
       queryParameters: {
         'as_parent': 'true',
         if (serviceId != null) 'service': serviceId,
+        'page': page,
       },
     );
     final results = res.data['results'] as List;
-    return results.map((e) => RequestModel.fromJson(e)).toList();
+    return PagedResponse(
+      results: results.map((e) => RequestModel.fromJson(e)).toList(),
+      hasMore: res.data['next'] != null,
+    );
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
@@ -29,7 +30,10 @@ class RequestsTab extends ConsumerWidget {
             ),
             child: Text(
               '$pending',
-              style: AppTextStyles.labelSmall.copyWith(color: Colors.white, fontSize: 10),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: Colors.white,
+                fontSize: 10,
+              ),
             ),
           ),
         ],
@@ -51,8 +55,8 @@ class RequestsTabView extends ConsumerWidget {
       ),
       error: (e, _) =>
           Center(child: Text('Error: $e', style: AppTextStyles.bodyMedium)),
-      data: (requests) {
-        if (requests.isEmpty) {
+      data: (state) {
+        if (state.items.isEmpty && !state.hasMore) {
           return const EmptyState(
             icon: Icons.handshake_outlined,
             title: 'No requests yet',
@@ -60,8 +64,12 @@ class RequestsTabView extends ConsumerWidget {
           );
         }
 
-        final pending = requests.where((r) => r.status == 'Pending').toList();
-        final history = requests.where((r) => r.status != 'Pending').toList();
+        final pending = state.items
+            .where((r) => r.status == 'Pending')
+            .toList();
+        final history = state.items
+            .where((r) => r.status != 'Pending')
+            .toList();
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
@@ -69,20 +77,34 @@ class RequestsTabView extends ConsumerWidget {
             if (pending.isNotEmpty) ...[
               SectionLabel('Pending'),
               const SizedBox(height: AppDimensions.spacing12),
-              ...pending.map((r) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
-                    child: RequestCard(request: r),
-                  )),
+              ...pending.map(
+                (r) => Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: AppDimensions.spacing8,
+                  ),
+                  child: RequestCard(request: r),
+                ),
+              ),
             ],
             if (history.isNotEmpty) ...[
-              if (pending.isNotEmpty) const SizedBox(height: AppDimensions.spacing8),
+              if (pending.isNotEmpty)
+                const SizedBox(height: AppDimensions.spacing8),
               SectionLabel('History'),
               const SizedBox(height: AppDimensions.spacing12),
-              ...history.map((r) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppDimensions.spacing8),
-                    child: RequestCard(request: r),
-                  )),
+              ...history.map(
+                (r) => Padding(
+                  padding: const EdgeInsets.only(
+                    bottom: AppDimensions.spacing8,
+                  ),
+                  child: RequestCard(request: r),
+                ),
+              ),
             ],
+            if (state.hasMore)
+              LoadMoreButton(
+                isLoading: state.isLoadingMore,
+                onPressed: () => ref.read(requestProvider.notifier).loadMore(),
+              ),
           ],
         );
       },

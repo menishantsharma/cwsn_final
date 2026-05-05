@@ -65,11 +65,11 @@ class ReadProviderSection extends ConsumerWidget {
                   ),
                 ),
                 error: (_, e) => RequestButton(serviceId: service.id),
-                data: (allRequests) {
-                  final serviceRequest = allRequests
+                data: (state) {
+                  final serviceRequest = state.items
                       .where((r) => r.serviceId == service.id)
                       .firstOrNull;
-                  final acceptedForCaregiver = allRequests
+                  final acceptedForCaregiver = state.items
                       .where(
                         (r) =>
                             r.caregiverId == service.caregiverId &&
