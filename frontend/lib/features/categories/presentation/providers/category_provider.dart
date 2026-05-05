@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:frontend/features/categories/data/sources/category_remote_source.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
+import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 import 'package:frontend/features/categories/domain/repositories/category_repository.dart';
 import 'package:frontend/providers/core_providers.dart';
 
@@ -25,3 +26,21 @@ final categoryProvider =
     AsyncNotifierProvider<CategoryNotifier, List<CategoryModel>>(
       CategoryNotifier.new,
     );
+
+class SubcategoryNotifier extends AsyncNotifier<List<SubcategoryModel>> {
+  final int categoryId;
+  SubcategoryNotifier(this.categoryId);
+
+  @override
+  Future<List<SubcategoryModel>> build() async {
+    ref.keepAlive();
+    return ref.watch(categoryRepositoryProvider).getSubcategories(categoryId);
+  }
+}
+
+final subcategoryProvider =
+    AsyncNotifierProvider.family<
+      SubcategoryNotifier,
+      List<SubcategoryModel>,
+      int
+    >(SubcategoryNotifier.new);

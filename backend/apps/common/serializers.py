@@ -13,12 +13,9 @@ class ServiceSubCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'category', 'name', 'short_description', 'image_url']
 
 class ServiceCategorySerializer(serializers.ModelSerializer):
-    # Optionally nest sub-categories so the frontend gets everything in one call
-    subcategories = ServiceSubCategorySerializer(many=True, read_only=True)
-
     class Meta:
         model = ServiceCategory
-        fields = ['id', 'name', 'short_description', 'image_url', 'subcategories']
+        fields = ['id', 'name', 'short_description', 'image_url']
 
 class DisabilitySerializer(serializers.ModelSerializer):
     class Meta:
