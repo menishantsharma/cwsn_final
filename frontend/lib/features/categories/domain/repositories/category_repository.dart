@@ -1,7 +1,8 @@
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 
 abstract class CategoryRepository {
-  Future<List<CategoryModel>> getCategories();
-  Future<List<SubcategoryModel>> getSubcategories(int categoryId);
+  Future<PagedResponse<CategoryModel>> getCategories({int page = 1});
+  Future<PagedResponse<SubcategoryModel>> getSubcategories(int categoryId, {int page = 1});
 }

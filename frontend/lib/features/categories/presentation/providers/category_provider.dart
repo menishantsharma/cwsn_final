@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/pagination/paginated_state.dart';
 import 'package:frontend/features/categories/data/repositories/category_repository_impl.dart';
 import 'package:frontend/features/categories/data/sources/category_remote_source.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
@@ -14,33 +15,35 @@ final categoryRepositoryProvider = Provider<CategoryRepository>(
   (ref) => CategoryRepositoryImpl(ref.watch(categoryRemoteSourceProvider)),
 );
 
-class CategoryNotifier extends AsyncNotifier<List<CategoryModel>> {
+class CategoryNotifier extends PaginatedNotifier<CategoryModel> {
   @override
-  Future<List<CategoryModel>> build() async {
-    ref.keepAlive();
-    return ref.watch(categoryRepositoryProvider).getCategories();
+  Future<PagedResponse<CategoryModel>> fetchPage(int page) async {
+    return await ref.read(categoryRepositoryProvider).getCategories(page: page);
   }
 }
 
 final categoryProvider =
-    AsyncNotifierProvider<CategoryNotifier, List<CategoryModel>>(
+    AsyncNotifierProvider<CategoryNotifier, PaginatedState<CategoryModel>>(
       CategoryNotifier.new,
     );
 
-class SubcategoryNotifier extends AsyncNotifier<List<SubcategoryModel>> {
+class SubcategoryNotifier extends PaginatedFamilyNotifier<SubcategoryModel, int> {
   final int categoryId;
+
+  @override
+  int get arg => categoryId;
+
   SubcategoryNotifier(this.categoryId);
 
   @override
-  Future<List<SubcategoryModel>> build() async {
-    ref.keepAlive();
-    return ref.watch(categoryRepositoryProvider).getSubcategories(categoryId);
+  Future<PagedResponse<SubcategoryModel>> fetchPage(int categoryId, int page) async {
+    return ref.read(categoryRepositoryProvider).getSubcategories(categoryId, page: page);
   }
 }
 
 final subcategoryProvider =
     AsyncNotifierProvider.family<
       SubcategoryNotifier,
-      List<SubcategoryModel>,
+      PaginatedState<SubcategoryModel>,
       int
     >(SubcategoryNotifier.new);

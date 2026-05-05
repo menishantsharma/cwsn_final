@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
@@ -21,8 +22,8 @@ class CategoriesPage extends ConsumerWidget {
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
           error: (error, _) => Center(child: Text('Error: $error')),
-          data: (categories) {
-            if (categories.isEmpty) {
+          data: (state) {
+            if (state.items.isEmpty) {
               return const EmptyState(
                 icon: Icons.category_outlined,
                 title: 'No categories available',
@@ -48,14 +49,25 @@ class CategoriesPage extends ConsumerWidget {
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
                   sliver: SliverList.separated(
-                    itemCount: categories.length,
+                    itemCount: state.items.length,
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppDimensions.spacing12),
-                    itemBuilder: (context, index) =>
-                        CategoryCard(category: categories[index], index: index),
+                    itemBuilder: (context, index) => CategoryCard(
+                      category: state.items[index],
+                      index: index,
+                    ),
                   ),
+                ),
+                SliverToBoxAdapter(
+                  child: state.hasMore
+                      ? LoadMoreButton(
+                          isLoading: state.isLoadingMore,
+                          onPressed: () =>
+                              ref.read(categoryProvider.notifier).loadMore(),
+                        )
+                      : const SizedBox(height: 32),
                 ),
               ],
             );
