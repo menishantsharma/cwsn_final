@@ -26,17 +26,16 @@ class OtpPinInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseDecoration = BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-      border: Border.all(color: AppColors.border),
+      color: AppColors.surfaceVariant,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
     );
 
     final defaultTheme = PinTheme(
-      width: 46,
-      height: 52,
-      textStyle: AppTextStyles.bodyLarge.copyWith(
+      width: 48,
+      height: 56,
+      textStyle: AppTextStyles.titleMedium.copyWith(
         color: AppColors.textPrimary,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
       ),
       decoration: baseDecoration,
     );
@@ -49,11 +48,13 @@ class OtpPinInput extends StatelessWidget {
       defaultPinTheme: defaultTheme,
       focusedPinTheme: defaultTheme.copyWith(
         decoration: baseDecoration.copyWith(
+          color: AppColors.primary.withValues(alpha: 0.08),
           border: Border.all(color: AppColors.primary, width: 1.5),
         ),
       ),
       submittedPinTheme: defaultTheme.copyWith(
         decoration: baseDecoration.copyWith(
+          color: AppColors.primaryLight,
           border: Border.all(color: AppColors.primary, width: 1.5),
         ),
       ),

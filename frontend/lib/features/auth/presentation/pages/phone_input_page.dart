@@ -52,16 +52,33 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
     });
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => FocusScope.of(context).unfocus(),
         child: SafeArea(
           child: Padding(
-            padding: AppDimensions.pagePadding,
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const Spacer(flex: 3),
+                const Spacer(flex: 2),
+
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.favorite_rounded,
+                    color: AppColors.primary,
+                    size: 30,
+                  ),
+                ),
+
+                const SizedBox(height: AppDimensions.spacing24),
 
                 RichText(
                   textAlign: TextAlign.center,
@@ -71,19 +88,29 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                       fontSize: 28,
                     ),
                     children: [
-                      TextSpan(
+                      const TextSpan(
                         text: 'Care',
-                        style: const TextStyle(color: AppColors.primary),
+                        style: TextStyle(color: AppColors.primary),
                       ),
-                      TextSpan(
+                      const TextSpan(
                         text: ' starts with\nconnection.',
-                        style: const TextStyle(color: AppColors.textPrimary),
+                        style: TextStyle(color: AppColors.textPrimary),
                       ),
                     ],
                   ),
                 ),
 
-                const Spacer(flex: 3),
+                const SizedBox(height: AppDimensions.spacing12),
+
+                Text(
+                  'Enter your phone number to get started',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textHint,
+                  ),
+                ),
+
+                const Spacer(flex: 2),
 
                 PhoneInputField(
                   controller: _phoneNumberController,
@@ -91,7 +118,7 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                   onChanged: () => setState(() {}),
                 ),
 
-                const SizedBox(height: AppDimensions.spacing16),
+                const SizedBox(height: AppDimensions.spacing12),
 
                 SendOtpButton(
                   isValid: _isValid,
@@ -111,7 +138,7 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                   ),
                 ),
 
-                const Spacer(flex: 2),
+                const Spacer(flex: 1),
               ],
             ),
           ),

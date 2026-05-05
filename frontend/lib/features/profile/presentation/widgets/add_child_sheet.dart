@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/profile/domain/models/profile_model.dart';
+import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
 
 class AddChildSheet extends StatefulWidget {
   final Future<void> Function(Map<String, dynamic>) onSave;
@@ -61,12 +63,13 @@ class _AddChildSheetState extends State<AddChildSheet> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.initial != null;
+
     return Padding(
       padding: EdgeInsets.only(
         left: AppDimensions.spacing20,
         right: AppDimensions.spacing20,
-        top: AppDimensions.spacing24,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppDimensions.spacing24,
+        top: AppDimensions.spacing20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + AppDimensions.spacing32,
       ),
       child: Form(
         key: _formKey,
@@ -85,66 +88,44 @@ class _AddChildSheetState extends State<AddChildSheet> {
                 ),
               ),
             ),
-            Text(isEdit ? 'Edit Child' : 'Add Child', style: AppTextStyles.titleMedium),
+            Text(
+              isEdit ? 'Edit Child' : 'Add Child',
+              style: AppTextStyles.titleMedium,
+            ),
             const SizedBox(height: AppDimensions.spacing24),
-            _SheetField(
+            LabeledField(
               label: 'Name',
               child: TextFormField(
                 controller: _nameController,
-                decoration: _sheetInputDecoration('Child\'s full name'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                decoration: inputDecoration("Child's full name"),
+                textCapitalization: TextCapitalization.words,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Required' : null,
               ),
             ),
-            _SheetField(
+            LabeledField(
               label: 'Age',
               child: TextFormField(
                 controller: _ageController,
-                decoration: _sheetInputDecoration('e.g. 7'),
+                decoration: inputDecoration('e.g. 7'),
                 keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                 validator: (v) {
                   if (v == null || v.trim().isEmpty) return 'Required';
-                  if (int.tryParse(v.trim()) == null) return 'Must be a number';
+                  final age = int.tryParse(v.trim());
+                  if (age == null || age < 1 || age > 18) return 'Enter a valid age (1–18)';
                   return null;
                 },
               ),
             ),
-            _SheetField(
-              label: 'Gender',
-              child: DropdownButtonFormField<String>(
-                initialValue: _gender,
-                decoration: _sheetInputDecoration('Select'),
-                items: ['Male', 'Female', 'Other']
-                    .map((g) => DropdownMenuItem(value: g, child: Text(g)))
-                    .toList(),
-                onChanged: (v) => setState(() => _gender = v!),
-              ),
+            _GenderField(
+              selected: _gender,
+              onChanged: (g) => setState(() => _gender = g),
             ),
-            const SizedBox(height: AppDimensions.spacing8),
-            SizedBox(
-              height: AppDimensions.buttonHeight,
-              child: Material(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                child: InkWell(
-                  onTap: _loading ? null : _submit,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
-                  child: Center(
-                    child: _loading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : Text(
-                            isEdit ? 'Update' : 'Save',
-                            style: AppTextStyles.labelLarge.copyWith(
-                              color: Colors.white,
-                              fontSize: 16,
-                            ),
-                          ),
-                  ),
-                ),
-              ),
+            const SizedBox(height: AppDimensions.spacing20),
+            SaveButton(
+              saving: _loading,
+              onTap: _submit,
             ),
           ],
         ),
@@ -153,59 +134,61 @@ class _AddChildSheetState extends State<AddChildSheet> {
   }
 }
 
-InputDecoration _sheetInputDecoration(String hint) => InputDecoration(
-      hintText: hint,
-      hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
-      filled: true,
-      fillColor: AppColors.background,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spacing16,
-        vertical: AppDimensions.spacing12,
-      ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        borderSide: const BorderSide(color: AppColors.error),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-        borderSide: const BorderSide(color: AppColors.error, width: 1.5),
-      ),
-    );
+class _GenderField extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onChanged;
 
-class _SheetField extends StatelessWidget {
-  final String label;
-  final Widget child;
+  static const _options = ['Male', 'Female', 'Other'];
 
-  const _SheetField({required this.label, required this.child});
+  const _GenderField({required this.selected, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppDimensions.spacing16),
+      padding: const EdgeInsets.only(bottom: AppDimensions.spacing20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label,
-            style: AppTextStyles.labelMedium.copyWith(
-              color: AppColors.textSecondary,
-              letterSpacing: 0.5,
+            'Gender',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: AppDimensions.spacing6),
-          child,
+          const SizedBox(height: AppDimensions.spacing8),
+          Row(
+            children: _options.map((g) {
+              final isSelected = g == selected;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: g != _options.last ? AppDimensions.spacing8 : 0,
+                  ),
+                  child: GestureDetector(
+                    onTap: () => onChanged(g),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacing12),
+                      decoration: BoxDecoration(
+                        color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                      ),
+                      child: Center(
+                        child: Text(
+                          g,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: isSelected ? Colors.white : AppColors.textSecondary,
+                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ],
       ),
     );

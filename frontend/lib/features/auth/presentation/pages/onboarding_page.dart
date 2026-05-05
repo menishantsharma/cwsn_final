@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/app/app_router.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_dimensions.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
 import 'package:frontend/features/auth/presentation/widgets/location_picker_field.dart';
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
 
 final _onboardingProvider =
     AsyncNotifierProvider.autoDispose<_OnboardingNotifier, void>(
@@ -61,7 +66,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   String _gender = 'Male';
   LocationPickerResult? _location;
 
-  static const _genders = ['Male', 'Female', 'Other'];
+  void _onTextChanged() => setState(() {});
 
   @override
   void dispose() {
@@ -86,7 +91,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
     if (!_formKey.currentState!.validate()) return;
     if (_location == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please pick your location on the map.')),
+        SnackBar(
+          content: const Text('Please pick your area on the map.'),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          ),
+          margin: const EdgeInsets.all(AppDimensions.spacing16),
+        ),
       );
       return;
     }
@@ -107,7 +120,15 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           if (mounted) context.go(AppRoutes.categories);
         },
         error: (e, _) => ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Something went wrong. Please try again.')),
+          SnackBar(
+            content: const Text('Something went wrong. Please try again.'),
+            backgroundColor: AppColors.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+            ),
+            margin: const EdgeInsets.all(AppDimensions.spacing16),
+          ),
         ),
         loading: () {},
       );
@@ -117,103 +138,188 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(_onboardingProvider).isLoading;
+    final canSubmit = _nameController.text.trim().isNotEmpty &&
+        _ageController.text.trim().isNotEmpty &&
+        _location != null;
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
+      backgroundColor: AppColors.background,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
           child: Form(
             key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                AppDimensions.spacing20,
+                AppDimensions.spacing32,
+                AppDimensions.spacing20,
+                AppDimensions.spacing40,
+              ),
               children: [
-                const SizedBox(height: 16),
-                Text(
-                  'Welcome!',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.waving_hand_rounded,
+                    color: AppColors.primary,
+                    size: 26,
                   ),
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: AppDimensions.spacing20),
+
+                Text('Welcome!', style: AppTextStyles.displaySmall),
+
+                const SizedBox(height: AppDimensions.spacing8),
+
                 Text(
                   'Tell us a bit about yourself to get started.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
+                  style: AppTextStyles.bodyMedium,
+                ),
+
+                const SizedBox(height: AppDimensions.spacing32),
+
+                LabeledField(
+                  label: 'Full Name',
+                  child: TextFormField(
+                    controller: _nameController,
+                    decoration: inputDecoration('Enter your full name'),
+                    textCapitalization: TextCapitalization.words,
+                    onChanged: (_) => _onTextChanged(),
+                    validator: (v) =>
+                        (v == null || v.trim().isEmpty) ? 'Required' : null,
                   ),
                 ),
-                const SizedBox(height: 40),
-                Text('Full Name', style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your full name',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Name is required' : null,
-                ),
-                const SizedBox(height: 24),
-                Text('Age', style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                TextFormField(
-                  controller: _ageController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    hintText: 'Enter your age',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Age is required';
-                    final n = int.tryParse(v.trim());
-                    if (n == null || n <= 0 || n > 120) return 'Enter a valid age';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                Text('Gender', style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                SegmentedButton<String>(
-                  segments: _genders
-                      .map((g) => ButtonSegment(value: g, label: Text(g)))
-                      .toList(),
-                  selected: {_gender},
-                  onSelectionChanged: (val) =>
-                      setState(() => _gender = val.first),
-                ),
-                const SizedBox(height: 24),
-                Text('Your Area', style: Theme.of(context).textTheme.labelLarge),
-                const SizedBox(height: 8),
-                LocationPickerField(
-                  location: _location,
-                  onTap: _openMapPicker,
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  'Move the pin to your neighbourhood — exact address not needed.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.grey[500],
+
+                LabeledField(
+                  label: 'Age',
+                  child: TextFormField(
+                    controller: _ageController,
+                    decoration: inputDecoration('e.g. 28'),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => _onTextChanged(),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      final n = int.tryParse(v.trim());
+                      if (n == null || n < 1 || n > 120) return 'Enter a valid age';
+                      return null;
+                    },
                   ),
                 ),
-                const SizedBox(height: 48),
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: FilledButton(
-                    onPressed: isLoading ? null : _submit,
-                    child: isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'Get Started',
-                            style: TextStyle(fontSize: 16),
-                          ),
+
+                _GenderSelector(
+                  selected: _gender,
+                  onChanged: (g) => setState(() => _gender = g),
+                ),
+
+                LabeledField(
+                  label: 'Your Area',
+                  child: LocationPickerField(
+                    location: _location,
+                    onTap: _openMapPicker,
                   ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.only(
+                    top: AppDimensions.spacing4,
+                    bottom: AppDimensions.spacing32,
+                  ),
+                  child: Text(
+                    'Move the pin to your neighbourhood — exact address not needed.',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.textHint,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+
+                SaveButton(
+                  saving: isLoading,
+                  onTap: _submit,
+                  label: 'Get Started',
+                  enabled: canSubmit,
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _GenderSelector extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onChanged;
+
+  static const _options = ['Male', 'Female', 'Other'];
+
+  const _GenderSelector({required this.selected, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.spacing20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Gender',
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.spacing8),
+          Row(
+            children: _options.map((g) {
+              final isSelected = g == selected;
+              return Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: g != _options.last ? AppDimensions.spacing8 : 0,
+                  ),
+                  child: GestureDetector(
+                    onTap: () => onChanged(g),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppDimensions.spacing12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.surfaceVariant,
+                        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+                      ),
+                      child: Center(
+                        child: Text(
+                          g,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: isSelected
+                                ? Colors.white
+                                : AppColors.textSecondary,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }

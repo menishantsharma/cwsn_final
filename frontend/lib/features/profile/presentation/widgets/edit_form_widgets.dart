@@ -65,18 +65,28 @@ class LabeledField extends StatelessWidget {
 class SaveButton extends StatelessWidget {
   final bool saving;
   final VoidCallback onTap;
+  final String label;
+  final bool enabled;
 
-  const SaveButton({super.key, required this.saving, required this.onTap});
+  const SaveButton({
+    super.key,
+    required this.saving,
+    required this.onTap,
+    this.label = 'Save Changes',
+    this.enabled = true,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final isActive = enabled && !saving;
+
     return SizedBox(
       height: AppDimensions.buttonHeight,
       child: Material(
-        color: AppColors.primary,
+        color: isActive ? AppColors.primary : AppColors.disabled,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         child: InkWell(
-          onTap: saving ? null : onTap,
+          onTap: isActive ? onTap : null,
           borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           child: Center(
             child: saving
@@ -86,7 +96,7 @@ class SaveButton extends StatelessWidget {
                     child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                   )
                 : Text(
-                    'Save Changes',
+                    label,
                     style: AppTextStyles.labelLarge.copyWith(color: Colors.white, fontSize: 16),
                   ),
           ),

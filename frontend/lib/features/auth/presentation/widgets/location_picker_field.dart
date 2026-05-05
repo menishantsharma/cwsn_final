@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_dimensions.dart';
+import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
 
 class LocationPickerField extends StatelessWidget {
@@ -13,41 +16,54 @@ class LocationPickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: location == null
-                ? Colors.grey.shade400
-                : Theme.of(context).colorScheme.primary,
-            width: location == null ? 1 : 2,
+    final hasLocation = location != null;
+
+    return Material(
+      color: AppColors.surfaceVariant,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacing16,
+            vertical: AppDimensions.spacing16,
           ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              location == null ? Icons.map_outlined : Icons.location_on,
-              color: location == null
-                  ? Colors.grey
-                  : Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                location?.displayLocation ?? 'Tap to pick your area on map',
-                style: TextStyle(
-                  color: location == null ? Colors.grey[600] : Colors.black87,
-                  fontSize: 15,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
+            border: hasLocation
+                ? Border.all(color: AppColors.primary, width: 1.5)
+                : null,
+          ),
+          child: Row(
+            children: [
+              Icon(
+                hasLocation ? Icons.location_on_rounded : Icons.map_outlined,
+                color: hasLocation ? AppColors.primary : AppColors.textHint,
+                size: 20,
+              ),
+              const SizedBox(width: AppDimensions.spacing12),
+              Expanded(
+                child: Text(
+                  location?.displayLocation ?? 'Tap to pick your area on map',
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: hasLocation
+                        ? AppColors.textPrimary
+                        : AppColors.textHint,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ),
-            Icon(Icons.chevron_right, color: Colors.grey[400]),
-          ],
+              const SizedBox(width: AppDimensions.spacing8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textHint,
+                size: 20,
+              ),
+            ],
+          ),
         ),
       ),
     );
