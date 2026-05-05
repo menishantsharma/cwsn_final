@@ -39,6 +39,29 @@ class ServiceRepositoryImpl implements ServiceRepository {
   }
 
   @override
+  Future<PagedResponse<ServiceModel>> searchServices({
+    required String query,
+    String? serviceType,
+    String? paymentType,
+    String? targetGender,
+    String? caregiverGender,
+    int? childAge,
+    int? distanceKm,
+    int page = 1,
+  }) {
+    return _remoteSource.searchServices(
+      query: query,
+      serviceType: serviceType,
+      paymentType: paymentType,
+      targetGender: targetGender,
+      caregiverGender: caregiverGender,
+      childAge: childAge,
+      distanceKm: distanceKm,
+      page: page,
+    );
+  }
+
+  @override
   Future<ServiceModel?> getMyServiceForSubcategory({
     required int categoryId,
     required int subCategoryId,

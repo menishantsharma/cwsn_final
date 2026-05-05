@@ -260,3 +260,63 @@ final editableServiceProvider =
     NotifierProvider<EditableServiceNotifier, AsyncValue<ServiceModel>>(
       EditableServiceNotifier.new,
     );
+
+class SearchNotifier extends AsyncNotifier<PaginatedState<ServiceModel>> {
+  final String query;
+  SearchNotifier(this.query);
+
+  @override
+  Future<PaginatedState<ServiceModel>> build() async {
+    final filter = ref.watch(serviceFilterProvider);
+    final page = await ref.read(serviceRepositoryProvider).searchServices(
+          query: query,
+          serviceType: filter.serviceType,
+          paymentType: filter.paymentType,
+          targetGender: filter.targetGender,
+          caregiverGender: filter.caregiverGender,
+          childAge: filter.childAge,
+          distanceKm: filter.distanceKm,
+          page: 1,
+        );
+    return PaginatedState(
+      items: page.results,
+      hasMore: page.hasMore,
+      currentPage: 1,
+    );
+  }
+
+  Future<void> loadMore() async {
+    final current = state.asData?.value;
+    if (current == null || !current.hasMore || current.isLoadingMore) return;
+
+    final filter = ref.read(serviceFilterProvider);
+    state = AsyncData(current.copyWith(isLoadingMore: true));
+    final nextPage = current.currentPage + 1;
+    final page = await ref.read(serviceRepositoryProvider).searchServices(
+          query: query,
+          serviceType: filter.serviceType,
+          paymentType: filter.paymentType,
+          targetGender: filter.targetGender,
+          caregiverGender: filter.caregiverGender,
+          childAge: filter.childAge,
+          distanceKm: filter.distanceKm,
+          page: nextPage,
+        );
+
+    final latest = state.asData?.value;
+    if (latest == null || !latest.isLoadingMore) return;
+    state = AsyncData(
+      latest.copyWith(
+        items: [...current.items, ...page.results],
+        hasMore: page.hasMore,
+        isLoadingMore: false,
+        currentPage: nextPage,
+      ),
+    );
+  }
+}
+
+final searchProvider =
+    AsyncNotifierProvider.family<SearchNotifier, PaginatedState<ServiceModel>, String>(
+      SearchNotifier.new,
+    );

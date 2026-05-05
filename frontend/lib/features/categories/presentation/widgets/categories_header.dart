@@ -75,7 +75,29 @@ class CategoriesHeader extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: AppDimensions.spacing24),
+        const SizedBox(height: AppDimensions.spacing16),
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.searchResults),
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusFull),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.search_rounded, size: 20, color: AppColors.textHint),
+                const SizedBox(width: AppDimensions.spacing8),
+                Text(
+                  'Search services...',
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: AppDimensions.spacing8),
       ],
     );
   }

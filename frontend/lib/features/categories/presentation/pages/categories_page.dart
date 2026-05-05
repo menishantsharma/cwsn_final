@@ -39,7 +39,7 @@ class CategoriesPage extends ConsumerWidget {
                   backgroundColor: Colors.white,
                   surfaceTintColor: Colors.transparent,
                   elevation: 0,
-                  expandedHeight: 120,
+                  expandedHeight: 172,
                   flexibleSpace: const FlexibleSpaceBar(
                     collapseMode: CollapseMode.none,
                     background: Padding(

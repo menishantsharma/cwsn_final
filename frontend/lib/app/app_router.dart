@@ -12,6 +12,8 @@ import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/pages/create_service_page.dart';
 import 'package:frontend/features/services/presentation/pages/editable_service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/service_detail_page.dart';
+import 'package:frontend/features/services/presentation/pages/search_listings_page.dart';
+import 'package:frontend/features/services/presentation/pages/search_results_page.dart';
 import 'package:frontend/features/services/presentation/pages/services_page.dart';
 import 'package:frontend/features/profile/presentation/pages/profile_page.dart';
 import 'package:frontend/features/profile/presentation/pages/edit_personal_info_page.dart';
@@ -36,6 +38,8 @@ class AppRoutes {
   static const String editPersonalInfo = '/edit-personal-info';
   static const String editCaregiverInfo = '/edit-caregiver-info';
   static const String onboarding = '/onboarding';
+  static const String searchResults = '/search';
+  static const String searchListings = '/search-listings';
   AppRoutes._();
 }
 
@@ -142,6 +146,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.onboarding,
         builder: (_, _) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.searchResults,
+        builder: (_, _) => const SearchResultsPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.searchListings,
+        builder: (_, state) =>
+            SearchListingsPage(query: state.extra as String),
       ),
     ],
   );

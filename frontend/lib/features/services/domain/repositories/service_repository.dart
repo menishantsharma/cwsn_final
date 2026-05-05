@@ -16,6 +16,17 @@ abstract class ServiceRepository {
     int page = 1,
   });
 
+  Future<PagedResponse<ServiceModel>> searchServices({
+    required String query,
+    String? serviceType,
+    String? paymentType,
+    String? targetGender,
+    String? caregiverGender,
+    int? childAge,
+    int? distanceKm,
+    int page = 1,
+  });
+
   Future<ServiceModel?> getMyServiceForSubcategory({
     required int categoryId,
     required int subCategoryId,

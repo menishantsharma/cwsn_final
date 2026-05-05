@@ -58,6 +58,39 @@ class ServiceRemoteSource {
     );
   }
 
+  Future<PagedResponse<ServiceModel>> searchServices({
+    required String query,
+    String? serviceType,
+    String? paymentType,
+    String? targetGender,
+    String? caregiverGender,
+    int? childAge,
+    int? distanceKm,
+    int page = 1,
+  }) async {
+    final params = <String, dynamic>{
+      'search': query,
+      'service_type': serviceType,
+      'payment_type': paymentType,
+      'target_gender': targetGender,
+      'caregiver_gender': caregiverGender,
+      'child_age': childAge,
+      'distance_km': distanceKm,
+      'page': page,
+    }..removeWhere((_, v) => v == null);
+    final res = await _dio.get(
+      '/api/services/services/',
+      queryParameters: params,
+    );
+    final results = res.data['results'] as List<dynamic>;
+    return PagedResponse(
+      results: results
+          .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      hasMore: res.data['next'] != null,
+    );
+  }
+
   Future<ServiceModel?> getMyServiceForSubcategory({
     required int categoryId,
     required int subCategoryId,
