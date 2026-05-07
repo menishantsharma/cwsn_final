@@ -61,6 +61,11 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
 
         serializer.save(cwsn_user=self.request.user, caregiver=service.caregiver)
 
+    @action(detail=False, methods=['get'])
+    def pending_count(self, request):
+        count = self.get_queryset().filter(status='Pending').count()
+        return Response({'count': count})
+
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def accept(self, request, pk=None):
         service_request = self.get_object()
@@ -136,16 +141,23 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(recipient=self.request.user)
+        return Notification.objects.filter(
+            recipient=self.request.user
+        ).select_related('recipient')
 
     @action(detail=True, methods=['post'])
     def mark_read(self, request, pk=None):
         notification = self.get_object()
         notification.is_read = True
-        notification.save()
+        notification.save(update_fields=['is_read'])
         return Response({'status': 'marked as read'})
 
     @action(detail=False, methods=['post'])
     def mark_all_read(self, request):
         updated_count = self.get_queryset().filter(is_read=False).update(is_read=True)
         return Response({'status': f'{updated_count} notifications marked as read'})
+
+    @action(detail=False, methods=['get'])
+    def unread_count(self, request):
+        count = self.get_queryset().filter(is_read=False).count()
+        return Response({'count': count})

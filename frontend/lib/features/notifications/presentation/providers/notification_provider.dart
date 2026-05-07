@@ -9,57 +9,13 @@ final notificationRemoteSourceProvider = Provider<NotificationRemoteSource>(
 );
 
 class NotificationNotifier
-    extends AsyncNotifier<PaginatedState<NotificationModel>> {
+    extends PaginatedNotifier<NotificationModel> {
   @override
-  Future<PaginatedState<NotificationModel>> build() async {
-    final page = await ref
-        .read(notificationRemoteSourceProvider)
-        .getNotifications(page: 1);
-    return PaginatedState(
-      items: page.results,
-      hasMore: page.hasMore,
-      currentPage: 1,
-    );
-  }
-
-  Future<void> loadMore() async {
-    final current = state.asData?.value;
-    if (current == null || !current.hasMore || current.isLoadingMore) return;
-
-    state = AsyncData(current.copyWith(isLoadingMore: true));
-    final nextPage = current.currentPage + 1;
-    final page = await ref
-        .read(notificationRemoteSourceProvider)
-        .getNotifications(page: nextPage);
-
-    final latest = state.asData?.value;
-    if (latest == null || !latest.isLoadingMore) return;
-    state = AsyncData(
-      latest.copyWith(
-        items: [...current.items, ...page.results],
-        hasMore: page.hasMore,
-        isLoadingMore: false,
-        currentPage: nextPage,
-      ),
-    );
-  }
-
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final page = await ref
-          .read(notificationRemoteSourceProvider)
-          .getNotifications(page: 1);
-      return PaginatedState(
-        items: page.results,
-        hasMore: page.hasMore,
-        currentPage: 1,
-      );
-    });
-  }
+  Future<PagedResponse<NotificationModel>> fetchPage(int page) =>
+      ref.read(notificationRemoteSourceProvider).getNotifications(page: page);
 
   Future<void> markAsRead(int id) async {
-    await ref.read(notificationRemoteSourceProvider).markAsRead(id);
+    // Optimistic update — apply immediately, fire API in background
     final current = state.asData?.value;
     if (current == null) return;
     state = AsyncData(
@@ -69,6 +25,20 @@ class NotificationNotifier
             .toList(),
       ),
     );
+    ref.read(notificationRemoteSourceProvider).markAsRead(id);
+    ref.invalidate(unreadCountProvider);
+  }
+
+  Future<void> markAllRead() async {
+    final current = state.asData?.value;
+    if (current == null) return;
+    state = AsyncData(
+      current.copyWith(
+        items: current.items.map((n) => n.copyWith(isRead: true)).toList(),
+      ),
+    );
+    await ref.read(notificationRemoteSourceProvider).markAllRead();
+    ref.invalidate(unreadCountProvider);
   }
 }
 
@@ -76,3 +46,7 @@ final notificationProvider =
     AsyncNotifierProvider<NotificationNotifier, PaginatedState<NotificationModel>>(
       NotificationNotifier.new,
     );
+
+final unreadCountProvider = FutureProvider<int>((ref) async {
+  return ref.read(notificationRemoteSourceProvider).getUnreadCount();
+});

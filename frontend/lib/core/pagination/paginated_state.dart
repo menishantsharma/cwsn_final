@@ -10,12 +10,14 @@ class PaginatedState<T> {
   final List<T> items;
   final bool hasMore;
   final bool isLoadingMore;
+  final bool isRefreshing;
   final int currentPage;
 
   const PaginatedState({
     this.items = const [],
     this.hasMore = true,
     this.isLoadingMore = false,
+    this.isRefreshing = false,
     this.currentPage = 1,
   });
 
@@ -23,11 +25,13 @@ class PaginatedState<T> {
     List<T>? items,
     bool? hasMore,
     bool? isLoadingMore,
+    bool? isRefreshing,
     int? currentPage,
   }) => PaginatedState(
     items: items ?? this.items,
     hasMore: hasMore ?? this.hasMore,
     isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+    isRefreshing: isRefreshing ?? this.isRefreshing,
     currentPage: currentPage ?? this.currentPage,
   );
 }
@@ -63,6 +67,22 @@ abstract class PaginatedNotifier<T> extends AsyncNotifier<PaginatedState<T>> {
         currentPage: nextPage,
       ),
     );
+  }
+
+  Future<void> refresh() async {
+    final current = state.asData?.value;
+    if (current == null || current.isRefreshing) return;
+    state = AsyncData(current.copyWith(isRefreshing: true));
+    try {
+      final page = await fetchPage(1);
+      state = AsyncData(PaginatedState(
+        items: page.results,
+        hasMore: page.hasMore,
+        currentPage: 1,
+      ));
+    } catch (_) {
+      state = AsyncData(current.copyWith(isRefreshing: false));
+    }
   }
 
   void reset() {
@@ -104,6 +124,22 @@ abstract class PaginatedFamilyNotifier<T, Arg>
         currentPage: nextPage,
       ),
     );
+  }
+
+  Future<void> refresh() async {
+    final current = state.asData?.value;
+    if (current == null || current.isRefreshing) return;
+    state = AsyncData(current.copyWith(isRefreshing: true));
+    try {
+      final page = await fetchPage(arg, 1);
+      state = AsyncData(PaginatedState(
+        items: page.results,
+        hasMore: page.hasMore,
+        currentPage: 1,
+      ));
+    } catch (_) {
+      state = AsyncData(current.copyWith(isRefreshing: false));
+    }
   }
 
   void reset() {

@@ -34,21 +34,19 @@ class CategoriesGreeting extends StatelessWidget {
           ),
           Consumer(
             builder: (context, ref, _) {
-              final unreadNotifs = ref
-                  .watch(notificationProvider)
-                  .maybeWhen(
-                    data: (state) =>
-                        state.items.where((n) => !n.isRead).length,
-                    orElse: () => 0,
-                  );
-              final pendingRequests = ref.watch(pendingRequestCountProvider);
+              final unreadNotifs = ref.watch(unreadCountProvider).maybeWhen(data: (c) => c, orElse: () => 0);
+              final pendingRequests = ref.watch(pendingCountProvider).maybeWhen(data: (c) => c, orElse: () => 0);
               final totalBadge = unreadNotifs + pendingRequests;
 
               return Stack(
                 children: [
                   _HeaderIconButton(
                     icon: Icons.notifications_outlined,
-                    onTap: () => context.push(AppRoutes.notifications),
+                    onTap: () async {
+                      await context.push(AppRoutes.notifications);
+                      ref.invalidate(unreadCountProvider);
+                      ref.invalidate(pendingCountProvider);
+                    },
                   ),
                   if (totalBadge > 0)
                     Positioned(

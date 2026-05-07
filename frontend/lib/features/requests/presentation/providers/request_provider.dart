@@ -8,66 +8,20 @@ final requestRemoteSourceProvider = Provider<RequestRemoteSource>(
   (ref) => RequestRemoteSource(ref.read(dioProvider)),
 );
 
-class RequestNotifier extends AsyncNotifier<PaginatedState<RequestModel>> {
+class RequestNotifier extends PaginatedNotifier<RequestModel> {
   @override
-  Future<PaginatedState<RequestModel>> build() async {
-    final page = await ref
-        .read(requestRemoteSourceProvider)
-        .getRequests(page: 1);
-    return PaginatedState(
-      items: page.results,
-      hasMore: page.hasMore,
-      currentPage: 1,
-    );
-  }
-
-  Future<void> loadMore() async {
-    final current = state.asData?.value;
-    if (current == null || !current.hasMore || current.isLoadingMore) return;
-
-    state = AsyncData(current.copyWith(isLoadingMore: true));
-    final nextPage = current.currentPage + 1;
-    final page = await ref
-        .read(requestRemoteSourceProvider)
-        .getRequests(page: nextPage);
-
-    final latest = state.asData?.value;
-    if (latest == null || !latest.isLoadingMore) return;
-    state = AsyncData(
-      latest.copyWith(
-        items: [...current.items, ...page.results],
-        hasMore: page.hasMore,
-        isLoadingMore: false,
-        currentPage: nextPage,
-      ),
-    );
-  }
-
-  Future<void> refresh() async {
-    state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
-      final page = await ref
-          .read(requestRemoteSourceProvider)
-          .getRequests(page: 1);
-      return PaginatedState(
-        items: page.results,
-        hasMore: page.hasMore,
-        currentPage: 1,
-      );
-    });
-  }
+  Future<PagedResponse<RequestModel>> fetchPage(int page) =>
+      ref.read(requestRemoteSourceProvider).getRequests(page: page);
 
   Future<void> accept(int id) async {
-    final updated = await ref
-        .read(requestRemoteSourceProvider)
-        .acceptRequest(id);
+    final updated =
+        await ref.read(requestRemoteSourceProvider).acceptRequest(id);
     _replace(updated);
   }
 
   Future<void> reject(int id) async {
-    final updated = await ref
-        .read(requestRemoteSourceProvider)
-        .rejectRequest(id);
+    final updated =
+        await ref.read(requestRemoteSourceProvider).rejectRequest(id);
     _replace(updated);
   }
 
@@ -103,50 +57,24 @@ final requestProvider =
       RequestNotifier.new,
     );
 
+// Derived from already-loaded list — only used inside the notifications page
 final pendingRequestCountProvider = Provider<int>((ref) {
-  return ref
-      .watch(requestProvider)
-      .maybeWhen(
-        data: (state) => state.items.where((r) => r.status == 'Pending').length,
+  return ref.watch(requestProvider).maybeWhen(
+        data: (state) =>
+            state.items.where((r) => r.status == 'Pending').length,
         orElse: () => 0,
       );
 });
 
-class ParentRequestsNotifier
-    extends AsyncNotifier<PaginatedState<RequestModel>> {
+// Lightweight count — single DB query, safe to watch from any page
+final pendingCountProvider = FutureProvider<int>((ref) async {
+  return ref.read(requestRemoteSourceProvider).getPendingCount();
+});
+
+class ParentRequestsNotifier extends PaginatedNotifier<RequestModel> {
   @override
-  Future<PaginatedState<RequestModel>> build() async {
-    final page = await ref
-        .read(requestRemoteSourceProvider)
-        .getRequestsAsParent(page: 1);
-    return PaginatedState(
-      items: page.results,
-      hasMore: page.hasMore,
-      currentPage: 1,
-    );
-  }
-
-  Future<void> loadMore() async {
-    final current = state.asData?.value;
-    if (current == null || !current.hasMore || current.isLoadingMore) return;
-
-    state = AsyncData(current.copyWith(isLoadingMore: true));
-    final nextPage = current.currentPage + 1;
-    final page = await ref
-        .read(requestRemoteSourceProvider)
-        .getRequestsAsParent(page: nextPage);
-
-    final latest = state.asData?.value;
-    if (latest == null || !latest.isLoadingMore) return;
-    state = AsyncData(
-      latest.copyWith(
-        items: [...current.items, ...page.results],
-        hasMore: page.hasMore,
-        isLoadingMore: false,
-        currentPage: nextPage,
-      ),
-    );
-  }
+  Future<PagedResponse<RequestModel>> fetchPage(int page) =>
+      ref.read(requestRemoteSourceProvider).getRequestsAsParent(page: page);
 }
 
 final parentRequestsProvider =

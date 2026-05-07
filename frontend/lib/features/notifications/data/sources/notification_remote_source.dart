@@ -25,4 +25,13 @@ class NotificationRemoteSource {
   Future<void> markAsRead(int id) async {
     await _dio.post('/api/interactions/notifications/$id/mark_read/');
   }
+
+  Future<void> markAllRead() async {
+    await _dio.post('/api/interactions/notifications/mark_all_read/');
+  }
+
+  Future<int> getUnreadCount() async {
+    final res = await _dio.get('/api/interactions/notifications/unread_count/');
+    return res.data['count'] as int;
+  }
 }

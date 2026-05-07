@@ -1,26 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
-import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
 import 'package:frontend/features/notifications/presentation/providers/notification_provider.dart';
 import 'package:frontend/features/notifications/presentation/widgets/notification_card.dart';
 
-class NotificationsTab extends ConsumerWidget {
+class NotificationsTab extends ConsumerStatefulWidget {
   const NotificationsTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NotificationsTab> createState() => _NotificationsTabState();
+}
+
+class _NotificationsTabState extends ConsumerState<NotificationsTab> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      ref.read(notificationProvider.notifier).loadMore();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final notificationsAsync = ref.watch(notificationProvider);
 
     return notificationsAsync.when(
       loading: () => const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
-      error: (e, _) =>
-          Center(child: Text('Error: $e', style: AppTextStyles.bodyMedium)),
+      error: (e, _) => Center(child: Text('Error: $e')),
       data: (state) {
         if (state.items.isEmpty && !state.hasMore) {
           return const EmptyState(
@@ -31,17 +54,26 @@ class NotificationsTab extends ConsumerWidget {
         }
         return RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: () =>
-              ref.read(notificationProvider.notifier).refresh(),
+          onRefresh: () => ref.read(notificationProvider.notifier).refresh(),
           child: ListView.builder(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-            itemCount: state.items.length + (state.hasMore ? 1 : 0),
+            itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
             itemBuilder: (_, i) {
               if (i == state.items.length) {
-                return LoadMoreButton(
-                  isLoading: state.isLoadingMore,
-                  onPressed: () =>
-                      ref.read(notificationProvider.notifier).loadMore(),
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
                 );
               }
               return Padding(

@@ -31,6 +31,10 @@ class Notification(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['recipient', '-created_at']),
+            models.Index(fields=['recipient', 'is_read']),
+        ]
 
     def __str__(self):
         return f"To {self.recipient.email}: {self.title}"
@@ -59,12 +63,6 @@ class ServiceRequest(models.Model):
                 raise ValidationError({
                     'child': 'The selected child does not belong to the selected CWSN user.'
                 })
-
-@receiver(post_save, sender=ServiceRequest)
-def populate_caregiver(sender, instance, created, **kwargs):
-    if created:
-        instance.caregiver = instance.service.caregiver
-        instance.save()
 
 class Report(models.Model):
     STATUS_CHOICES = [('Open', 'Open'), ('Resolved', 'Resolved'), ('Dismissed', 'Dismissed')]

@@ -47,6 +47,11 @@ class RequestRemoteSource {
     return RequestModel.fromJson(res.data);
   }
 
+  Future<int> getPendingCount() async {
+    final res = await _dio.get('/api/interactions/requests/pending_count/');
+    return res.data['count'] as int;
+  }
+
   Future<PagedResponse<RequestModel>> getRequestsAsParent({
     int? serviceId,
     int page = 1,
@@ -55,7 +60,7 @@ class RequestRemoteSource {
       '/api/interactions/requests/',
       queryParameters: {
         'as_parent': 'true',
-        if (serviceId != null) 'service': serviceId,
+        'service': serviceId,
         'page': page,
       },
     );
