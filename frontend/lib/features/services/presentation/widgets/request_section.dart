@@ -8,6 +8,7 @@ import 'package:frontend/features/interactions/presentation/providers/upvote_pro
 import 'package:frontend/features/profile/domain/models/profile_model.dart'
     hide CaregiverProfileModel;
 import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/presentation/widgets/add_child_sheet.dart';
 import 'package:frontend/features/requests/domain/models/request_model.dart';
 import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
@@ -201,7 +202,7 @@ class _RequestSheetState extends ConsumerState<RequestSheet> {
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.spacing20),
-          if (children.isEmpty)
+          if (children.isEmpty) ...[
             Container(
               padding: const EdgeInsets.all(AppDimensions.spacing16),
               decoration: BoxDecoration(
@@ -209,11 +210,13 @@ class _RequestSheetState extends ConsumerState<RequestSheet> {
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
               ),
               child: Text(
-                'No children added yet. Add a child from your profile first.',
+                'No children added yet.',
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
               ),
-            )
-          else
+            ),
+            const SizedBox(height: AppDimensions.spacing8),
+            _AddChildButton(onAdded: () => setState(() {})),
+          ] else ...[
             ...children.map(
               (child) => ChildOption(
                 child: child,
@@ -221,6 +224,8 @@ class _RequestSheetState extends ConsumerState<RequestSheet> {
                 onTap: () => setState(() => _selectedChild = child),
               ),
             ),
+            _AddChildButton(onAdded: () => setState(() {})),
+          ],
           const SizedBox(height: AppDimensions.spacing12),
           TextField(
             controller: _noteController,
@@ -321,6 +326,60 @@ class ChildOption extends StatelessWidget {
             Text(
               '${child.name} · ${child.age}y · ${child.gender}',
               style: AppTextStyles.bodyMedium,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AddChildButton extends ConsumerWidget {
+  final VoidCallback onAdded;
+
+  const _AddChildButton({required this.onAdded});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () async {
+        await showModalBottomSheet(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.white,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(AppDimensions.radiusXl),
+            ),
+          ),
+          builder: (_) => AddChildSheet(
+            onSave: (data) => ref.read(profileProvider.notifier).addChild(data),
+          ),
+        );
+        onAdded();
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppDimensions.spacing8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.spacing16,
+          vertical: AppDimensions.spacing12,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
+          border: Border.all(color: AppColors.primary, width: 1),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.add_rounded, size: 18, color: AppColors.primary),
+            const SizedBox(width: AppDimensions.spacing8),
+            Text(
+              'Add Child',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
