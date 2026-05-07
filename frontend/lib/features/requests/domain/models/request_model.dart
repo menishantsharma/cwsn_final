@@ -56,7 +56,11 @@ class RequestModel {
     );
   }
 
-  RequestModel copyWith({String? status}) {
+  RequestModel copyWith({
+    String? status,
+    String? caregiverPhone,
+    String? cwsnUserPhone,
+  }) {
     return RequestModel(
       id: id,
       serviceId: serviceId,
@@ -67,10 +71,10 @@ class RequestModel {
       childGender: childGender,
       cwsnUserId: cwsnUserId,
       cwsnUserName: cwsnUserName,
-      cwsnUserPhone: cwsnUserPhone,
+      cwsnUserPhone: cwsnUserPhone ?? this.cwsnUserPhone,
       caregiverId: caregiverId,
       caregiverName: caregiverName,
-      caregiverPhone: caregiverPhone,
+      caregiverPhone: caregiverPhone ?? this.caregiverPhone,
       status: status ?? this.status,
       note: note,
       createdAt: createdAt,

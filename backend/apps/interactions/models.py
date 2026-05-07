@@ -114,11 +114,23 @@ def decrement_upvote_count(sender, instance, **kwargs):
 @receiver(post_save, sender=Upvote)
 def notify_caregiver_on_upvote(sender, instance, created, **kwargs):
     if created:
+        from apps.services.models import Service
+        service = (
+            Service.objects
+            .select_related('caregiver')
+            .get(pk=instance.service_id)
+        )
+        from apps.users.models import User
+        voter = (
+            User.objects
+            .select_related('cwsn_profile')
+            .get(pk=instance.voter_id)
+        )
         Notification.objects.create(
-            recipient=instance.service.caregiver,
+            recipient=service.caregiver,
             notification_type='NEW_UPVOTE',
             title='New upvote on your service!',
-            message=f'{instance.voter.cwsn_profile.name} upvoted your service: {instance.service.title}.',
+            message=f'{voter.cwsn_profile.name} upvoted your service: {service.title}.',
             content_object=instance
         )
 
@@ -136,12 +148,21 @@ def track_request_status_change(sender, instance, **kwargs):
 
 @receiver(post_save, sender=ServiceRequest)
 def notify_on_service_request(sender, instance, created, **kwargs):
+    req = (
+        ServiceRequest.objects
+        .select_related(
+            'service',
+            'cwsn_user__cwsn_profile',
+            'caregiver__caregiver_profile',
+        )
+        .get(pk=instance.pk)
+    )
     if created:
         Notification.objects.create(
-            recipient=instance.caregiver,
+            recipient=req.caregiver,
             notification_type='NEW_REQUEST',
             title='New Service Request',
-            message=f'{instance.cwsn_user.cwsn_profile.name} has requested your service: {instance.service.title}.',
+            message=f'{req.cwsn_user.cwsn_profile.name} has requested your service: {req.service.title}.',
             content_object=instance
         )
     else:
@@ -149,18 +170,18 @@ def notify_on_service_request(sender, instance, created, **kwargs):
         if old_status and old_status != instance.status:
             if instance.status == 'Accepted':
                 Notification.objects.create(
-                    recipient=instance.cwsn_user,
+                    recipient=req.cwsn_user,
                     notification_type='REQUEST_ACCEPTED',
                     title='Request Accepted!',
-                    message=f'{instance.caregiver.caregiver_profile.name} accepted your request for {instance.service.title}.',
+                    message=f'{req.caregiver.caregiver_profile.name} accepted your request for {req.service.title}.',
                     content_object=instance
                 )
             elif instance.status == 'Rejected':
                 Notification.objects.create(
-                    recipient=instance.cwsn_user,
+                    recipient=req.cwsn_user,
                     notification_type='REQUEST_REJECTED',
                     title='Request Update',
-                    message=f'Your request for {instance.service.title} was declined.',
+                    message=f'Your request for {req.service.title} was declined.',
                     content_object=instance
                 )
 

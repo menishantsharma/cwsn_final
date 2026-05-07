@@ -20,16 +20,26 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         caregiver_id = self.request.query_params.get('caregiver')
         as_parent = self.request.query_params.get('as_parent')
 
+        base = (
+            ServiceRequest.objects
+            .select_related(
+                'service',
+                'child',
+                'cwsn_user__cwsn_profile',
+                'caregiver__caregiver_profile',
+            )
+        )
+
         # forces the CWSN (sender) view even for dual-role users.
         force_parent_view = as_parent == 'true' or caregiver_id is not None
 
         if user.is_caregiver and not force_parent_view:
-            qs = ServiceRequest.objects.filter(caregiver=user)
+            qs = base.filter(caregiver=user)
             if service_id:
                 qs = qs.filter(service_id=service_id)
             return qs
         if user.is_cwsn_user:
-            qs = ServiceRequest.objects.filter(cwsn_user=user)
+            qs = base.filter(cwsn_user=user)
             if service_id:
                 qs = qs.filter(service_id=service_id)
             if caregiver_id:
@@ -71,9 +81,9 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request = self.get_object()
         if request.user != service_request.caregiver:
             return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
-        
+
         service_request.status = 'Accepted'
-        service_request.save()
+        service_request.save(update_fields=['status'])
         return Response(ServiceRequestSerializer(service_request).data)
 
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
@@ -81,9 +91,9 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request = self.get_object()
         if request.user not in [service_request.caregiver, service_request.cwsn_user]:
             return Response({'error': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
-        
+
         service_request.status = 'Rejected'
-        service_request.save()
+        service_request.save(update_fields=['status'])
         return Response(ServiceRequestSerializer(service_request).data)
 
 class ReportViewSet(viewsets.ModelViewSet):

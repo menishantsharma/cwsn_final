@@ -17,12 +17,14 @@ class RequestNotifier extends PaginatedNotifier<RequestModel> {
     final updated =
         await ref.read(requestRemoteSourceProvider).acceptRequest(id);
     _replace(updated);
+    ref.invalidate(parentRequestsProvider);
   }
 
   Future<void> reject(int id) async {
     final updated =
         await ref.read(requestRemoteSourceProvider).rejectRequest(id);
     _replace(updated);
+    ref.invalidate(parentRequestsProvider);
   }
 
   void _replace(RequestModel updated) {
@@ -30,9 +32,7 @@ class RequestNotifier extends PaginatedNotifier<RequestModel> {
     if (current == null) return;
     state = AsyncData(
       current.copyWith(
-        items: current.items
-            .map((r) => r.id == updated.id ? updated : r)
-            .toList(),
+        items: current.items.map((r) => r.id == updated.id ? updated : r).toList(),
       ),
     );
   }

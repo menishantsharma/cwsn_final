@@ -45,13 +45,42 @@ void _showNoteSheet(BuildContext context, String note) {
   );
 }
 
-class RequestCard extends ConsumerWidget {
+class RequestCard extends ConsumerStatefulWidget {
   final RequestModel request;
 
   const RequestCard({super.key, required this.request});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RequestCard> createState() => _RequestCardState();
+}
+
+class _RequestCardState extends ConsumerState<RequestCard> {
+  bool _accepting = false;
+  bool _rejecting = false;
+
+  Future<void> _accept() async {
+    if (_accepting || _rejecting) return;
+    setState(() => _accepting = true);
+    try {
+      await ref.read(requestProvider.notifier).accept(widget.request.id);
+    } finally {
+      if (mounted) setState(() => _accepting = false);
+    }
+  }
+
+  Future<void> _reject() async {
+    if (_accepting || _rejecting) return;
+    setState(() => _rejecting = true);
+    try {
+      await ref.read(requestProvider.notifier).reject(widget.request.id);
+    } finally {
+      if (mounted) setState(() => _rejecting = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final request = widget.request;
     final isPending = request.status == 'Pending';
     final isAccepted = request.status == 'Accepted';
     final hasNote = request.note != null && request.note!.isNotEmpty;
@@ -157,7 +186,8 @@ class RequestCard extends ConsumerWidget {
                 Expanded(
                   child: _ActionButton(
                     label: 'Decline',
-                    onTap: () => ref.read(requestProvider.notifier).reject(request.id),
+                    onTap: _reject,
+                    loading: _rejecting,
                     filled: false,
                   ),
                 ),
@@ -165,7 +195,8 @@ class RequestCard extends ConsumerWidget {
                 Expanded(
                   child: _ActionButton(
                     label: 'Accept',
-                    onTap: () => ref.read(requestProvider.notifier).accept(request.id),
+                    onTap: _accept,
+                    loading: _accepting,
                     filled: true,
                   ),
                 ),
@@ -181,27 +212,42 @@ class RequestCard extends ConsumerWidget {
 class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
+  final bool loading;
   final bool filled;
 
-  const _ActionButton({required this.label, required this.onTap, required this.filled});
+  const _ActionButton({
+    required this.label,
+    required this.onTap,
+    required this.loading,
+    required this.filled,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final color = filled ? AppColors.primary : AppColors.errorLight;
+    final contentColor = filled ? Colors.white : AppColors.error;
     return SizedBox(
       height: 40,
       child: Material(
-        color: filled ? AppColors.primary : AppColors.errorLight,
+        color: color,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
         child: InkWell(
-          onTap: onTap,
+          onTap: loading ? null : onTap,
           borderRadius: BorderRadius.circular(AppDimensions.radiusLg),
           child: Center(
-            child: Text(
-              label,
-              style: AppTextStyles.labelMedium.copyWith(
-                color: filled ? Colors.white : AppColors.error,
-              ),
-            ),
+            child: loading
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: contentColor,
+                    ),
+                  )
+                : Text(
+                    label,
+                    style: AppTextStyles.labelMedium.copyWith(color: contentColor),
+                  ),
           ),
         ),
       ),

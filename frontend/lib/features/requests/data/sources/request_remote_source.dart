@@ -60,9 +60,9 @@ class RequestRemoteSource {
       '/api/interactions/requests/',
       queryParameters: {
         'as_parent': 'true',
-        'service': serviceId,
         'page': page,
-      },
+        'service': serviceId,
+      }..removeWhere((_, v) => v == null),
     );
     final results = res.data['results'] as List;
     return PagedResponse(
