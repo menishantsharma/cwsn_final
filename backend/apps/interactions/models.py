@@ -1,5 +1,6 @@
 # apps/interactions/models.py
 from django.db import models
+from django.db.models import F
 from django.forms import ValidationError
 from apps.users.models import User
 from django.conf import settings
@@ -82,9 +83,9 @@ class Report(models.Model):
 def populate_report_region(sender, instance, created, **kwargs):
     if created and instance.reported_user.is_caregiver:
         try:
-            instance.region_of_incident = instance.reported_user.caregiver_profile.region
-            instance.save()
-        except:
+            region = instance.reported_user.caregiver_profile.region
+            Report.objects.filter(pk=instance.pk).update(region_of_incident=region)
+        except Exception:
             pass
 
 # --- UPDATED UPVOTE MODEL ---
@@ -102,17 +103,13 @@ class Upvote(models.Model):
 @receiver(post_save, sender=Upvote)
 def increment_upvote_count(sender, instance, created, **kwargs):
     if created:
-        instance.service.upvote_count += 1
-        instance.service.save()
+        from apps.services.models import Service
+        Service.objects.filter(pk=instance.service_id).update(upvote_count=F('upvote_count') + 1)
 
 @receiver(post_delete, sender=Upvote)
 def decrement_upvote_count(sender, instance, **kwargs):
-    try:
-        if instance.service.upvote_count > 0:
-            instance.service.upvote_count -= 1
-            instance.service.save()
-    except Exception:
-        pass
+    from apps.services.models import Service
+    Service.objects.filter(pk=instance.service_id, upvote_count__gt=0).update(upvote_count=F('upvote_count') - 1)
 
 @receiver(post_save, sender=Upvote)
 def notify_caregiver_on_upvote(sender, instance, created, **kwargs):

@@ -42,9 +42,21 @@ class Service(models.Model):
     
     is_active = models.BooleanField(default=True)
     is_archived = models.BooleanField(default=False, help_text="Soft-delete status. Archived services are hidden.")
-    
-    objects = models.Manager() 
+
+    objects = models.Manager()
     active = ActiveServiceManager()
+
+    class Meta:
+        indexes = [
+            # Public listing: non-archived, non-suspended caregiver
+            models.Index(fields=['caregiver', 'is_archived']),
+            # Subcategory listing (most common query)
+            models.Index(fields=['sub_category', 'is_archived']),
+            # Category-level listing
+            models.Index(fields=['category', 'is_archived']),
+            # Region-scoped queries (Offline distance filter)
+            models.Index(fields=['region', 'is_archived']),
+        ]
 
     def __str__(self):
         return self.title

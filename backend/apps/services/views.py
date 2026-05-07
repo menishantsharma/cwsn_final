@@ -38,13 +38,20 @@ class ServiceViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
 
-        # Return non-archived services for the caregiver
-        if (self.request.query_params.get('mine') == 'true' and user.is_authenticated):
-            return Service.objects.filter(caregiver=user, is_archived=False)
+        base = (
+            Service.objects
+            .select_related(
+                'caregiver__caregiver_profile__region',
+                'category',
+                'sub_category',
+            )
+            .prefetch_related('slots', 'target_disabilities')
+        )
 
-        # Public queries: show non-archived services from non-suspended caregivers
-        qs = Service.objects.filter(caregiver__is_suspended=False, is_archived=False)
-        return qs.distinct()
+        if self.request.query_params.get('mine') == 'true' and user.is_authenticated:
+            return base.filter(caregiver=user, is_archived=False)
+
+        return base.filter(caregiver__is_suspended=False, is_archived=False).distinct()
     
     # --- REDIS CACHING IMPLEMENTATION ---
     def list(self, request, *args, **kwargs):

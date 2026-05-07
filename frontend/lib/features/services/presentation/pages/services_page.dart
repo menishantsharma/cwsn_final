@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:go_router/go_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
@@ -12,39 +11,70 @@ import 'package:frontend/features/services/presentation/widgets/filter_sheet.dar
 import 'package:frontend/features/services/presentation/widgets/my_service_card.dart';
 import 'package:frontend/features/services/presentation/widgets/service_card.dart';
 
-class ServicesPage extends ConsumerWidget {
+class ServicesPage extends ConsumerStatefulWidget {
   final SubcategoryModel subcategory;
 
   const ServicesPage({super.key, required this.subcategory});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final args = (subcategory.categoryId, subcategory.id);
-    final servicesAsync = ref.watch(serviceProvider(args));
-    final myServiceAsync = ref.watch(myServiceProvider(args));
+  ConsumerState<ServicesPage> createState() => _ServicesPageState();
+}
+
+class _ServicesPageState extends ConsumerState<ServicesPage> {
+  final _scrollController = ScrollController();
+  late final (int, int) _args;
+
+  @override
+  void initState() {
+    super.initState();
+    _args = (widget.subcategory.categoryId, widget.subcategory.id);
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels <
+        _scrollController.position.maxScrollExtent - 200) { return; }
+    final state = ref.read(serviceProvider(_args)).asData?.value;
+    if (state == null || state.isLoadingMore || !state.hasMore) { return; }
+    ref.read(serviceProvider(_args).notifier).loadMore();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final servicesAsync = ref.watch(serviceProvider(_args));
+    final myServiceAsync = ref.watch(myServiceProvider(_args));
     final filter = ref.watch(serviceFilterProvider);
+
+    // Resolve myService without blocking the list — show nothing while loading
+    final myServiceWidget = myServiceAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => AddServiceCard(subcategory: widget.subcategory),
+      data: (myService) => myService != null
+          ? MyServiceCard(service: myService)
+          : AddServiceCard(subcategory: widget.subcategory),
+    );
 
     return Scaffold(
       body: SafeArea(
         child: servicesAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
+          loading: () =>
+              const Center(child: CircularProgressIndicator(color: AppColors.primary)),
           error: (e, _) => const Center(child: Text('Something went wrong')),
-          data: (state) => myServiceAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-            error: (e, _) => const Center(child: Text('Something went wrong')),
-            data: (myService) {
-              final firstItem = myService != null
-                  ? MyServiceCard(service: myService)
-                  : AddServiceCard(subcategory: subcategory);
+          data: (state) {
+            final isEmpty = state.items.isEmpty && !state.hasMore;
 
-              final isEmpty =
-                  state.items.isEmpty && myService == null && !state.hasMore;
-
-              return CustomScrollView(
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: () => ref.read(serviceProvider(_args).notifier).refresh(),
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
                 clipBehavior: Clip.none,
                 slivers: [
                   SliverAppBar(
@@ -58,7 +88,7 @@ class ServicesPage extends ConsumerWidget {
                       onPressed: () => context.pop(),
                     ),
                     title: Text(
-                      subcategory.name,
+                      widget.subcategory.name,
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w600,
@@ -82,8 +112,7 @@ class ServicesPage extends ConsumerWidget {
                                   top: Radius.circular(24),
                                 ),
                               ),
-                              builder: (_) =>
-                                  FilterSheet(initialFilter: filter),
+                              builder: (_) => FilterSheet(initialFilter: filter),
                             ),
                           ),
                           if (filter.isActive)
@@ -110,7 +139,7 @@ class ServicesPage extends ConsumerWidget {
                       separatorBuilder: (_, _) =>
                           const SizedBox(height: AppDimensions.spacing12),
                       itemBuilder: (context, index) {
-                        if (index == 0) return firstItem;
+                        if (index == 0) return myServiceWidget;
                         if (isEmpty) {
                           return const EmptyState(
                             icon: Icons.miscellaneous_services_outlined,
@@ -122,20 +151,28 @@ class ServicesPage extends ConsumerWidget {
                       },
                     ),
                   ),
-                  SliverToBoxAdapter(
-                    child: state.hasMore
-                        ? LoadMoreButton(
-                            isLoading: state.isLoadingMore,
-                            onPressed: () => ref
-                                .read(serviceProvider(args).notifier)
-                                .loadMore(),
-                          )
-                        : const SizedBox(height: 32),
-                  ),
+                  if (state.isLoadingMore)
+                    const SliverToBoxAdapter(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 20),
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  else
+                    const SliverToBoxAdapter(child: SizedBox(height: 32)),
                 ],
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
