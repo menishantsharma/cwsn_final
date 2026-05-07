@@ -18,7 +18,7 @@ class ReadProviderSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = service.caregiverProfile!;
-    final requestAsync = ref.watch(parentRequestsProvider);
+    final requestAsync = ref.watch(serviceRequestProvider(service.id));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,24 +64,10 @@ class ReadProviderSection extends ConsumerWidget {
                     child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                   ),
                 ),
-                error: (_, e) => RequestButton(serviceId: service.id),
-                data: (state) {
-                  final serviceRequest = state.items
-                      .where((r) => r.serviceId == service.id)
-                      .firstOrNull;
-                  final acceptedForCaregiver = state.items
-                      .where(
-                        (r) =>
-                            r.caregiverId == service.caregiverId &&
-                            r.status == 'Accepted',
-                      )
-                      .firstOrNull;
-
-                  if (acceptedForCaregiver != null) {
-                    return RequestStatus(request: acceptedForCaregiver);
-                  }
-                  if (serviceRequest != null) {
-                    return RequestStatus(request: serviceRequest);
+                error: (_, _) => RequestButton(serviceId: service.id),
+                data: (request) {
+                  if (request != null) {
+                    return RequestStatus(request: request);
                   }
                   return RequestButton(serviceId: service.id);
                 },

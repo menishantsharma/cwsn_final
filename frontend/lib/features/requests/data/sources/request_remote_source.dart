@@ -92,4 +92,14 @@ class RequestRemoteSource {
       hasMore: res.data['next'] != null,
     );
   }
+
+  Future<RequestModel?> getRequestForService(int serviceId) async {
+    final res = await _dio.get(
+      '/api/interactions/requests/',
+      queryParameters: {'as_parent': 'true', 'service': serviceId},
+    );
+    final results = res.data['results'] as List;
+    if (results.isEmpty) return null;
+    return RequestModel.fromJson(results.first as Map<String, dynamic>);
+  }
 }
