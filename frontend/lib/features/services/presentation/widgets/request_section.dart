@@ -162,7 +162,7 @@ class _RequestSheetState extends ConsumerState<RequestSheet> {
     if (_selectedChild == null) return;
     setState(() => _loading = true);
     try {
-      await ref.read(requestProvider.notifier).sendRequest(
+      await ref.read(pendingRequestsProvider.notifier).sendRequest(
             serviceId: widget.serviceId,
             childId: _selectedChild!.id,
             note: _noteController.text.trim(),

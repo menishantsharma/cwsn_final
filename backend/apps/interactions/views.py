@@ -37,15 +37,22 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             qs = base.filter(caregiver=user)
             if service_id:
                 qs = qs.filter(service_id=service_id)
-            return qs
-        if user.is_cwsn_user:
+        elif user.is_cwsn_user:
             qs = base.filter(cwsn_user=user)
             if service_id:
                 qs = qs.filter(service_id=service_id)
             if caregiver_id:
                 qs = qs.filter(caregiver_id=caregiver_id)
-            return qs
-        return ServiceRequest.objects.none()
+        else:
+            return ServiceRequest.objects.none()
+
+        status_param = self.request.query_params.get('status')
+        if status_param == 'Pending':
+            qs = qs.filter(status='Pending')
+        elif status_param == 'history':
+            qs = qs.exclude(status='Pending')
+
+        return qs
     
     def perform_create(self, serializer):
         if not self.request.user.is_cwsn_user:

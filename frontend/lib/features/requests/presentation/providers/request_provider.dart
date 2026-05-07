@@ -8,32 +8,30 @@ final requestRemoteSourceProvider = Provider<RequestRemoteSource>(
   (ref) => RequestRemoteSource(ref.read(dioProvider)),
 );
 
-class RequestNotifier extends PaginatedNotifier<RequestModel> {
+class PendingRequestsNotifier extends PaginatedNotifier<RequestModel> {
   @override
   Future<PagedResponse<RequestModel>> fetchPage(int page) =>
-      ref.read(requestRemoteSourceProvider).getRequests(page: page);
+      ref.read(requestRemoteSourceProvider).getPendingRequests(page: page);
 
   Future<void> accept(int id) async {
-    final updated =
-        await ref.read(requestRemoteSourceProvider).acceptRequest(id);
-    _replace(updated);
+    await ref.read(requestRemoteSourceProvider).acceptRequest(id);
+    _remove(id);
+    ref.invalidate(historyRequestsProvider);
     ref.invalidate(parentRequestsProvider);
   }
 
   Future<void> reject(int id) async {
-    final updated =
-        await ref.read(requestRemoteSourceProvider).rejectRequest(id);
-    _replace(updated);
+    await ref.read(requestRemoteSourceProvider).rejectRequest(id);
+    _remove(id);
+    ref.invalidate(historyRequestsProvider);
     ref.invalidate(parentRequestsProvider);
   }
 
-  void _replace(RequestModel updated) {
+  void _remove(int id) {
     final current = state.asData?.value;
     if (current == null) return;
     state = AsyncData(
-      current.copyWith(
-        items: current.items.map((r) => r.id == updated.id ? updated : r).toList(),
-      ),
+      current.copyWith(items: current.items.where((r) => r.id != id).toList()),
     );
   }
 
@@ -47,21 +45,31 @@ class RequestNotifier extends PaginatedNotifier<RequestModel> {
         .createRequest(serviceId: serviceId, childId: childId, note: note);
     final current = state.asData?.value;
     if (current == null) return;
-    state = AsyncData(current.copyWith(items: [...current.items, created]));
+    state = AsyncData(current.copyWith(items: [created, ...current.items]));
     ref.invalidate(parentRequestsProvider);
   }
 }
 
-final requestProvider =
-    AsyncNotifierProvider<RequestNotifier, PaginatedState<RequestModel>>(
-      RequestNotifier.new,
+final pendingRequestsProvider =
+    AsyncNotifierProvider<PendingRequestsNotifier, PaginatedState<RequestModel>>(
+      PendingRequestsNotifier.new,
     );
 
-// Derived from already-loaded list — only used inside the notifications page
+class HistoryRequestsNotifier extends PaginatedNotifier<RequestModel> {
+  @override
+  Future<PagedResponse<RequestModel>> fetchPage(int page) =>
+      ref.read(requestRemoteSourceProvider).getHistoryRequests(page: page);
+}
+
+final historyRequestsProvider =
+    AsyncNotifierProvider<HistoryRequestsNotifier, PaginatedState<RequestModel>>(
+      HistoryRequestsNotifier.new,
+    );
+
+// Derived count from already-loaded pending list — used for the tab badge
 final pendingRequestCountProvider = Provider<int>((ref) {
-  return ref.watch(requestProvider).maybeWhen(
-        data: (state) =>
-            state.items.where((r) => r.status == 'Pending').length,
+  return ref.watch(pendingRequestsProvider).maybeWhen(
+        data: (state) => state.items.length,
         orElse: () => 0,
       );
 });
@@ -81,3 +89,4 @@ final parentRequestsProvider =
     AsyncNotifierProvider<ParentRequestsNotifier, PaginatedState<RequestModel>>(
       ParentRequestsNotifier.new,
     );
+

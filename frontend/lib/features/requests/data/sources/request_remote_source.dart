@@ -12,9 +12,31 @@ class RequestRemoteSource {
       '/api/interactions/requests/',
       queryParameters: {'page': page},
     );
-
     final results = res.data['results'] as List;
+    return PagedResponse(
+      results: results.map((e) => RequestModel.fromJson(e)).toList(),
+      hasMore: res.data['next'] != null,
+    );
+  }
 
+  Future<PagedResponse<RequestModel>> getPendingRequests({int page = 1}) async {
+    final res = await _dio.get(
+      '/api/interactions/requests/',
+      queryParameters: {'status': 'Pending', 'page': page},
+    );
+    final results = res.data['results'] as List;
+    return PagedResponse(
+      results: results.map((e) => RequestModel.fromJson(e)).toList(),
+      hasMore: res.data['next'] != null,
+    );
+  }
+
+  Future<PagedResponse<RequestModel>> getHistoryRequests({int page = 1}) async {
+    final res = await _dio.get(
+      '/api/interactions/requests/',
+      queryParameters: {'status': 'history', 'page': page},
+    );
+    final results = res.data['results'] as List;
     return PagedResponse(
       results: results.map((e) => RequestModel.fromJson(e)).toList(),
       hasMore: res.data['next'] != null,

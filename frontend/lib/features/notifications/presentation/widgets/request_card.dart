@@ -62,7 +62,7 @@ class _RequestCardState extends ConsumerState<RequestCard> {
     if (_accepting || _rejecting) return;
     setState(() => _accepting = true);
     try {
-      await ref.read(requestProvider.notifier).accept(widget.request.id);
+      await ref.read(pendingRequestsProvider.notifier).accept(widget.request.id);
     } finally {
       if (mounted) setState(() => _accepting = false);
     }
@@ -72,7 +72,7 @@ class _RequestCardState extends ConsumerState<RequestCard> {
     if (_accepting || _rejecting) return;
     setState(() => _rejecting = true);
     try {
-      await ref.read(requestProvider.notifier).reject(widget.request.id);
+      await ref.read(pendingRequestsProvider.notifier).reject(widget.request.id);
     } finally {
       if (mounted) setState(() => _rejecting = false);
     }
