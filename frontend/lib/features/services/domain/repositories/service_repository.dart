@@ -32,9 +32,11 @@ abstract class ServiceRepository {
     required int subCategoryId,
   });
 
-  Future<ServiceModel> createService({required Map<String, dynamic> fields});
+  Future<ServiceDetailModel> getServiceById({required int id});
 
-  Future<ServiceModel> updateService({
+  Future<ServiceDetailModel> createService({required Map<String, dynamic> fields});
+
+  Future<ServiceDetailModel> updateService({
     required int id,
     required Map<String, dynamic> fields,
   });

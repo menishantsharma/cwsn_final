@@ -20,7 +20,7 @@ class MyServiceCard extends ConsumerWidget {
     final delta = ref.watch(upvoteCountDeltaProvider(service.id));
 
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service),
+      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service.id),
       child: DottedBorder(
         options: RoundedRectDottedBorderOptions(
           color: AppColors.primary,

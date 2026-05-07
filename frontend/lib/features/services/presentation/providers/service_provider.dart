@@ -150,13 +150,18 @@ final myServiceProvider = FutureProvider.family<ServiceModel?, (int, int)>((
       );
 });
 
-class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
-  late ServiceModel _original;
+final serviceDetailProvider =
+    FutureProvider.family<ServiceDetailModel, int>((ref, id) {
+  return ref.read(serviceRepositoryProvider).getServiceById(id: id);
+});
+
+class EditableServiceNotifier extends Notifier<AsyncValue<ServiceDetailModel>> {
+  late ServiceDetailModel _original;
 
   @override
-  AsyncValue<ServiceModel> build() => const AsyncLoading();
+  AsyncValue<ServiceDetailModel> build() => const AsyncLoading();
 
-  void init(ServiceModel service) {
+  void init(ServiceDetailModel service) {
     _original = service;
     state = AsyncData(service);
   }
@@ -190,7 +195,7 @@ class EditableServiceNotifier extends Notifier<AsyncValue<ServiceModel>> {
 }
 
 final editableServiceProvider =
-    NotifierProvider<EditableServiceNotifier, AsyncValue<ServiceModel>>(
+    NotifierProvider<EditableServiceNotifier, AsyncValue<ServiceDetailModel>>(
       EditableServiceNotifier.new,
     );
 

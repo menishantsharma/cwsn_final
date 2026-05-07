@@ -4,14 +4,14 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
-import 'package:frontend/features/services/domain/models/service_model.dart';
+import 'package:frontend/features/services/domain/models/service_model.dart' show ServiceDetailModel, CaregiverProfileModel;
 import 'package:frontend/features/services/presentation/widgets/provider_section.dart';
 import 'package:frontend/features/services/presentation/widgets/request_section.dart';
 import 'package:frontend/features/services/presentation/widgets/section_label.dart';
 
 /// Read-only provider card shown on ServiceDetailPage.
 class ReadProviderSection extends ConsumerWidget {
-  final ServiceModel service;
+  final ServiceDetailModel service;
 
   const ReadProviderSection({super.key, required this.service});
 

@@ -22,7 +22,7 @@ class ServiceCard extends ConsumerWidget {
     final caregiver = service.caregiverProfile;
 
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.serviceDetail, extra: service),
+      onTap: () => context.push(AppRoutes.serviceDetail, extra: service.id),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,

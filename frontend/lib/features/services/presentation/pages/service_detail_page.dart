@@ -5,6 +5,7 @@ import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
 import 'package:frontend/features/services/domain/models/service_model.dart';
+import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:frontend/features/services/presentation/widgets/read_provider_section.dart';
 import 'package:frontend/features/services/presentation/widgets/request_section.dart';
 import 'package:frontend/features/services/presentation/widgets/section_label.dart';
@@ -12,75 +13,81 @@ import 'package:frontend/features/services/presentation/widgets/service_chip.dar
 import 'package:frontend/features/services/presentation/widgets/service_hero.dart';
 
 class ServiceDetailPage extends ConsumerWidget {
-  final ServiceModel service;
+  final int serviceId;
 
-  const ServiceDetailPage({super.key, required this.service});
+  const ServiceDetailPage({super.key, required this.serviceId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final detailAsync = ref.watch(serviceDetailProvider(serviceId));
+
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: CustomScrollView(
-        slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.background,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: const Icon(Icons.chevron_left, size: 28),
-              color: AppColors.textPrimary,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
-                tooltip: 'Report service',
-                onPressed: () => showModalBottomSheet(
-                  context: context,
-                  isScrollControlled: true,
-                  backgroundColor: Colors.white,
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.vertical(
-                      top: Radius.circular(AppDimensions.radiusXl),
-                    ),
-                  ),
-                  builder: (_) => ReportSheet(service: service),
-                ),
+      body: detailAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+        error: (e, _) => Center(child: Text('Failed to load service', style: AppTextStyles.bodyMedium)),
+        data: (service) => CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              scrolledUnderElevation: 0,
+              pinned: true,
+              automaticallyImplyLeading: false,
+              leading: IconButton(
+                icon: const Icon(Icons.chevron_left, size: 28),
+                color: AppColors.textPrimary,
+                onPressed: () => Navigator.of(context).pop(),
               ),
-            ],
-          ),
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                ServiceHero(image: service.image),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ServiceInfoSection(service: service),
-                      if (service.caregiverProfile != null) ...[
-                        const SizedBox(height: AppDimensions.spacing32),
-                        ReadProviderSection(service: service),
-                      ],
-                      const SizedBox(height: AppDimensions.spacing32),
-                    ],
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
+                  tooltip: 'Report service',
+                  onPressed: () => showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true,
+                    backgroundColor: Colors.white,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(AppDimensions.radiusXl),
+                      ),
+                    ),
+                    builder: (_) => ReportSheet(serviceId: service.id, caregiverId: service.caregiverId),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ServiceHero(image: service.image),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _ServiceInfoSection(service: service),
+                        if (service.caregiverProfile != null) ...[
+                          const SizedBox(height: AppDimensions.spacing32),
+                          ReadProviderSection(service: service),
+                        ],
+                        const SizedBox(height: AppDimensions.spacing32),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 class _ServiceInfoSection extends ConsumerWidget {
-  final ServiceModel service;
+  final ServiceDetailModel service;
   const _ServiceInfoSection({required this.service});
 
   @override
@@ -244,7 +251,7 @@ class _ExpandableTextState extends State<_ExpandableText> {
 }
 
 class _InfoGrid extends StatelessWidget {
-  final ServiceModel service;
+  final ServiceDetailModel service;
   const _InfoGrid({required this.service});
 
   @override

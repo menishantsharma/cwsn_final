@@ -8,7 +8,6 @@ import 'package:frontend/features/categories/domain/models/subcategory_model.dar
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
 import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
 import 'package:frontend/features/notifications/presentation/pages/notifications_page.dart';
-import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/pages/create_service_page.dart';
 import 'package:frontend/features/services/presentation/pages/editable_service_detail_page.dart';
 import 'package:frontend/features/services/presentation/pages/service_detail_page.dart';
@@ -126,12 +125,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.serviceDetail,
         builder: (_, state) =>
-            ServiceDetailPage(service: state.extra as ServiceModel),
+            ServiceDetailPage(serviceId: state.extra as int),
       ),
       GoRoute(
         path: AppRoutes.editableServiceDetail,
         builder: (_, state) =>
-            EditableServiceDetailPage(service: state.extra as ServiceModel),
+            EditableServiceDetailPage(serviceId: state.extra as int),
       ),
       GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
       GoRoute(

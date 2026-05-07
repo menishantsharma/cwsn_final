@@ -84,7 +84,7 @@ class _ServiceRow extends ConsumerWidget {
     final delta = ref.watch(upvoteCountDeltaProvider(service.id));
 
     return InkWell(
-      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service),
+      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service.id),
       borderRadius: BorderRadius.circular(AppDimensions.radiusXl),
       child: Padding(
         padding: const EdgeInsets.symmetric(

@@ -11,7 +11,6 @@ import 'package:frontend/features/profile/presentation/providers/profile_provide
 import 'package:frontend/features/profile/presentation/widgets/add_child_sheet.dart';
 import 'package:frontend/features/requests/domain/models/request_model.dart';
 import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
-import 'package:frontend/features/services/domain/models/service_model.dart';
 import 'package:frontend/features/services/presentation/widgets/sheet_widgets.dart';
 
 class RequestButton extends ConsumerWidget {
@@ -389,9 +388,10 @@ class _AddChildButton extends ConsumerWidget {
 }
 
 class ReportSheet extends ConsumerStatefulWidget {
-  final ServiceModel service;
+  final int serviceId;
+  final int caregiverId;
 
-  const ReportSheet({super.key, required this.service});
+  const ReportSheet({super.key, required this.serviceId, required this.caregiverId});
 
   @override
   ConsumerState<ReportSheet> createState() => _ReportSheetState();
@@ -428,7 +428,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     setState(() => _loading = true);
     try {
       await ref.read(reportProvider).reportService(
-            reportedUserId: widget.service.caregiverId,
+            reportedUserId: widget.caregiverId,
             reason: reason,
           );
       if (mounted) {

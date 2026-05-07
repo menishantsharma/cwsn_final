@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from apps.users.models import CaregiverProfile
 from .models import Service, AvailabilitySlot
-from .serializers import ServiceSerializer, AvailabilitySlotSerializer
+from .serializers import ServiceSerializer, ServiceListSerializer, AvailabilitySlotSerializer
 from .filters import ServiceFilter
 import hashlib
 from django.core.cache import cache
@@ -24,10 +24,14 @@ class IsCaregiverOwnerOrReadOnly(permissions.BasePermission):
         return obj.caregiver == request.user
 
 class ServiceViewSet(viewsets.ModelViewSet):
-    serializer_class = ServiceSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsCaregiverOwnerOrReadOnly]
     filterset_class = ServiceFilter
     parser_classes = (MultiPartParser, FormParser)
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return ServiceListSerializer
+        return ServiceSerializer
 
     def get_queryset(self):
         """
@@ -38,15 +42,21 @@ class ServiceViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
 
-        base = (
-            Service.objects
-            .select_related(
-                'caregiver__caregiver_profile__region',
-                'category',
-                'sub_category',
+        if self.action == 'list':
+            base = (
+                Service.objects
+                .select_related('caregiver__caregiver_profile', 'category', 'sub_category')
             )
-            .prefetch_related('slots', 'target_disabilities')
-        )
+        else:
+            base = (
+                Service.objects
+                .select_related(
+                    'caregiver__caregiver_profile__region',
+                    'category',
+                    'sub_category',
+                )
+                .prefetch_related('slots', 'target_disabilities')
+            )
 
         if self.request.query_params.get('mine') == 'true' and user.is_authenticated:
             return base.filter(caregiver=user, is_archived=False)

@@ -15,6 +15,24 @@ class AvailabilitySlotSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("End time must be after start time.")
         return data
 
+class CaregiverSummarySerializer(serializers.Serializer):
+    """Minimal caregiver fields needed for service list cards."""
+    id = serializers.IntegerField(source='caregiver_profile.id', read_only=True)
+    name = serializers.CharField(source='caregiver_profile.name', read_only=True)
+    street_address = serializers.CharField(source='caregiver_profile.street_address', read_only=True)
+
+class ServiceListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for list views — no slots, no disabilities, no full caregiver profile."""
+    caregiver_profile = CaregiverSummarySerializer(source='caregiver', read_only=True)
+
+    class Meta:
+        model = Service
+        fields = [
+            'id', 'title', 'image', 'service_type', 'payment_type',
+            'upvote_count', 'caregiver', 'caregiver_profile',
+            'category', 'sub_category',
+        ]
+
 class ServiceSerializer(serializers.ModelSerializer):
     # Nested read-only data for display
     caregiver_profile = CaregiverProfileSerializer(source='caregiver.caregiver_profile', read_only=True)

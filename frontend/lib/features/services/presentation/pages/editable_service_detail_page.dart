@@ -4,7 +4,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/confirm_dialog.dart';
-import 'package:frontend/features/services/domain/models/service_model.dart';
+import 'package:frontend/features/services/domain/models/service_model.dart' show ServiceDetailModel;
 import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:frontend/features/services/presentation/widgets/editable_field_row.dart';
 import 'package:frontend/features/services/presentation/widgets/provider_section.dart';
@@ -13,9 +13,9 @@ import 'package:frontend/features/services/presentation/widgets/service_hero.dar
 import 'package:frontend/features/services/presentation/widgets/sheet_widgets.dart';
 
 class EditableServiceDetailPage extends ConsumerStatefulWidget {
-  final ServiceModel service;
+  final int serviceId;
 
-  const EditableServiceDetailPage({super.key, required this.service});
+  const EditableServiceDetailPage({super.key, required this.serviceId});
 
   @override
   ConsumerState<EditableServiceDetailPage> createState() =>
@@ -27,9 +27,10 @@ class _EditableServiceDetailPageState
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref.read(editableServiceProvider.notifier).init(widget.service),
-    );
+    Future.microtask(() async {
+      final detail = await ref.read(serviceDetailProvider(widget.serviceId).future);
+      if (mounted) ref.read(editableServiceProvider.notifier).init(detail);
+    });
   }
 
   void _confirmDelete(BuildContext context) {
@@ -56,7 +57,7 @@ class _EditableServiceDetailPageState
     return 'Up to $max years';
   }
 
-  void _save(ServiceModel updated) {
+  void _save(ServiceDetailModel updated) {
     ref.read(editableServiceProvider.notifier).updateField({
       'title': updated.title,
       'description': updated.description,
@@ -108,8 +109,14 @@ class _EditableServiceDetailPageState
   @override
   Widget build(BuildContext context) {
     final serviceAsync = ref.watch(editableServiceProvider);
-    final service = serviceAsync.value ?? widget.service;
+    final service = serviceAsync.value;
     final isSaving = serviceAsync.isLoading;
+
+    if (service == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,

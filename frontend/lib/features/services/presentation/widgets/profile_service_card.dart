@@ -18,11 +18,9 @@ class ProfileServiceCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final delta = ref.watch(upvoteCountDeltaProvider(service.id));
     final upvotes = service.upvoteCount + delta;
-    final hasDescription =
-        service.description != null && service.description!.isNotEmpty;
 
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service),
+      onTap: () => context.push(AppRoutes.editableServiceDetail, extra: service.id),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -96,17 +94,6 @@ class ProfileServiceCard extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      if (hasDescription) ...[
-                        const SizedBox(height: AppDimensions.spacing6),
-                        Text(
-                          service.description!,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
                       const SizedBox(height: AppDimensions.spacing12),
                       Row(
                         children: [

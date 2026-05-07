@@ -1,3 +1,23 @@
+class CaregiverSummaryModel {
+  final int id;
+  final String name;
+  final String? streetAddress;
+
+  CaregiverSummaryModel({
+    required this.id,
+    required this.name,
+    this.streetAddress,
+  });
+
+  factory CaregiverSummaryModel.fromJson(Map<String, dynamic> json) {
+    return CaregiverSummaryModel(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      streetAddress: json['street_address'] as String?,
+    );
+  }
+}
+
 class CaregiverProfileModel {
   final int id;
   final String name;
@@ -33,7 +53,53 @@ class CaregiverProfileModel {
   }
 }
 
+/// Lightweight model returned by the list endpoint.
 class ServiceModel {
+  final int id;
+  final String title;
+  final String? image;
+  final String serviceType;
+  final String paymentType;
+  final int upvoteCount;
+  final int categoryId;
+  final int subCategoryId;
+  final int caregiverId;
+  final CaregiverSummaryModel? caregiverProfile;
+
+  ServiceModel({
+    required this.id,
+    required this.title,
+    this.image,
+    required this.serviceType,
+    required this.paymentType,
+    required this.upvoteCount,
+    required this.categoryId,
+    required this.subCategoryId,
+    required this.caregiverId,
+    this.caregiverProfile,
+  });
+
+  factory ServiceModel.fromJson(Map<String, dynamic> json) {
+    return ServiceModel(
+      id: json['id'] as int,
+      title: json['title'] as String,
+      image: json['image'] as String?,
+      serviceType: json['service_type'] as String,
+      paymentType: json['payment_type'] as String,
+      upvoteCount: (json['upvote_count'] as int?) ?? 0,
+      categoryId: (json['category'] as int?) ?? 0,
+      subCategoryId: (json['sub_category'] as int?) ?? 0,
+      caregiverId: (json['caregiver'] as int?) ?? 0,
+      caregiverProfile: json['caregiver_profile'] != null
+          ? CaregiverSummaryModel.fromJson(
+              json['caregiver_profile'] as Map<String, dynamic>)
+          : null,
+    );
+  }
+}
+
+/// Full model returned by the detail endpoint (/api/services/services/{id}/).
+class ServiceDetailModel {
   final int id;
   final String title;
   final String? description;
@@ -49,7 +115,7 @@ class ServiceModel {
   final int caregiverId;
   final CaregiverProfileModel? caregiverProfile;
 
-  ServiceModel({
+  ServiceDetailModel({
     required this.id,
     required this.title,
     this.description,
@@ -66,8 +132,8 @@ class ServiceModel {
     this.caregiverProfile,
   });
 
-  factory ServiceModel.fromJson(Map<String, dynamic> json) {
-    return ServiceModel(
+  factory ServiceDetailModel.fromJson(Map<String, dynamic> json) {
+    return ServiceDetailModel(
       id: json['id'] as int,
       title: json['title'] as String,
       description: json['description'] as String?,
@@ -82,12 +148,13 @@ class ServiceModel {
       subCategoryId: (json['sub_category'] as int?) ?? 0,
       caregiverId: (json['caregiver'] as int?) ?? 0,
       caregiverProfile: json['caregiver_profile'] != null
-          ? CaregiverProfileModel.fromJson(json['caregiver_profile'])
+          ? CaregiverProfileModel.fromJson(
+              json['caregiver_profile'] as Map<String, dynamic>)
           : null,
     );
   }
 
-  ServiceModel copyWith({
+  ServiceDetailModel copyWith({
     String? title,
     String? description,
     String? serviceType,
@@ -96,7 +163,7 @@ class ServiceModel {
     int? targetAgeMax,
     String? targetGender,
   }) {
-    return ServiceModel(
+    return ServiceDetailModel(
       id: id,
       title: title ?? this.title,
       description: description ?? this.description,
