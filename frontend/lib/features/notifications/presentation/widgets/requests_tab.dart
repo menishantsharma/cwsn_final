@@ -65,10 +65,11 @@ class _RequestsTabViewState extends ConsumerState<RequestsTabView> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels >=
-        _scrollController.position.maxScrollExtent - 200) {
-      ref.read(requestProvider.notifier).loadMore();
-    }
+    if (_scrollController.position.pixels <
+        _scrollController.position.maxScrollExtent - 200) { return; }
+    final state = ref.read(requestProvider).asData?.value;
+    if (state == null || state.isLoadingMore || !state.hasMore) { return; }
+    ref.read(requestProvider.notifier).loadMore();
   }
 
   @override

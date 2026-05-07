@@ -15,9 +15,10 @@ class NotificationNotifier
       ref.read(notificationRemoteSourceProvider).getNotifications(page: page);
 
   Future<void> markAsRead(int id) async {
-    // Optimistic update — apply immediately, fire API in background
     final current = state.asData?.value;
     if (current == null) return;
+    final alreadyRead = current.items.any((n) => n.id == id && n.isRead);
+    if (alreadyRead) return;
     state = AsyncData(
       current.copyWith(
         items: current.items
