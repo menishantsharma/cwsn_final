@@ -19,16 +19,19 @@ class SearchListingsPage extends ConsumerStatefulWidget {
 
 class _SearchListingsPageState extends ConsumerState<SearchListingsPage> {
   final _scrollController = ScrollController();
+  late final ServiceFilterNotifier _filterNotifier;
 
   @override
   void initState() {
     super.initState();
+    _filterNotifier = ref.read(serviceFilterProvider.notifier);
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    Future.microtask(_filterNotifier.clearAll);
     super.dispose();
   }
 

@@ -23,17 +23,20 @@ class ServicesPage extends ConsumerStatefulWidget {
 class _ServicesPageState extends ConsumerState<ServicesPage> {
   final _scrollController = ScrollController();
   late final (int, int) _args;
+  late final ServiceFilterNotifier _filterNotifier;
 
   @override
   void initState() {
     super.initState();
     _args = (widget.subcategory.categoryId, widget.subcategory.id);
+    _filterNotifier = ref.read(serviceFilterProvider.notifier);
     _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
+    Future.microtask(_filterNotifier.clearAll);
     super.dispose();
   }
 
