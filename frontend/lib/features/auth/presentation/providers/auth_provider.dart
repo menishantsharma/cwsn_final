@@ -4,6 +4,12 @@ import 'package:frontend/features/auth/data/repositories/auth_repository_impl.da
 import 'package:frontend/features/auth/data/sources/auth_remote_source.dart';
 import 'package:frontend/features/auth/domain/models/auth_model.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/categories/presentation/providers/category_provider.dart';
+import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
+import 'package:frontend/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
+import 'package:frontend/features/services/presentation/providers/service_provider.dart';
 import 'package:frontend/providers/core_providers.dart';
 
 final authRemoteSourceProvider = Provider<AuthRemoteSource>(
@@ -119,6 +125,29 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     await _storage.deleteToken();
     await _storage.deleteUserId();
     await _storage.clearNewUser();
+
+    // Drop every cached user-data provider so the next signed-in user
+    // starts from a clean slate.
+    ref.invalidate(profileProvider);
+    ref.invalidate(supportedLanguagesProvider);
+    ref.invalidate(categoryProvider);
+    ref.invalidate(subcategoryProvider);
+    ref.invalidate(serviceProvider);
+    ref.invalidate(myServiceProvider);
+    ref.invalidate(allMyServicesProvider);
+    ref.invalidate(serviceDetailProvider);
+    ref.invalidate(editableServiceProvider);
+    ref.invalidate(searchProvider);
+    ref.invalidate(serviceFilterProvider);
+    ref.invalidate(pendingRequestsProvider);
+    ref.invalidate(historyRequestsProvider);
+    ref.invalidate(pendingCountProvider);
+    ref.invalidate(parentRequestsProvider);
+    ref.invalidate(caregiverRequestProvider);
+    ref.invalidate(notificationProvider);
+    ref.invalidate(unreadCountProvider);
+    ref.invalidate(upvoteProvider);
+
     state = const AsyncData(AuthState());
   }
 }
