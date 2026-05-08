@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/core/pagination/load_more_button.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
@@ -8,11 +7,38 @@ import 'package:frontend/features/categories/presentation/providers/category_pro
 import 'package:frontend/features/categories/presentation/widgets/categories_header.dart';
 import 'package:frontend/features/categories/presentation/widgets/category_card.dart';
 
-class CategoriesPage extends ConsumerWidget {
+class CategoriesPage extends ConsumerStatefulWidget {
   const CategoriesPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CategoriesPage> createState() => _CategoriesPageState();
+}
+
+class _CategoriesPageState extends ConsumerState<CategoriesPage> {
+  final _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels <
+        _scrollController.position.maxScrollExtent - 200) { return; }
+    final state = ref.read(categoryProvider).asData?.value;
+    if (state == null || state.isLoadingMore || !state.hasMore) { return; }
+    ref.read(categoryProvider.notifier).loadMore();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final categoriesAsync = ref.watch(categoryProvider);
 
     return Scaffold(
@@ -33,6 +59,8 @@ class CategoriesPage extends ConsumerWidget {
             }
 
             return CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
                 // Greeting — scrolls away
                 const SliverToBoxAdapter(child: CategoriesGreeting()),
@@ -57,15 +85,24 @@ class CategoriesPage extends ConsumerWidget {
                   ),
                 ),
 
-                SliverToBoxAdapter(
-                  child: state.hasMore
-                      ? LoadMoreButton(
-                          isLoading: state.isLoadingMore,
-                          onPressed: () =>
-                              ref.read(categoryProvider.notifier).loadMore(),
-                        )
-                      : const SizedBox(height: 32),
-                ),
+                if (state.isLoadingMore)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            color: AppColors.primary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  const SliverToBoxAdapter(child: SizedBox(height: 32)),
               ],
             );
           },
