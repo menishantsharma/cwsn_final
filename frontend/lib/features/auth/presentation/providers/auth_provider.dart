@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/data/sources/auth_remote_source.dart';
-import 'package:frontend/features/auth/domain/models/auth_model.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
 import 'package:frontend/features/categories/presentation/providers/category_provider.dart';
 import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
@@ -20,34 +19,20 @@ final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepositoryImpl(ref.read(authRemoteSourceProvider)),
 );
 
-enum AuthStatus { initial, otpSent, verified }
-
 class AuthState {
-  final AuthStatus status;
-  final String? phoneNumber;
-  final AuthModel? user;
+  final bool isAuthenticated;
   final bool isNewUser;
   final int? userId;
 
   const AuthState({
-    this.status = AuthStatus.initial,
-    this.phoneNumber,
-    this.user,
+    this.isAuthenticated = false,
     this.isNewUser = false,
     this.userId,
   });
 
-  AuthState copyWith({
-    AuthStatus? status,
-    String? phoneNumber,
-    AuthModel? user,
-    bool? isNewUser,
-    int? userId,
-  }) {
+  AuthState copyWith({bool? isAuthenticated, bool? isNewUser, int? userId}) {
     return AuthState(
-      status: status ?? this.status,
-      phoneNumber: phoneNumber ?? this.phoneNumber,
-      user: user ?? this.user,
+      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
       isNewUser: isNewUser ?? this.isNewUser,
       userId: userId ?? this.userId,
     );
@@ -68,60 +53,35 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     });
 
     final hasToken = await _storage.hasToken();
-
     if (hasToken) {
-      final newUser = await _storage.isNewUser();
+      final isNewUser = await _storage.isNewUser();
       final userId = await _storage.getUserId();
-      return AuthState(status: AuthStatus.verified, isNewUser: newUser, userId: userId);
+      return AuthState(isAuthenticated: true, isNewUser: isNewUser, userId: userId);
     }
 
     return const AuthState();
   }
 
   Future<void> sendOtp(String phoneNumber) async {
-    final current = state.value ?? const AuthState();
     state = const AsyncValue.loading();
-
     state = await AsyncValue.guard(() async {
       await _repository.sendOtp(phoneNumber);
-      return current.copyWith(
-        status: AuthStatus.otpSent,
-        phoneNumber: phoneNumber,
-      );
+      return state.value ?? const AuthState();
     });
   }
 
-  Future<void> verifyOtp(String code) async {
-    final phoneNumber = state.value?.phoneNumber;
-    if (phoneNumber == null || phoneNumber.isEmpty) {
-      state = AsyncError(
-        Exception('Session expired. Please re-enter your phone number.'),
-        StackTrace.current,
-      );
-      return;
-    }
-
+  Future<bool> verifyOtp(String phoneNumber, String code) async {
     state = const AsyncValue.loading();
-
+    bool success = false;
     state = await AsyncValue.guard(() async {
       final user = await _repository.verifyOtp(phoneNumber, code);
       await _storage.saveToken(user.token);
       await _storage.saveUserId(user.userId);
       if (user.isNewUser) await _storage.setNewUser();
-
-      return AuthState(
-        status: AuthStatus.verified,
-        phoneNumber: phoneNumber,
-        user: user,
-        isNewUser: user.isNewUser,
-        userId: user.userId,
-      );
+      success = true;
+      return AuthState(isAuthenticated: true, isNewUser: user.isNewUser, userId: user.userId);
     });
-  }
-
-  void backToPhoneInput() {
-    final current = state.value ?? const AuthState();
-    state = AsyncData(current.copyWith(status: AuthStatus.initial));
+    return success;
   }
 
   Future<void> completeOnboarding() async {
@@ -135,8 +95,6 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     await _storage.deleteUserId();
     await _storage.clearNewUser();
 
-    // Drop every cached user-data provider so the next signed-in user
-    // starts from a clean slate.
     ref.invalidate(profileProvider);
     ref.invalidate(supportedLanguagesProvider);
     ref.invalidate(categoryProvider);

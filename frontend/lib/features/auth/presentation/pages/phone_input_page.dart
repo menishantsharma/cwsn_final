@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/auth/presentation/widgets/otp_pin_input.dart';
 import 'package:frontend/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontend/features/auth/presentation/widgets/send_otp_button.dart';
 
@@ -15,41 +18,49 @@ class PhoneInputPage extends ConsumerStatefulWidget {
 }
 
 class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
-  final TextEditingController _phoneNumberController = TextEditingController();
-  bool get _isValid => _phoneNumberController.text.length == 10;
+  final _phoneController = TextEditingController();
+  bool get _isValid => _phoneController.text.length == 10;
 
   @override
   void dispose() {
-    _phoneNumberController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _sendOtp() async {
     if (!_isValid) return;
-    ref.read(authProvider.notifier).sendOtp('+91${_phoneNumberController.text}');
+    final phone = '+91${_phoneController.text}';
+    await ref.read(authProvider.notifier).sendOtp(phone);
+
+    if (!mounted) return;
+    final err = ref.read(authProvider).error;
+    if (err != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(err.toString()),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMd)),
+        margin: const EdgeInsets.all(AppDimensions.spacing16),
+      ));
+      return;
+    }
+
+    _showOtpSheet(phone);
+  }
+
+  void _showOtpSheet(String phone) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _OtpSheet(phone: phone),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
-
-    ref.listen<AsyncValue<AuthState>>(authProvider, (_, next) {
-      next.whenOrNull(
-        error: (error, _) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(error.toString()),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-              ),
-              margin: const EdgeInsets.all(AppDimensions.spacing16),
-            ),
-          );
-        },
-      );
-    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -71,11 +82,7 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                     color: AppColors.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.favorite_rounded,
-                    color: AppColors.primary,
-                    size: 30,
-                  ),
+                  child: const Icon(Icons.favorite_rounded, color: AppColors.primary, size: 30),
                 ),
 
                 const SizedBox(height: AppDimensions.spacing24),
@@ -83,19 +90,10 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                 RichText(
                   textAlign: TextAlign.center,
                   text: TextSpan(
-                    style: AppTextStyles.displayMedium.copyWith(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 28,
-                    ),
-                    children: [
-                      const TextSpan(
-                        text: 'Care',
-                        style: TextStyle(color: AppColors.primary),
-                      ),
-                      const TextSpan(
-                        text: ' starts with\nconnection.',
-                        style: TextStyle(color: AppColors.textPrimary),
-                      ),
+                    style: AppTextStyles.displayMedium.copyWith(fontWeight: FontWeight.w700, fontSize: 28),
+                    children: const [
+                      TextSpan(text: 'Care', style: TextStyle(color: AppColors.primary)),
+                      TextSpan(text: ' starts with\nconnection.', style: TextStyle(color: AppColors.textPrimary)),
                     ],
                   ),
                 ),
@@ -105,37 +103,27 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
                 Text(
                   'Enter your phone number to get started',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyMedium.copyWith(
-                    color: AppColors.textHint,
-                  ),
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textHint),
                 ),
 
                 const Spacer(flex: 2),
 
                 PhoneInputField(
-                  controller: _phoneNumberController,
-                  onSubmitted: _submit,
+                  controller: _phoneController,
+                  onSubmitted: _sendOtp,
                   onChanged: () => setState(() {}),
                 ),
 
                 const SizedBox(height: AppDimensions.spacing12),
 
-                SendOtpButton(
-                  isValid: _isValid,
-                  isLoading: isLoading,
-                  onTap: _submit,
-                ),
+                SendOtpButton(isValid: _isValid, isLoading: isLoading, onTap: _sendOtp),
 
                 const SizedBox(height: AppDimensions.spacing16),
 
                 Text(
                   'By continuing, you agree to our Terms & Privacy Policy',
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall.copyWith(
-                    color: AppColors.textHint,
-                    fontSize: 11,
-                    height: 1.5,
-                  ),
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint, fontSize: 11, height: 1.5),
                 ),
 
                 const Spacer(flex: 1),
@@ -143,6 +131,196 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _OtpSheet extends ConsumerStatefulWidget {
+  final String phone;
+  const _OtpSheet({required this.phone});
+
+  @override
+  ConsumerState<_OtpSheet> createState() => _OtpSheetState();
+}
+
+class _OtpSheetState extends ConsumerState<_OtpSheet> {
+  final _pinController = TextEditingController();
+  final _focusNode = FocusNode();
+  String? _errorText;
+  bool _resending = false;
+
+  static const _timerDuration = 30;
+  int _secondsLeft = _timerDuration;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _pinController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer?.cancel();
+    setState(() => _secondsLeft = _timerDuration);
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (_secondsLeft == 0) {
+        t.cancel();
+      } else {
+        if (mounted) setState(() => _secondsLeft--);
+      }
+    });
+  }
+
+  Future<void> _resend() async {
+    setState(() { _resending = true; _errorText = null; _pinController.clear(); });
+    await ref.read(authProvider.notifier).sendOtp(widget.phone);
+    if (mounted) {
+      setState(() => _resending = false);
+      _startTimer();
+      _focusNode.requestFocus();
+    }
+  }
+
+  Future<void> _verify(String code) async {
+    final success = await ref.read(authProvider.notifier).verifyOtp(widget.phone, code);
+    if (!success && mounted) {
+      setState(() => _errorText = 'Invalid code. Please try again.');
+      _pinController.clear();
+      _focusNode.requestFocus();
+    }
+    // On success the router redirect handles navigation automatically.
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isLoading = ref.watch(authProvider.select((s) => s.isLoading));
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: EdgeInsets.fromLTRB(
+        AppDimensions.spacing24,
+        AppDimensions.spacing16,
+        AppDimensions.spacing24,
+        AppDimensions.spacing32 + bottomInset,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.border,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          const SizedBox(height: AppDimensions.spacing24),
+
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.lock_open_rounded, color: AppColors.primary, size: 26),
+          ),
+
+          const SizedBox(height: AppDimensions.spacing16),
+
+          Text('Verify your number', style: AppTextStyles.titleLarge),
+
+          const SizedBox(height: AppDimensions.spacing8),
+
+          RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: AppTextStyles.bodyMedium,
+              children: [
+                const TextSpan(text: 'Code sent to '),
+                TextSpan(
+                  text: widget.phone,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppDimensions.spacing32),
+
+          OtpPinInput(
+            controller: _pinController,
+            focusNode: _focusNode,
+            enabled: !isLoading,
+            hasError: _errorText != null,
+            onChanged: (val) { if (_errorText != null) setState(() => _errorText = null); },
+            onCompleted: _verify,
+          ),
+
+          if (_errorText != null) ...[
+            const SizedBox(height: AppDimensions.spacing8),
+            Text(_errorText!, style: AppTextStyles.bodySmall.copyWith(color: AppColors.error)),
+          ],
+
+          const SizedBox(height: AppDimensions.spacing24),
+
+          if (isLoading)
+            const SizedBox(
+              width: 22, height: 22,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+            )
+          else if (_resending)
+            const SizedBox(
+              width: 18, height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+            )
+          else if (_secondsLeft > 0)
+            RichText(
+              text: TextSpan(
+                style: AppTextStyles.bodySmall,
+                children: [
+                  const TextSpan(text: 'Resend OTP in '),
+                  TextSpan(
+                    text: '0:${_secondsLeft.toString().padLeft(2, '0')}',
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            )
+          else
+            GestureDetector(
+              onTap: _resend,
+              child: RichText(
+                text: TextSpan(
+                  style: AppTextStyles.bodySmall,
+                  children: [
+                    const TextSpan(text: "Didn't receive it? "),
+                    TextSpan(
+                      text: 'Resend OTP',
+                      style: AppTextStyles.bodySmall.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
