@@ -53,6 +53,7 @@ class ServiceRequest(models.Model):
 
     class Meta:
         unique_together = ('cwsn_user', 'child', 'service')
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"Request from {self.cwsn_user.email} for {self.service.title}"
@@ -75,6 +76,9 @@ class Report(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Open')
     created_at = models.DateTimeField(auto_now_add=True)
     moderator_action = models.TextField(blank=True, null=True, help_text="[Moderator only] Action taken or notes.")
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return f"Report against {self.reported_user.email} by {self.reporter.email}"
@@ -99,6 +103,7 @@ class Upvote(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['voter', 'service'], name='unique_upvote')
         ]
+        ordering = ['-created_at']
 
 @receiver(post_save, sender=Upvote)
 def increment_upvote_count(sender, instance, created, **kwargs):

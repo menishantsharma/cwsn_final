@@ -108,20 +108,26 @@ class ServiceViewSet(viewsets.ModelViewSet):
     # ------------------------------------
 
     # ADDED: Soft Delete (Archive) instead of hard delete
+    def _invalidate_service_cache(self, service_id=None):
+        cache.delete_pattern('services_list_public_*')
+        if self.request.user.is_authenticated:
+            cache.delete_pattern(f'services_list_user_{self.request.user.id}_*')
+        if service_id:
+            cache.delete(f'service_detail_{service_id}')
+
     def destroy(self, request, *args, **kwargs):
         service = self.get_object()
+        self._invalidate_service_cache(service_id=service.id)
         service.is_archived = True
-        service.is_active = False # Deactivate it so it stops showing in active lists
+        service.is_active = False
         service.save(update_fields=['is_archived', 'is_active'])
         return Response({'status': 'Service archived'}, status=status.HTTP_204_NO_CONTENT)
 
     def perform_create(self, serializer):
         user = self.request.user
-        # Auto-promote to caregiver on first service creation
         if not getattr(user, 'is_caregiver', False):
             user.is_caregiver = True
             user.save(update_fields=['is_caregiver'])
-        # Ensure a CaregiverProfile exists so search results include it
         CaregiverProfile.objects.get_or_create(
             user=user,
             defaults={
@@ -131,7 +137,12 @@ class ServiceViewSet(viewsets.ModelViewSet):
                 'gender': 'Other',
             },
         )
-        serializer.save(caregiver=user)
+        instance = serializer.save(caregiver=user)
+        self._invalidate_service_cache(service_id=instance.id)
+
+    def perform_update(self, serializer):
+        instance = serializer.save()
+        self._invalidate_service_cache(service_id=instance.id)
 
 class AvailabilitySlotViewSet(viewsets.ModelViewSet):
     serializer_class = AvailabilitySlotSerializer

@@ -17,6 +17,12 @@ final categoryRepositoryProvider = Provider<CategoryRepository>(
 
 class CategoryNotifier extends PaginatedNotifier<CategoryModel> {
   @override
+  Future<PaginatedState<CategoryModel>> build() {
+    ref.keepAlive();
+    return super.build();
+  }
+
+  @override
   Future<PagedResponse<CategoryModel>> fetchPage(int page) async {
     return await ref.read(categoryRepositoryProvider).getCategories(page: page);
   }
@@ -34,6 +40,12 @@ class SubcategoryNotifier extends PaginatedFamilyNotifier<SubcategoryModel, int>
   int get arg => categoryId;
 
   SubcategoryNotifier(this.categoryId);
+
+  @override
+  Future<PaginatedState<SubcategoryModel>> build() {
+    ref.keepAlive();
+    return super.build();
+  }
 
   @override
   Future<PagedResponse<SubcategoryModel>> fetchPage(int categoryId, int page) async {

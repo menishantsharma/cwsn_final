@@ -12,10 +12,10 @@ class Region(models.Model):
 
     class Meta:
         verbose_name_plural = 'Regions'
-        # 2. Add this constraint block
+        ordering = ['name']
         constraints = [
             models.UniqueConstraint(
-                fields=['name', 'parent'], 
+                fields=['name', 'parent'],
                 name='unique_region_per_parent'
             )
         ]
@@ -32,6 +32,7 @@ class ServiceCategory(models.Model):
 
     class Meta:
         verbose_name_plural = 'Service Categories'
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -44,8 +45,8 @@ class ServiceSubCategory(models.Model):
 
     class Meta:
         verbose_name_plural = 'Service Sub-Categories'
-        # Prevent duplicate sub-categories under the same category
         unique_together = ('category', 'name')
+        ordering = ['name']
 
     def __str__(self):
         return f"{self.name} ({self.category.name})"
@@ -55,12 +56,16 @@ class Disability(models.Model):
 
     class Meta:
         verbose_name_plural = 'Disabilities'
+        ordering = ['name']
 
     def __str__(self):
         return self.name
 
 class Language(models.Model):
     name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['name']
 
     def __str__(self):
         return self.name
@@ -94,7 +99,8 @@ class AdRegionWeight(models.Model):
     weight = models.PositiveIntegerField(default=10, help_text="Relative weight/proportion for this region")
 
     class Meta:
-        unique_together = ('ad', 'region') # An ad can only have one weight per region
+        unique_together = ('ad', 'region')
+        ordering = ['ad', 'region']
 
     def __str__(self):
         return f"{self.ad.title} in {self.region.name} (Weight: {self.weight})"
@@ -114,6 +120,7 @@ class AdDailyAnalytics(models.Model):
     class Meta:
         unique_together = ('ad', 'region', 'date')
         verbose_name_plural = "Ad Daily Analytics"
+        ordering = ['-date', 'ad']
 
     def __str__(self):
         return f"{self.ad.title} - {self.region.name if self.region else 'Global'} - {self.date}"
