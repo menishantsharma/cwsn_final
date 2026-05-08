@@ -140,6 +140,21 @@ class ProfilePage extends ConsumerWidget {
 
               const SizedBox(height: AppDimensions.spacing24),
 
+              // ── Support ──────────────────────────────────
+              _SectionLabel('Support'),
+              const SizedBox(height: AppDimensions.spacing8),
+              _MenuGroup(
+                children: [
+                  _MenuRow(
+                    icon: Icons.bug_report_outlined,
+                    label: 'Report an Issue',
+                    onTap: () => context.push(AppRoutes.reportIssue),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppDimensions.spacing24),
+
               // ── Account actions ──────────────────────────
               _SectionLabel('Account Actions'),
               const SizedBox(height: AppDimensions.spacing8),

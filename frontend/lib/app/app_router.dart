@@ -20,6 +20,7 @@ import 'package:frontend/features/profile/presentation/pages/edit_personal_info_
 import 'package:frontend/features/profile/presentation/pages/edit_caregiver_info_page.dart';
 import 'package:frontend/features/profile/presentation/pages/my_children_page.dart';
 import 'package:frontend/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:frontend/features/support/presentation/pages/report_issue_page.dart';
 
 import 'package:go_router/go_router.dart';
 
@@ -43,6 +44,7 @@ class AppRoutes {
   static const String searchListings = '/search-listings';
   static const String myServices = '/my-services';
   static const String myChildren = '/my-children';
+  static const String reportIssue = '/report-issue';
   AppRoutes._();
 }
 
@@ -166,6 +168,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.myChildren,
         builder: (_, _) => const MyChildrenPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportIssue,
+        builder: (_, _) => const ReportIssuePage(),
       ),
     ],
   );

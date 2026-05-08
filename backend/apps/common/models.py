@@ -105,6 +105,20 @@ class AdRegionWeight(models.Model):
     def __str__(self):
         return f"{self.ad.title} in {self.region.name} (Weight: {self.weight})"
 
+class AppIssue(models.Model):
+    reporter = models.ForeignKey(
+        'users.User', on_delete=models.SET_NULL, null=True, related_name='reported_issues'
+    )
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Issue by {self.reporter_id} at {self.created_at:%Y-%m-%d}"
+
+
 class AdDailyAnalytics(models.Model):
     """
     Minimalistic data storage for graphs. 

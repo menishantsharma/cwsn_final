@@ -1,6 +1,6 @@
 # apps/common/serializers.py
 from rest_framework import serializers
-from .models import Region, ServiceCategory, Disability, Language, ServiceSubCategory
+from .models import AppIssue, Region, ServiceCategory, Disability, Language, ServiceSubCategory
 
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -26,3 +26,9 @@ class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ['id', 'name']
+
+class AppIssueSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AppIssue
+        fields = ['id', 'description', 'created_at']
+        read_only_fields = ['created_at']

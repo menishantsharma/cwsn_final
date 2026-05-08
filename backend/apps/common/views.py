@@ -4,12 +4,13 @@ from rest_framework import viewsets, views, status, response
 from django.utils import timezone
 from django.db.models import F
 import random
+from rest_framework import permissions
 from .models import (
-    Region, ServiceCategory, Disability, Language, ServiceSubCategory,
+    AppIssue, Region, ServiceCategory, Disability, Language, ServiceSubCategory,
     Ad, AdRegionWeight, AdDailyAnalytics
 )
 from .serializers import (
-    RegionSerializer, ServiceCategorySerializer, DisabilitySerializer,
+    AppIssueSerializer, RegionSerializer, ServiceCategorySerializer, DisabilitySerializer,
     LanguageSerializer, ServiceSubCategorySerializer
 )
 
@@ -39,6 +40,14 @@ class DisabilityViewSet(viewsets.ReadOnlyModelViewSet):
 class LanguageViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Language.objects.all()
     serializer_class = LanguageSerializer
+
+class AppIssueViewSet(viewsets.GenericViewSet, viewsets.mixins.CreateModelMixin):
+    serializer_class = AppIssueSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(reporter=self.request.user)
+
 
 class FetchAdAPIView(views.APIView):
     permission_classes = [] 
