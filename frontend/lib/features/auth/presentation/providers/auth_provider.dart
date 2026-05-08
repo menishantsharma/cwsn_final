@@ -63,6 +63,10 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     _repository = ref.read(authRepositoryProvider);
     _storage = ref.read(secureStorageProvider);
 
+    ref.listen(unauthorizedEventProvider, (_, _) async {
+      await logout();
+    });
+
     final hasToken = await _storage.hasToken();
 
     if (hasToken) {
@@ -113,6 +117,11 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         userId: user.userId,
       );
     });
+  }
+
+  void backToPhoneInput() {
+    final current = state.value ?? const AuthState();
+    state = AsyncData(current.copyWith(status: AuthStatus.initial));
   }
 
   Future<void> completeOnboarding() async {

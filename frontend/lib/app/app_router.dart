@@ -80,6 +80,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.otpVerify;
       }
 
+      if (!isOtpSent && isOnOtpPage && !isVerified) {
+        return AppRoutes.phoneInput;
+      }
+
       if (isVerified && (isOnAuth || isOnSplash)) {
         return authState.isNewUser
             ? AppRoutes.onboarding

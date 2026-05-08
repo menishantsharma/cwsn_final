@@ -6,7 +6,7 @@ import 'package:frontend/core/storage/secure_storage.dart';
 class DioClient {
   late final Dio dio;
 
-  DioClient(SecureStorage storage) {
+  DioClient(SecureStorage storage, {Future<void> Function()? onUnauthorized}) {
     dio = Dio(
       BaseOptions(
         baseUrl: 'http://127.0.0.1:8000',
@@ -17,7 +17,7 @@ class DioClient {
     );
 
     dio.interceptors.addAll([
-      AuthInterceptor(storage),
+      AuthInterceptor(storage, onUnauthorized: onUnauthorized),
       ErrorInterceptor(),
       LogInterceptor(requestBody: true, responseBody: true),
     ]);

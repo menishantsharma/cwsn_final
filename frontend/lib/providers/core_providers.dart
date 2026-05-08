@@ -6,6 +6,22 @@ final secureStorageProvider = Provider<SecureStorage>(
   (_) => const SecureStorage(),
 );
 
-final dioProvider = Provider(
-  (ref) => DioClient(ref.read(secureStorageProvider)).dio,
+// Incremented by AuthInterceptor on 401; authProvider watches this to trigger logout.
+final unauthorizedEventProvider = NotifierProvider<UnauthorizedNotifier, int>(
+  UnauthorizedNotifier.new,
 );
+
+class UnauthorizedNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void trigger() => state++;
+}
+
+final dioProvider = Provider((ref) {
+  final storage = ref.read(secureStorageProvider);
+  final notifier = ref.read(unauthorizedEventProvider.notifier);
+  return DioClient(
+    storage,
+    onUnauthorized: () async => notifier.trigger(),
+  ).dio;
+});

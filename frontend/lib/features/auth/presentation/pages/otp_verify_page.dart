@@ -80,130 +80,116 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
       );
     });
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: AppDimensions.spacing8),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-                  color: AppColors.textPrimary,
-                  onPressed: () => Navigator.of(context).pop(),
-                  padding: EdgeInsets.zero,
-                ),
-              ),
-
-              const Spacer(flex: 2),
-
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.lock_open_rounded,
-                  color: AppColors.primary,
-                  size: 28,
-                ),
-              ),
-
-              const SizedBox(height: AppDimensions.spacing20),
-
-              Text('Verify your number', style: AppTextStyles.titleLarge),
-
-              const SizedBox(height: AppDimensions.spacing8),
-
-              RichText(
-                textAlign: TextAlign.center,
-                text: TextSpan(
-                  style: AppTextStyles.bodyMedium,
-                  children: [
-                    const TextSpan(text: 'Code sent to '),
-                    TextSpan(
-                      text: phoneNumber,
-                      style: AppTextStyles.bodyMedium.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Spacer(flex: 2),
-
-              OtpPinInput(
-                controller: _pinController,
-                focusNode: _focusNode,
-                enabled: !isLoading,
-                hasError: _errorText != null,
-                onChanged: (val) {
-                  if (_errorText != null) setState(() => _errorText = null);
-                },
-                onCompleted: (code) {
-                  ref.read(authProvider.notifier).verifyOtp(code);
-                },
-              ),
-
-              if (_errorText != null) ...[
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) =>
+          ref.read(authProvider.notifier).backToPhoneInput(),
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
                 const SizedBox(height: AppDimensions.spacing8),
-                Text(
-                  _errorText!,
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
-                ),
-              ],
-
-              const SizedBox(height: AppDimensions.spacing32),
-
-              if (isLoading)
-                const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                    color: AppColors.textPrimary,
+                    onPressed: () => ref.read(authProvider.notifier).backToPhoneInput(),
+                    padding: EdgeInsets.zero,
                   ),
-                )
-              else if (_resending)
-                const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                )
-              else if (_secondsLeft > 0)
+                ),
+
+                const Spacer(flex: 2),
+
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.lock_open_rounded,
+                    color: AppColors.primary,
+                    size: 28,
+                  ),
+                ),
+
+                const SizedBox(height: AppDimensions.spacing20),
+
+                Text('Verify your number', style: AppTextStyles.titleLarge),
+
+                const SizedBox(height: AppDimensions.spacing8),
+
                 RichText(
+                  textAlign: TextAlign.center,
                   text: TextSpan(
-                    style: AppTextStyles.bodySmall,
+                    style: AppTextStyles.bodyMedium,
                     children: [
-                      const TextSpan(text: "Resend OTP in "),
+                      const TextSpan(text: 'Code sent to '),
                       TextSpan(
-                        text: '0:${_secondsLeft.toString().padLeft(2, '0')}',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primary,
+                        text: phoneNumber,
+                        style: AppTextStyles.bodyMedium.copyWith(
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                )
-              else
-                GestureDetector(
-                  onTap: () => _resend(phoneNumber),
-                  child: RichText(
+                ),
+
+                const Spacer(flex: 2),
+
+                OtpPinInput(
+                  controller: _pinController,
+                  focusNode: _focusNode,
+                  enabled: !isLoading,
+                  hasError: _errorText != null,
+                  onChanged: (val) {
+                    if (_errorText != null) setState(() => _errorText = null);
+                  },
+                  onCompleted: (code) {
+                    ref.read(authProvider.notifier).verifyOtp(code);
+                  },
+                ),
+
+                if (_errorText != null) ...[
+                  const SizedBox(height: AppDimensions.spacing8),
+                  Text(
+                    _errorText!,
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.error),
+                  ),
+                ],
+
+                const SizedBox(height: AppDimensions.spacing32),
+
+                if (isLoading)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primary,
+                    ),
+                  )
+                else if (_resending)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                  )
+                else if (_secondsLeft > 0)
+                  RichText(
                     text: TextSpan(
                       style: AppTextStyles.bodySmall,
                       children: [
-                        const TextSpan(text: "Didn't receive it? "),
+                        const TextSpan(text: "Resend OTP in "),
                         TextSpan(
-                          text: 'Resend OTP',
+                          text: '0:${_secondsLeft.toString().padLeft(2, '0')}',
                           style: AppTextStyles.bodySmall.copyWith(
                             color: AppColors.primary,
                             fontWeight: FontWeight.w600,
@@ -211,11 +197,30 @@ class _OtpVerifyPageState extends ConsumerState<OtpVerifyPage> {
                         ),
                       ],
                     ),
+                  )
+                else
+                  GestureDetector(
+                    onTap: () => _resend(phoneNumber),
+                    child: RichText(
+                      text: TextSpan(
+                        style: AppTextStyles.bodySmall,
+                        children: [
+                          const TextSpan(text: "Didn't receive it? "),
+                          TextSpan(
+                            text: 'Resend OTP',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
 
-              const Spacer(flex: 1),
-            ],
+                const Spacer(flex: 1),
+              ],
+            ),
           ),
         ),
       ),
