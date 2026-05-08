@@ -47,6 +47,7 @@ class Service(models.Model):
     active = ActiveServiceManager()
 
     class Meta:
+        ordering = ['-id']
         indexes = [
             # Public listing: non-archived, non-suspended caregiver
             models.Index(fields=['caregiver', 'is_archived']),
