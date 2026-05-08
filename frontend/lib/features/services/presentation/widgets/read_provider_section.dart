@@ -18,7 +18,7 @@ class ReadProviderSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = service.caregiverProfile!;
-    final requestAsync = ref.watch(serviceRequestProvider(service.id));
+    final requestAsync = ref.watch(caregiverRequestProvider(service.caregiverId));
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

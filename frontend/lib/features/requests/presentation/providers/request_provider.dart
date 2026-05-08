@@ -47,7 +47,7 @@ class PendingRequestsNotifier extends PaginatedNotifier<RequestModel> {
     if (current == null) return;
     state = AsyncData(current.copyWith(items: [created, ...current.items]));
     ref.invalidate(parentRequestsProvider);
-    ref.invalidate(serviceRequestProvider(serviceId));
+    ref.invalidate(caregiverRequestProvider(created.caregiverId));
   }
 }
 
@@ -91,8 +91,8 @@ final parentRequestsProvider =
       ParentRequestsNotifier.new,
     );
 
-final serviceRequestProvider = FutureProvider.family<RequestModel?, int>(
-  (ref, serviceId) =>
-      ref.read(requestRemoteSourceProvider).getRequestForService(serviceId),
+final caregiverRequestProvider = FutureProvider.family<RequestModel?, int>(
+  (ref, caregiverId) =>
+      ref.read(requestRemoteSourceProvider).getRequestForCaregiver(caregiverId),
 );
 

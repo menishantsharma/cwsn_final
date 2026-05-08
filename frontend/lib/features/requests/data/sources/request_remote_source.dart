@@ -93,13 +93,17 @@ class RequestRemoteSource {
     );
   }
 
-  Future<RequestModel?> getRequestForService(int serviceId) async {
+  Future<RequestModel?> getRequestForCaregiver(int caregiverId) async {
     final res = await _dio.get(
       '/api/interactions/requests/',
-      queryParameters: {'as_parent': 'true', 'service': serviceId},
+      queryParameters: {'as_parent': 'true', 'caregiver': caregiverId},
     );
     final results = res.data['results'] as List;
     if (results.isEmpty) return null;
-    return RequestModel.fromJson(results.first as Map<String, dynamic>);
+    // Prefer accepted, then fall back to the most recent (first)
+    final accepted = results.cast<Map<String, dynamic>>().where(
+      (e) => e['status'] == 'Accepted',
+    ).firstOrNull;
+    return RequestModel.fromJson(accepted ?? results.first as Map<String, dynamic>);
   }
 }
