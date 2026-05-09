@@ -49,8 +49,12 @@ class User(AbstractUser):
     is_caregiver = models.BooleanField(default=False)
     is_moderator = models.BooleanField(default=False)
     is_suspended = models.BooleanField(
-        default=False, 
+        default=False,
         help_text="Hide user from listings and disable new requests."
+    )
+    has_completed_onboarding = models.BooleanField(
+        default=False,
+        help_text="Set to True once the user finishes the onboarding flow."
     )
     suspension_reason = models.TextField(
         blank=True, 

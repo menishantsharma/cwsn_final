@@ -89,8 +89,8 @@ class VerifyOTPView(APIView):
                 return Response({
                     'status': 'OTP verified successfully',
                     'token': token.key,
-                    'is_new_user': created,
                     'user_id': user.id,
+                    'has_completed_onboarding': user.has_completed_onboarding,
                     'is_cwsn_user': user.is_cwsn_user,
                     'is_caregiver': user.is_caregiver,
                 }, status=status.HTTP_200_OK)
@@ -102,6 +102,30 @@ class VerifyOTPView(APIView):
         except requests.exceptions.Timeout:
             # Catching the timeout gracefully
             return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+
+class MeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            'user_id': user.id,
+            'has_completed_onboarding': user.has_completed_onboarding,
+            'is_cwsn_user': user.is_cwsn_user,
+            'is_caregiver': user.is_caregiver,
+        }, status=status.HTTP_200_OK)
+
+
+class MarkOnboardedView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if not user.has_completed_onboarding:
+            user.has_completed_onboarding = True
+            user.save(update_fields=['has_completed_onboarding'])
+        return Response({'status': 'ok'}, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 @perm([permissions.IsAuthenticated])
