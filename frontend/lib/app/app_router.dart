@@ -19,10 +19,12 @@ import 'package:frontend/features/profile/presentation/pages/edit_personal_info_
 import 'package:frontend/features/profile/presentation/pages/edit_caregiver_info_page.dart';
 import 'package:frontend/features/profile/presentation/pages/my_children_page.dart';
 import 'package:frontend/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:frontend/features/auth/presentation/pages/splash_page.dart';
 import 'package:frontend/features/support/presentation/pages/report_issue_page.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRoutes {
+  static const String splash = '/splash';
   static const String phoneInput = '/phone-input';
   static const String categories = '/categories';
   static const String subcategories = '/subcategories';
@@ -46,33 +48,38 @@ class AppRoutes {
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ValueNotifier<AuthState?>(null);
 
+  // Only update on resolved data — keeps the router on the current screen during
+  // transient loading states (e.g. while sendOtp/verifyOtp are in flight).
   ref.listen<AsyncValue<AuthState>>(authProvider, (_, next) {
-    authNotifier.value = next.value;
+    if (next.hasValue) authNotifier.value = next.value;
   });
 
   ref.onDispose(() => authNotifier.dispose());
 
   return GoRouter(
-    initialLocation: AppRoutes.phoneInput,
+    initialLocation: AppRoutes.splash,
     refreshListenable: authNotifier,
     redirect: (context, state) {
-      final authState = authNotifier.value;
-      if (authState == null) return null;
+      final auth = authNotifier.value;
+      final loc = state.matchedLocation;
 
-      final isAuthenticated = authState.isAuthenticated;
-      final isOnAuth = state.matchedLocation == AppRoutes.phoneInput;
-
-      if (isAuthenticated && isOnAuth) {
-        return authState.isNewUser ? AppRoutes.onboarding : AppRoutes.categories;
+      // Auth not resolved yet — keep user on splash.
+      if (auth == null) {
+        return loc == AppRoutes.splash ? null : AppRoutes.splash;
       }
 
-      if (!isAuthenticated && !isOnAuth) {
-        return AppRoutes.phoneInput;
-      }
-
-      return null;
+      return switch (auth) {
+        Unauthenticated() => loc == AppRoutes.phoneInput ? null : AppRoutes.phoneInput,
+        NeedsOnboarding() => loc == AppRoutes.onboarding ? null : AppRoutes.onboarding,
+        Authenticated() when loc == AppRoutes.splash ||
+                loc == AppRoutes.phoneInput ||
+                loc == AppRoutes.onboarding =>
+          AppRoutes.categories,
+        Authenticated() => null,
+      };
     },
     routes: [
+      GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
       GoRoute(path: AppRoutes.phoneInput, builder: (_, _) => const PhoneInputPage()),
       GoRoute(path: AppRoutes.categories, builder: (_, _) => const CategoriesPage()),
       GoRoute(

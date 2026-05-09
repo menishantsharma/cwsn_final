@@ -26,8 +26,6 @@ class AuthInterceptor extends Interceptor {
   ) async {
     if (err.response?.statusCode == 401) {
       await _storage.deleteToken();
-      await _storage.deleteUserId();
-      await _storage.clearNewUser();
       await onUnauthorized?.call();
     }
     handler.next(err);

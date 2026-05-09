@@ -20,5 +20,13 @@ class AuthRemoteSource {
 
     return AuthModel.fromJson(response.data);
   }
-}
 
+  Future<MeModel> getMe() async {
+    final response = await _dio.get('/api/users/auth/me/');
+    return MeModel.fromJson(response.data);
+  }
+
+  Future<void> markOnboarded() async {
+    await _dio.post('/api/users/auth/onboarded/');
+  }
+}

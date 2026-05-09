@@ -19,24 +19,22 @@ final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepositoryImpl(ref.read(authRemoteSourceProvider)),
 );
 
-class AuthState {
-  final bool isAuthenticated;
-  final bool isNewUser;
-  final int? userId;
+sealed class AuthState {
+  const AuthState();
+}
 
-  const AuthState({
-    this.isAuthenticated = false,
-    this.isNewUser = false,
-    this.userId,
-  });
+class Unauthenticated extends AuthState {
+  const Unauthenticated();
+}
 
-  AuthState copyWith({bool? isAuthenticated, bool? isNewUser, int? userId}) {
-    return AuthState(
-      isAuthenticated: isAuthenticated ?? this.isAuthenticated,
-      isNewUser: isNewUser ?? this.isNewUser,
-      userId: userId ?? this.userId,
-    );
-  }
+class NeedsOnboarding extends AuthState {
+  final int userId;
+  const NeedsOnboarding(this.userId);
+}
+
+class Authenticated extends AuthState {
+  final int userId;
+  const Authenticated(this.userId);
 }
 
 class AuthNotifier extends AsyncNotifier<AuthState> {
@@ -52,21 +50,25 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       await logout();
     });
 
-    final hasToken = await _storage.hasToken();
-    if (hasToken) {
-      final isNewUser = await _storage.isNewUser();
-      final userId = await _storage.getUserId();
-      return AuthState(isAuthenticated: true, isNewUser: isNewUser, userId: userId);
-    }
+    if (!await _storage.hasToken()) return const Unauthenticated();
 
-    return const AuthState();
+    try {
+      final me = await _repository.getMe();
+      return me.hasCompletedOnboarding
+          ? Authenticated(me.userId)
+          : NeedsOnboarding(me.userId);
+    } catch (_) {
+      // /me failed (token invalid, network down, etc.). Force re-login.
+      await _storage.deleteToken();
+      return const Unauthenticated();
+    }
   }
 
   Future<void> sendOtp(String phoneNumber) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _repository.sendOtp(phoneNumber);
-      return state.value ?? const AuthState();
+      return state.value ?? const Unauthenticated();
     });
   }
 
@@ -76,24 +78,23 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     state = await AsyncValue.guard(() async {
       final user = await _repository.verifyOtp(phoneNumber, code);
       await _storage.saveToken(user.token);
-      await _storage.saveUserId(user.userId);
-      if (user.isNewUser) await _storage.setNewUser();
       success = true;
-      return AuthState(isAuthenticated: true, isNewUser: user.isNewUser, userId: user.userId);
+      return user.hasCompletedOnboarding
+          ? Authenticated(user.userId)
+          : NeedsOnboarding(user.userId);
     });
     return success;
   }
 
   Future<void> completeOnboarding() async {
-    await _storage.clearNewUser();
-    final current = state.value ?? const AuthState();
-    state = AsyncData(current.copyWith(isNewUser: false));
+    final current = state.value;
+    if (current is! NeedsOnboarding) return;
+    await _repository.markOnboarded();
+    state = AsyncData(Authenticated(current.userId));
   }
 
   Future<void> logout() async {
     await _storage.deleteToken();
-    await _storage.deleteUserId();
-    await _storage.clearNewUser();
 
     ref.invalidate(profileProvider);
     ref.invalidate(supportedLanguagesProvider);
@@ -115,7 +116,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     ref.invalidate(unreadCountProvider);
     ref.invalidate(upvoteProvider);
 
-    state = const AsyncData(AuthState());
+    state = const AsyncData(Unauthenticated());
   }
 }
 

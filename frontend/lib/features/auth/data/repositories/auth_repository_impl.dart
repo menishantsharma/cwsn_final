@@ -12,4 +12,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<AuthModel> verifyOtp(String phoneNumber, String code) =>
       _source.verifyOtp(phoneNumber, code);
+
+  @override
+  Future<MeModel> getMe() => _source.getMe();
+
+  @override
+  Future<void> markOnboarded() => _source.markOnboarded();
 }
