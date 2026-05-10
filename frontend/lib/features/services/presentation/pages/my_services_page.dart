@@ -52,10 +52,11 @@ class _MyServicesPageState extends ConsumerState<MyServicesPage> {
         ),
         data: (state) {
           if (state.items.isEmpty && !state.hasMore) {
-            return const EmptyState(
+            return EmptyState(
               icon: Icons.home_repair_service_outlined,
               title: 'No services yet',
               subtitle: 'Services you offer will appear here',
+              onRefresh: () => ref.read(allMyServicesProvider.notifier).refresh(),
             );
           }
           return RefreshIndicator(
