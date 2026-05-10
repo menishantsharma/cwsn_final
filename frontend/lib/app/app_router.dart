@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/pages/phone_input_page.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_state.dart';
-import 'package:frontend/features/categories/domain/models/category_model.dart';
-import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
+import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
+import 'package:frontend/features/categories/domain/category_models.dart';
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
 import 'package:frontend/features/categories/presentation/pages/subcategories_page.dart';
 import 'package:frontend/features/notifications/presentation/pages/notifications_page.dart';

@@ -7,9 +7,9 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:frontend/features/auth/presentation/widgets/location_picker_field.dart';
-import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/data/profile_repository.dart';
 import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
 
 final _onboardingProvider =
@@ -29,7 +29,7 @@ class _OnboardingNotifier extends AsyncNotifier<void> {
     required double latitude,
     required double longitude,
   }) async {
-    final source = ref.read(profileRemoteSourceProvider);
+    final source = ref.read(profileRepositoryProvider);
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
       final cwsn = await source.getCwsnProfile();
@@ -44,7 +44,7 @@ class _OnboardingNotifier extends AsyncNotifier<void> {
         'longitude': double.parse(longitude.toStringAsFixed(6)),
       };
 
-      await Future.wait([
+      await Future.wait<Object>([
         source.updateCwsnProfile(cwsn.id, data),
         source.updateCaregiverProfile(caregiver.id, data),
       ]);

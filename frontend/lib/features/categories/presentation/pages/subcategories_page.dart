@@ -4,8 +4,8 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
-import 'package:frontend/features/categories/domain/models/category_model.dart';
-import 'package:frontend/features/categories/presentation/providers/category_provider.dart';
+import 'package:frontend/features/categories/domain/category_models.dart';
+import 'package:frontend/features/categories/presentation/controllers/category_controller.dart';
 import 'package:frontend/features/categories/presentation/widgets/subcategory_card.dart';
 
 class SubcategoriesPage extends ConsumerStatefulWidget {

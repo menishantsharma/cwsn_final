@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
-import 'package:frontend/features/services/presentation/providers/service_provider.dart';
+import 'package:frontend/features/services/presentation/controllers/service_controller.dart';
 import 'package:frontend/features/services/presentation/widgets/filter_sheet.dart';
 import 'package:frontend/features/services/presentation/widgets/service_card.dart';
 import 'package:go_router/go_router.dart';

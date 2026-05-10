@@ -5,7 +5,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
-import 'package:frontend/features/support/presentation/providers/issue_provider.dart';
+import 'package:frontend/features/support/presentation/controllers/issue_controller.dart';
 
 class ReportIssuePage extends ConsumerStatefulWidget {
   const ReportIssuePage({super.key});
@@ -26,12 +26,17 @@ class _ReportIssuePageState extends ConsumerState<ReportIssuePage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await ref.read(issueProvider.notifier).submit(_controller.text.trim());
-    if (!mounted) return;
-    if (success) {
+    try {
+      await ref.read(issueProvider.notifier).submit(_controller.text.trim());
+      if (!mounted) return;
       context.pop();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Issue reported. Thank you!')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to report issue. Please try again.')),
       );
     }
   }

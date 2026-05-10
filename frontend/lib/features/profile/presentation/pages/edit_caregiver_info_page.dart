@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
 
 class EditCaregiverInfoPage extends ConsumerStatefulWidget {

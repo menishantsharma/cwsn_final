@@ -1,0 +1,93 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/core/storage/secure_storage.dart';
+import 'package:frontend/features/auth/data/auth_repository.dart';
+import 'package:frontend/providers/core_providers.dart';
+
+enum AuthStatus { unauthenticated, onboarding, authenticated }
+
+class AuthState {
+  final AuthStatus status;
+  final int? userId;
+
+  const AuthState._(this.status, this.userId);
+
+  const AuthState.unauthenticated() : this._(AuthStatus.unauthenticated, null);
+  const AuthState.onboarding(int userId) : this._(AuthStatus.onboarding, userId);
+  const AuthState.authenticated(int userId)
+      : this._(AuthStatus.authenticated, userId);
+}
+
+class AuthNotifier extends AsyncNotifier<AuthState> {
+  AuthRepository get _repo => ref.read(authRepositoryProvider);
+  SecureStorage get _storage => ref.read(secureStorageProvider);
+
+  @override
+  Future<AuthState> build() async {
+    ref.listen(unauthorizedEventProvider, (_, _) => logout());
+
+    if (!await _storage.hasToken()) return const AuthState.unauthenticated();
+
+    try {
+      final me = await _repo.getMe();
+      return me.hasCompletedOnboarding
+          ? AuthState.authenticated(me.userId)
+          : AuthState.onboarding(me.userId);
+    } catch (_) {
+      await _storage.deleteToken();
+      return const AuthState.unauthenticated();
+    }
+  }
+
+  /// Throws on failure. Caller should `try/catch` to show UI feedback.
+  Future<void> sendOtp(String phoneNumber) async {
+    final previous = state.value ?? const AuthState.unauthenticated();
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      await _repo.sendOtp(phoneNumber);
+      return previous;
+    });
+    if (state.hasError) throw state.error!;
+  }
+
+  /// Throws on failure. Caller should `try/catch` to clear pin / show error.
+  Future<void> verifyOtp(String phoneNumber, String code) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(() async {
+      final session = await _repo.verifyOtp(phoneNumber, code);
+      await _storage.saveToken(session.token);
+      return session.hasCompletedOnboarding
+          ? AuthState.authenticated(session.userId)
+          : AuthState.onboarding(session.userId);
+    });
+    if (state.hasError) throw state.error!;
+  }
+
+  Future<void> completeOnboarding() async {
+    final current = state.value;
+    if (current == null || current.status != AuthStatus.onboarding) return;
+    await _repo.markOnboarded();
+    state = AsyncData(AuthState.authenticated(current.userId!));
+  }
+
+  /// Other feature providers self-clear via [RefAuthAware.clearOnLogout].
+  Future<void> logout() async {
+    await _storage.deleteToken();
+    state = const AsyncData(AuthState.unauthenticated());
+  }
+}
+
+final authProvider = AsyncNotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
+
+/// Add `ref.clearOnLogout()` at the top of any feature provider's build or
+/// `(ref) { ... }` callback to make it self-invalidate when the user logs out.
+extension RefAuthAware on Ref {
+  void clearOnLogout() {
+    listen(authProvider, (_, next) {
+      if (next.value?.status == AuthStatus.unauthenticated) {
+        invalidateSelf();
+      }
+    });
+  }
+}

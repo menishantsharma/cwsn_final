@@ -12,9 +12,9 @@ import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/pages/map_picker_page.dart';
 import 'package:frontend/features/auth/presentation/widgets/otp_pin_input.dart';
-import 'package:frontend/features/profile/data/sources/profile_remote_source.dart';
+import 'package:frontend/features/profile/data/profile_repository.dart';
 import 'package:frontend/features/profile/presentation/widgets/edit_form_widgets.dart';
-import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/presentation/controllers/profile_controller.dart';
 
 class EditPersonalInfoPage extends ConsumerStatefulWidget {
   const EditPersonalInfoPage({super.key});
@@ -76,7 +76,7 @@ class _EditPersonalInfoPageState extends ConsumerState<EditPersonalInfoPage> {
   }
 
   Future<void> _openChangePhoneSheet() async {
-    final source = ref.read(profileRemoteSourceProvider);
+    final source = ref.read(profileRepositoryProvider);
     final newPhone = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
@@ -257,7 +257,7 @@ class _EditPersonalInfoPageState extends ConsumerState<EditPersonalInfoPage> {
 enum _PhoneChangeStep { enterPhone, enterOtp }
 
 class _ChangePhoneSheet extends StatefulWidget {
-  final ProfileRemoteSource source;
+  final ProfileRepository source;
   const _ChangePhoneSheet({required this.source});
 
   @override

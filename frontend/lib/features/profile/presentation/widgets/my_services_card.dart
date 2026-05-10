@@ -5,9 +5,9 @@ import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
-import 'package:frontend/features/services/domain/models/service_model.dart';
-import 'package:frontend/features/services/presentation/providers/service_provider.dart';
+import 'package:frontend/features/interactions/presentation/controllers/upvote_controller.dart';
+import 'package:frontend/features/services/domain/service_models.dart';
+import 'package:frontend/features/services/presentation/controllers/service_controller.dart';
 
 class MyServicesCard extends ConsumerWidget {
   const MyServicesCard({super.key});

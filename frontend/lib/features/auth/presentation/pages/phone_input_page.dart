@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
 import 'package:frontend/features/auth/presentation/widgets/otp_pin_input.dart';
 import 'package:frontend/features/auth/presentation/widgets/phone_input_field.dart';
 import 'package:frontend/features/auth/presentation/widgets/send_otp_button.dart';
@@ -30,22 +30,20 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
   Future<void> _sendOtp() async {
     if (!_isValid) return;
     final phone = '+91${_phoneController.text}';
-    await ref.read(authProvider.notifier).sendOtp(phone);
-
-    if (!mounted) return;
-    final err = ref.read(authProvider).error;
-    if (err != null) {
+    try {
+      await ref.read(authProvider.notifier).sendOtp(phone);
+      if (!mounted) return;
+      _showOtpSheet(phone);
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(err.toString()),
+        content: Text(e.toString()),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMd)),
         margin: const EdgeInsets.all(AppDimensions.spacing16),
       ));
-      return;
     }
-
-    _showOtpSheet(phone);
   }
 
   void _showOtpSheet(String phone) {
@@ -182,7 +180,11 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
 
   Future<void> _resend() async {
     setState(() { _resending = true; _errorText = null; _pinController.clear(); });
-    await ref.read(authProvider.notifier).sendOtp(widget.phone);
+    try {
+      await ref.read(authProvider.notifier).sendOtp(widget.phone);
+    } catch (_) {
+      // Silently ignore — user can tap resend again.
+    }
     if (mounted) {
       setState(() => _resending = false);
       _startTimer();
@@ -191,13 +193,15 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
   }
 
   Future<void> _verify(String code) async {
-    final success = await ref.read(authProvider.notifier).verifyOtp(widget.phone, code);
-    if (!success && mounted) {
+    try {
+      await ref.read(authProvider.notifier).verifyOtp(widget.phone, code);
+      // On success the router redirect handles navigation automatically.
+    } catch (_) {
+      if (!mounted) return;
       setState(() => _errorText = 'Invalid code. Please try again.');
       _pinController.clear();
       _focusNode.requestFocus();
     }
-    // On success the router redirect handles navigation automatically.
   }
 
   @override

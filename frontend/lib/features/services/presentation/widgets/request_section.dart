@@ -4,13 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
-import 'package:frontend/features/profile/domain/models/profile_model.dart'
+import 'package:frontend/features/interactions/presentation/controllers/upvote_controller.dart';
+import 'package:frontend/features/profile/domain/profile_models.dart'
     hide CaregiverProfileModel;
-import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:frontend/features/profile/presentation/widgets/add_child_sheet.dart';
-import 'package:frontend/features/requests/domain/models/request_model.dart';
-import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
+import 'package:frontend/features/requests/domain/request_models.dart';
+import 'package:frontend/features/requests/presentation/controllers/request_controller.dart';
 import 'package:frontend/features/services/presentation/widgets/sheet_widgets.dart';
 
 class RequestButton extends ConsumerWidget {

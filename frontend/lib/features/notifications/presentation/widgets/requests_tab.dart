@@ -5,7 +5,7 @@ import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
 import 'package:frontend/features/notifications/presentation/widgets/request_card.dart';
-import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
+import 'package:frontend/features/requests/presentation/controllers/request_controller.dart';
 
 class RequestsTab extends ConsumerWidget {
   const RequestsTab({super.key});

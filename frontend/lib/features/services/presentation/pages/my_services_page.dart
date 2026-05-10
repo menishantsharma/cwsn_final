@@ -5,7 +5,7 @@ import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
-import 'package:frontend/features/services/presentation/providers/service_provider.dart';
+import 'package:frontend/features/services/presentation/controllers/service_controller.dart';
 import 'package:frontend/features/services/presentation/widgets/my_service_card.dart';
 
 class MyServicesPage extends ConsumerStatefulWidget {

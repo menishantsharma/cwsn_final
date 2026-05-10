@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/profile/domain/models/profile_model.dart';
+import 'package:frontend/features/profile/domain/profile_models.dart';
 
 class ChildRow extends StatelessWidget {
   final ChildProfileModel child;

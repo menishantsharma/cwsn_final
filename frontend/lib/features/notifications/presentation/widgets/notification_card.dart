@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/notifications/domain/models/notification_model.dart';
+import 'package:frontend/features/notifications/domain/notification_models.dart';
 
 (IconData, Color, Color) _notificationStyle(String type) {
   switch (type.toLowerCase()) {

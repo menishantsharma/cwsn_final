@@ -6,8 +6,8 @@ import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:frontend/core/widgets/confirm_dialog.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
-import 'package:frontend/features/profile/domain/models/profile_model.dart';
-import 'package:frontend/features/profile/presentation/providers/profile_provider.dart';
+import 'package:frontend/features/profile/domain/profile_models.dart';
+import 'package:frontend/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:frontend/features/profile/presentation/widgets/add_child_sheet.dart';
 
 class MyChildrenPage extends ConsumerWidget {

@@ -4,8 +4,8 @@ import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
-import 'package:frontend/features/notifications/presentation/providers/notification_provider.dart';
-import 'package:frontend/features/requests/presentation/providers/request_provider.dart';
+import 'package:frontend/features/notifications/presentation/controllers/notification_controller.dart';
+import 'package:frontend/features/requests/presentation/controllers/request_controller.dart';
 import 'package:go_router/go_router.dart';
 
 /// Scrollable greeting — title + icons. Scrolls away with content.

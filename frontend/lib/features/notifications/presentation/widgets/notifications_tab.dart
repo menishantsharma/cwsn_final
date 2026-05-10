@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/widgets/empty_state.dart';
-import 'package:frontend/features/notifications/presentation/providers/notification_provider.dart';
+import 'package:frontend/features/notifications/presentation/controllers/notification_controller.dart';
 import 'package:frontend/features/notifications/presentation/widgets/notification_card.dart';
 
 class NotificationsTab extends ConsumerStatefulWidget {
