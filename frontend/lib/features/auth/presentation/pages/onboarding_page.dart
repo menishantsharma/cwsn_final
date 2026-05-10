@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'package:frontend/app/app_router.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
@@ -113,26 +111,33 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       longitude: _location!.longitude,
     );
 
-    if (mounted) {
-      ref.read(_onboardingProvider).when(
-        data: (_) async {
+    if (!mounted) return;
+    ref.read(_onboardingProvider).when(
+      data: (_) async {
+        try {
           await ref.read(authProvider.notifier).completeOnboarding();
-          if (mounted) context.go(AppRoutes.categories);
-        },
-        error: (e, _) => ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Something went wrong. Please try again.'),
-            backgroundColor: AppColors.error,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
-            ),
-            margin: const EdgeInsets.all(AppDimensions.spacing16),
-          ),
+        } catch (_) {
+          if (!mounted) return;
+          _showError("Couldn't finish setup. Please try again.");
+        }
+      },
+      error: (_, _) => _showError('Something went wrong. Please try again.'),
+      loading: () {},
+    );
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMd),
         ),
-        loading: () {},
-      );
-    }
+        margin: const EdgeInsets.all(AppDimensions.spacing16),
+      ),
+    );
   }
 
   @override

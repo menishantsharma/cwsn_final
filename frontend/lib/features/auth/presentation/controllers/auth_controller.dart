@@ -42,24 +42,27 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   Future<void> sendOtp(String phoneNumber) async {
     final previous = state.value ?? const AuthState.unauthenticated();
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       await _repo.sendOtp(phoneNumber);
-      return previous;
-    });
-    if (state.hasError) throw state.error!;
+    } finally {
+      state = AsyncData(previous);
+    }
   }
 
   /// Throws on failure. Caller should `try/catch` to clear pin / show error.
   Future<void> verifyOtp(String phoneNumber, String code) async {
+    final previous = state.value ?? const AuthState.unauthenticated();
     state = const AsyncLoading();
-    state = await AsyncValue.guard(() async {
+    try {
       final session = await _repo.verifyOtp(phoneNumber, code);
       await _storage.saveToken(session.token);
-      return session.hasCompletedOnboarding
+      state = AsyncData(session.hasCompletedOnboarding
           ? AuthState.authenticated(session.userId)
-          : AuthState.onboarding(session.userId);
-    });
-    if (state.hasError) throw state.error!;
+          : AuthState.onboarding(session.userId));
+    } catch (_) {
+      state = AsyncData(previous);
+      rethrow;
+    }
   }
 
   Future<void> completeOnboarding() async {
