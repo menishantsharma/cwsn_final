@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/features/auth/presentation/pages/phone_input_page.dart';
 import 'package:frontend/features/auth/presentation/providers/auth_provider.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_state.dart';
 import 'package:frontend/features/categories/domain/models/category_model.dart';
 import 'package:frontend/features/categories/domain/models/subcategory_model.dart';
 import 'package:frontend/features/categories/presentation/pages/categories_page.dart';
@@ -68,53 +69,93 @@ final routerProvider = Provider<GoRouter>((ref) {
         return loc == AppRoutes.splash ? null : AppRoutes.splash;
       }
 
-      return switch (auth) {
-        Unauthenticated() => loc == AppRoutes.phoneInput ? null : AppRoutes.phoneInput,
-        NeedsOnboarding() => loc == AppRoutes.onboarding ? null : AppRoutes.onboarding,
-        Authenticated() when loc == AppRoutes.splash ||
-                loc == AppRoutes.phoneInput ||
-                loc == AppRoutes.onboarding =>
-          AppRoutes.categories,
-        Authenticated() => null,
-      };
+      if (auth.status == AuthStatus.unauthenticated) {
+        return loc == AppRoutes.phoneInput ? null : AppRoutes.phoneInput;
+      }
+
+      if (auth.status == AuthStatus.onboarding) {
+        return loc == AppRoutes.onboarding ? null : AppRoutes.onboarding;
+      }
+
+      if (loc == AppRoutes.splash ||
+          loc == AppRoutes.phoneInput ||
+          loc == AppRoutes.onboarding) {
+        return AppRoutes.categories;
+      }
+
+      return null;
     },
     routes: [
       GoRoute(path: AppRoutes.splash, builder: (_, _) => const SplashPage()),
-      GoRoute(path: AppRoutes.phoneInput, builder: (_, _) => const PhoneInputPage()),
-      GoRoute(path: AppRoutes.categories, builder: (_, _) => const CategoriesPage()),
+      GoRoute(
+        path: AppRoutes.phoneInput,
+        builder: (_, _) => const PhoneInputPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.categories,
+        builder: (_, _) => const CategoriesPage(),
+      ),
       GoRoute(
         path: AppRoutes.subcategories,
-        builder: (_, state) => SubcategoriesPage(category: state.extra as CategoryModel),
+        builder: (_, state) =>
+            SubcategoriesPage(category: state.extra as CategoryModel),
       ),
       GoRoute(
         path: AppRoutes.services,
-        builder: (_, state) => ServicesPage(subcategory: state.extra as SubcategoryModel),
+        builder: (_, state) =>
+            ServicesPage(subcategory: state.extra as SubcategoryModel),
       ),
-      GoRoute(path: AppRoutes.notifications, builder: (_, _) => const NotificationsPage()),
+      GoRoute(
+        path: AppRoutes.notifications,
+        builder: (_, _) => const NotificationsPage(),
+      ),
       GoRoute(
         path: AppRoutes.serviceDetail,
         builder: (_, state) => ServiceDetailPage(serviceId: state.extra as int),
       ),
       GoRoute(
         path: AppRoutes.editableServiceDetail,
-        builder: (_, state) => EditableServiceDetailPage(serviceId: state.extra as int),
+        builder: (_, state) =>
+            EditableServiceDetailPage(serviceId: state.extra as int),
       ),
       GoRoute(path: AppRoutes.profile, builder: (_, _) => const ProfilePage()),
-      GoRoute(path: AppRoutes.editPersonalInfo, builder: (_, _) => const EditPersonalInfoPage()),
-      GoRoute(path: AppRoutes.editCaregiverInfo, builder: (_, _) => const EditCaregiverInfoPage()),
+      GoRoute(
+        path: AppRoutes.editPersonalInfo,
+        builder: (_, _) => const EditPersonalInfoPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.editCaregiverInfo,
+        builder: (_, _) => const EditCaregiverInfoPage(),
+      ),
       GoRoute(
         path: AppRoutes.createService,
-        builder: (_, state) => CreateServicePage(subcategory: state.extra as SubcategoryModel),
+        builder: (_, state) =>
+            CreateServicePage(subcategory: state.extra as SubcategoryModel),
       ),
-      GoRoute(path: AppRoutes.onboarding, builder: (_, _) => const OnboardingPage()),
-      GoRoute(path: AppRoutes.searchResults, builder: (_, _) => const SearchResultsPage()),
+      GoRoute(
+        path: AppRoutes.onboarding,
+        builder: (_, _) => const OnboardingPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.searchResults,
+        builder: (_, _) => const SearchResultsPage(),
+      ),
       GoRoute(
         path: AppRoutes.searchListings,
         builder: (_, state) => SearchListingsPage(query: state.extra as String),
       ),
-      GoRoute(path: AppRoutes.myServices, builder: (_, _) => const MyServicesPage()),
-      GoRoute(path: AppRoutes.myChildren, builder: (_, _) => const MyChildrenPage()),
-      GoRoute(path: AppRoutes.reportIssue, builder: (_, _) => const ReportIssuePage()),
+      GoRoute(
+        path: AppRoutes.myServices,
+        builder: (_, _) => const MyServicesPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.myChildren,
+        builder: (_, _) => const MyChildrenPage(),
+      ),
+      GoRoute(
+        path: AppRoutes.reportIssue,
+        builder: (_, _) => const ReportIssuePage(),
+      ),
     ],
   );
 });

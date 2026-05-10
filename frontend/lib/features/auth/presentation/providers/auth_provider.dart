@@ -3,6 +3,7 @@ import 'package:frontend/core/storage/secure_storage.dart';
 import 'package:frontend/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:frontend/features/auth/data/sources/auth_remote_source.dart';
 import 'package:frontend/features/auth/domain/repositories/auth_repository.dart';
+import 'package:frontend/features/auth/presentation/providers/auth_state.dart';
 import 'package:frontend/features/categories/presentation/providers/category_provider.dart';
 import 'package:frontend/features/interactions/presentation/providers/upvote_provider.dart';
 import 'package:frontend/features/notifications/presentation/providers/notification_provider.dart';
@@ -19,24 +20,6 @@ final authRepositoryProvider = Provider<AuthRepository>(
   (ref) => AuthRepositoryImpl(ref.read(authRemoteSourceProvider)),
 );
 
-sealed class AuthState {
-  const AuthState();
-}
-
-class Unauthenticated extends AuthState {
-  const Unauthenticated();
-}
-
-class NeedsOnboarding extends AuthState {
-  final int userId;
-  const NeedsOnboarding(this.userId);
-}
-
-class Authenticated extends AuthState {
-  final int userId;
-  const Authenticated(this.userId);
-}
-
 class AuthNotifier extends AsyncNotifier<AuthState> {
   late AuthRepository _repository;
   late SecureStorage _storage;
@@ -50,17 +33,18 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       await logout();
     });
 
-    if (!await _storage.hasToken()) return const Unauthenticated();
+    if (!await _storage.hasToken()) {
+      return const AuthState(status: AuthStatus.unauthenticated);
+    }
 
     try {
       final me = await _repository.getMe();
       return me.hasCompletedOnboarding
-          ? Authenticated(me.userId)
-          : NeedsOnboarding(me.userId);
+          ? AuthState(status: AuthStatus.authenticated, userId: me.userId)
+          : AuthState(status: AuthStatus.onboarding, userId: me.userId);
     } catch (_) {
-      // /me failed (token invalid, network down, etc.). Force re-login.
       await _storage.deleteToken();
-      return const Unauthenticated();
+      return const AuthState(status: AuthStatus.unauthenticated);
     }
   }
 
@@ -68,7 +52,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _repository.sendOtp(phoneNumber);
-      return state.value ?? const Unauthenticated();
+      return state.value ?? const AuthState(status: AuthStatus.unauthenticated);
     });
   }
 
@@ -80,17 +64,21 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
       await _storage.saveToken(user.token);
       success = true;
       return user.hasCompletedOnboarding
-          ? Authenticated(user.userId)
-          : NeedsOnboarding(user.userId);
+          ? AuthState(status: AuthStatus.authenticated, userId: user.userId)
+          : AuthState(status: AuthStatus.onboarding, userId: user.userId);
     });
     return success;
   }
 
   Future<void> completeOnboarding() async {
     final current = state.value;
-    if (current is! NeedsOnboarding) return;
+    if (current is! AuthState || current.status != AuthStatus.onboarding) {
+      return;
+    }
     await _repository.markOnboarded();
-    state = AsyncData(Authenticated(current.userId));
+    state = AsyncData(
+      AuthState(status: AuthStatus.authenticated, userId: current.userId),
+    );
   }
 
   Future<void> logout() async {
@@ -116,7 +104,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     ref.invalidate(unreadCountProvider);
     ref.invalidate(upvoteProvider);
 
-    state = const AsyncData(Unauthenticated());
+    state = const AsyncData(AuthState(status: AuthStatus.unauthenticated));
   }
 }
 
