@@ -47,10 +47,11 @@ class _NotificationsTabState extends ConsumerState<NotificationsTab> {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (state) {
         if (state.items.isEmpty && !state.hasMore) {
-          return const EmptyState(
+          return EmptyState(
             icon: Icons.notifications_outlined,
             title: 'No notifications yet',
-            subtitle: 'You\'re all caught up!',
+            subtitle: "You're all caught up!",
+            onRefresh: () => ref.read(notificationProvider.notifier).refresh(),
           );
         }
         return RefreshIndicator(

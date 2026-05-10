@@ -209,10 +209,11 @@ class _PendingList extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e', style: AppTextStyles.bodyMedium)),
       data: (state) {
         if (state.items.isEmpty && !state.hasMore) {
-          return const EmptyState(
+          return EmptyState(
             icon: Icons.handshake_outlined,
             title: 'No pending requests',
             subtitle: 'New service requests will appear here',
+            onRefresh: () => ref.read(pendingRequestsProvider.notifier).refresh(),
           );
         }
         return RefreshIndicator(
@@ -260,10 +261,11 @@ class _HistoryList extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e', style: AppTextStyles.bodyMedium)),
       data: (state) {
         if (state.items.isEmpty && !state.hasMore) {
-          return const EmptyState(
+          return EmptyState(
             icon: Icons.history_rounded,
             title: 'No history yet',
             subtitle: 'Accepted and declined requests will appear here',
+            onRefresh: () => ref.read(historyRequestsProvider.notifier).refresh(),
           );
         }
         return RefreshIndicator(
