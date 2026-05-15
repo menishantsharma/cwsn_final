@@ -1,12 +1,10 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/core/widgets/app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:frontend/core/errors/app_exception.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
@@ -125,7 +123,7 @@ class _EditPersonalInfoPageState extends ConsumerState<EditPersonalInfoPage> {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => const Scaffold(body: Center(child: Text('Could not load your profile. Please go back and try again.'))),
       data: (profile) {
         _initialize(profile);
         return Scaffold(
@@ -362,16 +360,10 @@ class _ChangePhoneSheetState extends State<_ChangePhoneSheet> {
   }
 
   String _parseError(Object e) {
-    final String msg;
-    if (e is DioException && e.error is AppException) {
-      msg = (e.error as AppException).message;
-    } else {
-      msg = e.toString();
-    }
-    final lower = msg.toLowerCase();
-    if (lower.contains('already in use')) return 'This number is already registered.';
-    if (lower.contains('timeout')) return 'Request timed out. Please try again.';
-    return 'Something went wrong. Please try again.';
+    final msg = e.toString().toLowerCase();
+    if (msg.contains('already') || msg.contains('in use')) return 'This number is already registered to another account.';
+    if (msg.contains('timeout') || msg.contains('timed out')) return 'Request timed out. Please check your connection and try again.';
+    return 'Could not update phone number. Please try again.';
   }
 
   @override

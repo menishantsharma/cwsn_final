@@ -36,7 +36,7 @@ class _ReportIssuePageState extends ConsumerState<ReportIssuePage> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to report issue. Please try again.')),
+        const SnackBar(content: Text('Could not submit your report. Please try again.')),
       );
     }
   }

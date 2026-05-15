@@ -155,6 +155,26 @@ class ProfilePage extends ConsumerWidget {
 
               const SizedBox(height: AppDimensions.spacing24),
 
+              // ── Legal ─────────────────────────────────────
+              _SectionLabel('Legal'),
+              const SizedBox(height: AppDimensions.spacing8),
+              _MenuGroup(
+                children: [
+                  _MenuRow(
+                    icon: Icons.description_outlined,
+                    label: 'Terms of Service',
+                    onTap: () => context.push(AppRoutes.terms),
+                  ),
+                  _MenuRow(
+                    icon: Icons.privacy_tip_outlined,
+                    label: 'Privacy Policy',
+                    onTap: () => context.push(AppRoutes.privacy),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppDimensions.spacing24),
+
               // ── Account actions ──────────────────────────
               _SectionLabel('Account Actions'),
               const SizedBox(height: AppDimensions.spacing8),

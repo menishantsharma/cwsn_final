@@ -48,7 +48,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
           loading: () => const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           ),
-          error: (error, _) => Center(child: Text('Error: $error')),
+          error: (error, _) => const Center(child: Text('Could not load categories. Please try again.')),
           data: (state) {
             if (state.items.isEmpty) {
               return const EmptyState(

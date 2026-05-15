@@ -48,7 +48,7 @@ class _SubcategoriesPageState extends ConsumerState<SubcategoriesPage> {
       appBar: AppTopBar(title: widget.category.name),
       body: subcategoriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+        error: (error, _) => const Center(child: Text('Could not load subcategories. Please try again.')),
         data: (state) {
           if (state.items.isEmpty) {
             return const EmptyState(

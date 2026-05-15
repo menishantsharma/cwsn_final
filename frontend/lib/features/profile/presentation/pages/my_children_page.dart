@@ -10,10 +10,20 @@ import 'package:frontend/features/profile/domain/profile_models.dart';
 import 'package:frontend/features/profile/presentation/controllers/profile_controller.dart';
 import 'package:frontend/features/profile/presentation/widgets/add_child_sheet.dart';
 
-class MyChildrenPage extends ConsumerWidget {
+class MyChildrenPage extends ConsumerStatefulWidget {
   const MyChildrenPage({super.key});
 
-  void _showAddChildSheet(BuildContext context, WidgetRef ref) {
+  @override
+  ConsumerState<MyChildrenPage> createState() => _MyChildrenPageState();
+}
+
+class _MyChildrenPageState extends ConsumerState<MyChildrenPage> {
+  Future<void> _refresh() async {
+    ref.invalidate(profileProvider);
+    await ref.read(profileProvider.future);
+  }
+
+  void _showAddChildSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -29,11 +39,7 @@ class MyChildrenPage extends ConsumerWidget {
     );
   }
 
-  void _showEditChildSheet(
-    BuildContext context,
-    WidgetRef ref,
-    ChildProfileModel child,
-  ) {
+  void _showEditChildSheet(ChildProfileModel child) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -51,11 +57,7 @@ class MyChildrenPage extends ConsumerWidget {
     );
   }
 
-  void _confirmDeleteChild(
-    BuildContext context,
-    WidgetRef ref,
-    ChildProfileModel child,
-  ) {
+  void _confirmDeleteChild(ChildProfileModel child) {
     showDialog(
       context: context,
       builder: (_) => ConfirmDialog(
@@ -69,13 +71,13 @@ class MyChildrenPage extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final profileAsync = ref.watch(profileProvider);
 
     return Scaffold(
       appBar: const AppTopBar(title: 'My Children'),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddChildSheet(context, ref),
+        onPressed: _showAddChildSheet,
         backgroundColor: AppColors.primary,
         elevation: 2,
         child: const Icon(Icons.add_rounded, color: Colors.white),
@@ -83,33 +85,57 @@ class MyChildrenPage extends ConsumerWidget {
       body: profileAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (e, _) => Center(
-          child: Text('Failed to load profile', style: AppTextStyles.bodyMedium),
+        error: (e, _) => RefreshIndicator(
+          color: AppColors.primary,
+          onRefresh: _refresh,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height * 0.6,
+              child: Center(
+                child: Text('Could not load children. Pull to refresh.', style: AppTextStyles.bodyMedium),
+              ),
+            ),
+          ),
         ),
         data: (profile) {
           final children = profile.cwsnProfile?.children ?? [];
 
           if (children.isEmpty) {
-            return const EmptyState(
-              icon: Icons.child_care_outlined,
-              title: 'No children added',
-              subtitle: 'Tap + to add your first child',
+            return RefreshIndicator(
+              color: AppColors.primary,
+              onRefresh: _refresh,
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  EmptyState(
+                    icon: Icons.child_care_outlined,
+                    title: 'No children added',
+                    subtitle: 'Tap + to add your first child',
+                  ),
+                ],
+              ),
             );
           }
 
-          return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-            itemCount: children.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(height: AppDimensions.spacing8),
-            itemBuilder: (context, i) {
-              final child = children[i];
-              return _ChildCard(
-                child: child,
-                onEdit: () => _showEditChildSheet(context, ref, child),
-                onDelete: () => _confirmDeleteChild(context, ref, child),
-              );
-            },
+          return RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: _refresh,
+            child: ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+              itemCount: children.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(height: AppDimensions.spacing8),
+              itemBuilder: (context, i) {
+                final child = children[i];
+                return _ChildCard(
+                  child: child,
+                  onEdit: () => _showEditChildSheet(child),
+                  onDelete: () => _confirmDeleteChild(child),
+                );
+              },
+            ),
           );
         },
       ),

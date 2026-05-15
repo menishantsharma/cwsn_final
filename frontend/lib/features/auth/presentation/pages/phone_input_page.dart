@@ -1,8 +1,10 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/features/legal/presentation/pages/legal_page.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
 import 'package:frontend/features/auth/presentation/controllers/auth_controller.dart';
@@ -37,13 +39,33 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(e.toString()),
+        content: const Text('Could not send OTP. Please try again.'),
         backgroundColor: AppColors.error,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMd)),
         margin: const EdgeInsets.all(AppDimensions.spacing16),
       ));
     }
+  }
+
+  void _showLegal(BuildContext context, LegalMode mode) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.5,
+        maxChildSize: 0.95,
+        builder: (_, controller) => ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: Scaffold(
+            body: LegalPage(mode: mode, scrollController: controller),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showOtpSheet(String phone) {
@@ -118,10 +140,35 @@ class _PhoneInputPageState extends ConsumerState<PhoneInputPage> {
 
                 const SizedBox(height: AppDimensions.spacing16),
 
-                Text(
-                  'By continuing, you agree to our Terms & Privacy Policy',
+                RichText(
                   textAlign: TextAlign.center,
-                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint, fontSize: 11, height: 1.5),
+                  text: TextSpan(
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.textHint, fontSize: 11, height: 1.5),
+                    children: [
+                      const TextSpan(text: 'By continuing, you agree to our '),
+                      TextSpan(
+                        text: 'Terms of Service',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontSize: 11,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => _showLegal(context, LegalMode.terms),
+                      ),
+                      const TextSpan(text: ' and '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          fontSize: 11,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () => _showLegal(context, LegalMode.privacy),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const Spacer(flex: 1),

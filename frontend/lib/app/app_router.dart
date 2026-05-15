@@ -19,6 +19,7 @@ import 'package:frontend/features/profile/presentation/pages/edit_caregiver_info
 import 'package:frontend/features/profile/presentation/pages/my_children_page.dart';
 import 'package:frontend/features/auth/presentation/pages/onboarding_page.dart';
 import 'package:frontend/features/auth/presentation/pages/splash_page.dart';
+import 'package:frontend/features/legal/presentation/pages/legal_page.dart';
 import 'package:frontend/features/support/presentation/pages/report_issue_page.dart';
 import 'package:go_router/go_router.dart';
 
@@ -41,6 +42,8 @@ class AppRoutes {
   static const String myServices = '/my-services';
   static const String myChildren = '/my-children';
   static const String reportIssue = '/report-issue';
+  static const String terms = '/terms';
+  static const String privacy = '/privacy';
   AppRoutes._();
 }
 
@@ -153,6 +156,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.reportIssue,
         builder: (_, _) => const ReportIssuePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.terms,
+        builder: (_, _) => const LegalPage(mode: LegalMode.terms),
+      ),
+      GoRoute(
+        path: AppRoutes.privacy,
+        builder: (_, _) => const LegalPage(mode: LegalMode.privacy),
       ),
     ],
   );

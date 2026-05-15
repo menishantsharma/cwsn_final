@@ -172,7 +172,7 @@ class _RequestSheetState extends ConsumerState<RequestSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(e.toString())));
+            .showSnackBar(const SnackBar(content: Text('Could not send request. Please try again.')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -440,7 +440,7 @@ class _ReportSheetState extends ConsumerState<ReportSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to submit report. Try again.')),
+          const SnackBar(content: Text('Could not submit report. Please try again.')),
         );
       }
     } finally {

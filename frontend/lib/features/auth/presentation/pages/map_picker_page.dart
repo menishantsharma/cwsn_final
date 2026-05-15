@@ -87,7 +87,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
         if (mounted) {
-          _showSnack('Please enable location services');
+          _showSnack('Please enable location services to use your current location.');
           setState(() => _isLocating = false);
         }
         _reverseGeocode(_center);
@@ -101,7 +101,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (mounted) {
-          _showSnack('Location permission is required');
+          _showSnack('Location permission is required to use your current location.');
           setState(() => _isLocating = false);
         }
         _reverseGeocode(_center);
@@ -126,7 +126,7 @@ class _MapPickerPageState extends State<MapPickerPage> {
       _reverseGeocode(loc);
     } catch (_) {
       if (mounted) {
-        _showSnack('Could not get current location');
+        _showSnack('Could not fetch your location. You can still pick manually.');
         setState(() => _isLocating = false);
       }
       _reverseGeocode(_center);

@@ -53,7 +53,7 @@ class _AddChildSheetState extends State<AddChildSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Failed to save: $e')));
+            .showSnackBar(const SnackBar(content: Text('Could not save child. Please try again.')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

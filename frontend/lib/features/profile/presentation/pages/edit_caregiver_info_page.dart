@@ -66,12 +66,12 @@ class _EditCaregiverInfoPageState extends ConsumerState<EditCaregiverInfoPage> {
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
       ),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => const Scaffold(body: Center(child: Text('Could not load your profile. Please go back and try again.'))),
       data: (profile) => languagesAsync.when(
         loading: () => const Scaffold(
           body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
         ),
-        error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+        error: (e, _) => const Scaffold(body: Center(child: Text('Could not load languages. Please go back and try again.'))),
         data: (allLanguages) {
           _initialize(profile, allLanguages);
           return Scaffold(

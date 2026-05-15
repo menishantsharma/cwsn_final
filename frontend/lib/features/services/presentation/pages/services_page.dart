@@ -68,7 +68,17 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
         child: servicesAsync.when(
           loading: () =>
               const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          error: (e, _) => const Center(child: Text('Something went wrong')),
+          error: (e, _) => RefreshIndicator(
+            color: AppColors.primary,
+            onRefresh: () => ref.read(serviceProvider(_args).notifier).refresh(),
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height * 0.6,
+                child: const Center(child: Text('Could not load services. Pull to refresh.')),
+              ),
+            ),
+          ),
           data: (state) {
             final isEmpty = state.items.isEmpty && !state.hasMore;
 

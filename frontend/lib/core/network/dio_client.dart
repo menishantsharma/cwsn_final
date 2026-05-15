@@ -9,7 +9,7 @@ class DioClient {
   DioClient(SecureStorage storage, {Future<void> Function()? onUnauthorized}) {
     dio = Dio(
       BaseOptions(
-        baseUrl: 'http://127.0.0.1:8000',
+        baseUrl: 'http://10.129.7.48:9000',
         connectTimeout: const Duration(seconds: 5),
         receiveTimeout: const Duration(seconds: 5),
         headers: {'Content-Type': 'application/json'},

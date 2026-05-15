@@ -25,7 +25,7 @@ class ServiceDetailPage extends ConsumerWidget {
       backgroundColor: AppColors.background,
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (e, _) => Center(child: Text('Failed to load service', style: AppTextStyles.bodyMedium)),
+        error: (e, _) => Center(child: Text('Could not load service details. Please go back and try again.', style: AppTextStyles.bodyMedium)),
         data: (service) => CustomScrollView(
           slivers: [
             SliverAppBar(
@@ -116,8 +116,8 @@ class _ServiceInfoSection extends ConsumerWidget {
                       SnackBar(
                         content: Text(
                           e.toString().contains('400')
-                              ? 'Accept a request first to upvote'
-                              : 'Could not upvote. Try again.',
+                              ? 'You need to accept a request before upvoting.'
+                              : 'Could not upvote. Please try again.',
                         ),
                       ),
                     );

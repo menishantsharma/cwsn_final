@@ -118,10 +118,10 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
           await ref.read(authProvider.notifier).completeOnboarding();
         } catch (_) {
           if (!mounted) return;
-          _showError("Couldn't finish setup. Please try again.");
+          _showError('Could not complete setup. Please try again.');
         }
       },
-      error: (_, _) => _showError('Something went wrong. Please try again.'),
+      error: (_, _) => _showError('Could not save your profile. Please try again.'),
       loading: () {},
     );
   }
