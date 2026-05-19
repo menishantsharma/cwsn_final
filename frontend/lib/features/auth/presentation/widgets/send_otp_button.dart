@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_dimensions.dart';
 import 'package:frontend/core/theme/app_text_styles.dart';
@@ -37,23 +36,12 @@ class SendOtpButton extends StatelessWidget {
                       color: Colors.white,
                     ),
                   )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const FaIcon(
-                        FontAwesomeIcons.whatsapp,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                      const SizedBox(width: AppDimensions.spacing8),
-                      Text(
-                        'Send OTP via WhatsApp',
-                        style: AppTextStyles.labelLarge.copyWith(
-                          fontSize: 16,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+                : Text(
+                    'Send OTP',
+                    style: AppTextStyles.labelLarge.copyWith(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
                   ),
           ),
         ),

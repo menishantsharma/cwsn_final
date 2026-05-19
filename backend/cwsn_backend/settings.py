@@ -5,6 +5,8 @@ Generated for Production and Docker Environments.
 
 import os
 from pathlib import Path
+import firebase_admin
+from firebase_admin import credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -135,11 +137,12 @@ REST_FRAMEWORK = {
 
 
 # ==============================================================================
-# TWILIO API SETTINGS
+# FIREBASE ADMIN SDK
 # ==============================================================================
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID', '')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN', '')
-TWILIO_VERIFY_SERVICE_SID = os.environ.get('TWILIO_VERIFY_SERVICE_SID', '')
+_firebase_creds_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', str(BASE_DIR / 'cwsn-51a3e-firebase-adminsdk-fbsvc-bbf1eb5e81.json'))
+if not firebase_admin._apps:
+    _cred = credentials.Certificate(_firebase_creds_path)
+    firebase_admin.initialize_app(_cred)
 
 
 # ==============================================================================

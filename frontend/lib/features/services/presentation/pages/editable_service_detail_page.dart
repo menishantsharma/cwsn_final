@@ -112,9 +112,48 @@ class _EditableServiceDetailPageState
     final service = serviceAsync.value;
     final isSaving = serviceAsync.isLoading;
 
+    final appBar = SliverAppBar(
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      pinned: true,
+      automaticallyImplyLeading: false,
+      leading: IconButton(
+        icon: const Icon(Icons.chevron_left, size: 28),
+        color: AppColors.textPrimary,
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      actions: service == null ? null : [
+        if (isSaving)
+          const Padding(
+            padding: EdgeInsets.only(right: 16),
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+              ),
+            ),
+          )
+        else
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            onPressed: () => _confirmDelete(context),
+          ),
+      ],
+    );
+
     if (service == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: CustomScrollView(
+          slivers: [
+            appBar,
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            ),
+          ],
+        ),
       );
     }
 
@@ -122,36 +161,7 @@ class _EditableServiceDetailPageState
       backgroundColor: AppColors.background,
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            backgroundColor: AppColors.background,
-            elevation: 0,
-            scrolledUnderElevation: 0,
-            pinned: true,
-            automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: const Icon(Icons.chevron_left, size: 28),
-              color: AppColors.textPrimary,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-            actions: [
-              if (isSaving)
-                const Padding(
-                  padding: EdgeInsets.only(right: 16),
-                  child: Center(
-                    child: SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
-                    ),
-                  ),
-                )
-              else
-                IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                  onPressed: () => _confirmDelete(context),
-                ),
-            ],
-          ),
+          appBar,
           SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

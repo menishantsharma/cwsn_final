@@ -63,20 +63,86 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
           : AddServiceCard(subcategory: widget.subcategory),
     );
 
+    final appBar = SliverAppBar(
+      pinned: true,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.chevron_left, size: 28),
+        color: AppColors.textPrimary,
+        onPressed: () => context.pop(),
+      ),
+      title: Text(
+        widget.subcategory.name,
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      actions: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.tune_rounded),
+              color: AppColors.textPrimary,
+              tooltip: 'Filter',
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                builder: (_) => FilterSheet(initialFilter: filter),
+              ),
+            ),
+            if (filter.isActive)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+
     return Scaffold(
       body: SafeArea(
         child: servicesAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          loading: () => CustomScrollView(
+            slivers: [
+              appBar,
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              ),
+            ],
+          ),
           error: (e, _) => RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () => ref.read(serviceProvider(_args).notifier).refresh(),
-            child: SingleChildScrollView(
+            child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              child: SizedBox(
-                height: MediaQuery.of(context).size.height * 0.6,
-                child: const Center(child: Text('Could not load services. Pull to refresh.')),
-              ),
+              slivers: [
+                appBar,
+                SliverFillRemaining(
+                  child: Center(
+                    child: Text('Could not load services. Pull to refresh.'),
+                  ),
+                ),
+              ],
             ),
           ),
           data: (state) {
@@ -90,61 +156,7 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
                 physics: const AlwaysScrollableScrollPhysics(),
                 clipBehavior: Clip.none,
                 slivers: [
-                  SliverAppBar(
-                    pinned: true,
-                    backgroundColor: Colors.white,
-                    surfaceTintColor: Colors.transparent,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon: const Icon(Icons.chevron_left, size: 28),
-                      color: AppColors.textPrimary,
-                      onPressed: () => context.pop(),
-                    ),
-                    title: Text(
-                      widget.subcategory.name,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    actions: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.tune_rounded),
-                            color: AppColors.textPrimary,
-                            tooltip: 'Filter',
-                            onPressed: () => showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              backgroundColor: Colors.white,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(24),
-                                ),
-                              ),
-                              builder: (_) => FilterSheet(initialFilter: filter),
-                            ),
-                          ),
-                          if (filter.isActive)
-                            Positioned(
-                              top: 10,
-                              right: 10,
-                              child: Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: AppColors.primary,
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+                  appBar,
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                     sliver: SliverList.separated(

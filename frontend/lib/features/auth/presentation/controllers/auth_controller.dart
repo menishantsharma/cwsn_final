@@ -21,6 +21,9 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
   AuthRepository get _repo => ref.read(authRepositoryProvider);
   SecureStorage get _storage => ref.read(secureStorageProvider);
 
+  // Holds the verificationId between sendOtp and verifyOtp calls.
+  String? _verificationId;
+
   @override
   Future<AuthState> build() async {
     ref.listen(unauthorizedEventProvider, (_, _) => logout());
@@ -38,28 +41,33 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
     }
   }
 
-  /// Throws on failure. Caller should `try/catch` to show UI feedback.
+  /// Sends OTP via Firebase. Throws on failure.
   Future<void> sendOtp(String phoneNumber) async {
     final previous = state.value ?? const AuthState.unauthenticated();
     state = const AsyncLoading();
     try {
-      await _repo.sendOtp(phoneNumber);
-    } finally {
+      _verificationId = await _repo.sendOtp(phoneNumber);
       state = AsyncData(previous);
+    } catch (_) {
+      state = AsyncData(previous);
+      rethrow;
     }
   }
 
-  /// Throws on failure. Caller should `try/catch` to clear pin / show error.
-  Future<void> verifyOtp(String phoneNumber, String code) async {
+  /// Verifies the SMS code. Throws on failure so UI can show error.
+  Future<void> verifyOtp(String smsCode) async {
+    final verificationId = _verificationId;
+    if (verificationId == null) throw 'No verification in progress. Please request a new OTP.';
+
     final previous = state.value ?? const AuthState.unauthenticated();
     state = const AsyncLoading();
     try {
-      final session = await _repo.verifyOtp(phoneNumber, code);
+      final session = await _repo.verifyOtp(verificationId, smsCode);
       await _storage.saveToken(session.token);
       state = AsyncData(session.hasCompletedOnboarding
           ? AuthState.authenticated(session.userId)
           : AuthState.onboarding(session.userId));
-    } catch (_) {
+    } catch (e) {
       state = AsyncData(previous);
       rethrow;
     }

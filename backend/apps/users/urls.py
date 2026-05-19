@@ -13,13 +13,11 @@ urlpatterns = [
     path('switch-role/', views.switch_role, name='switch_role'),
     path('delete-account/', views.delete_account, name='delete_account'),
     
-    # Core Auth Routes
-    path('auth/send-otp/', views.SendOTPView.as_view(), name='send_otp'),
+    # Core Auth Routes (OTP sent by Firebase on device; backend only verifies the id_token)
     path('auth/verify-otp/', views.VerifyOTPView.as_view(), name='verify_otp'),
     path('auth/me/', views.MeView.as_view(), name='auth_me'),
     path('auth/onboarded/', views.MarkOnboardedView.as_view(), name='mark_onboarded'),
 
-    # Change Phone
-    path('change-phone/request/', views.ChangePhoneRequestView.as_view(), name='change_phone_request'),
+    # Change Phone (Flutter verifies new number via Firebase, sends id_token here)
     path('change-phone/confirm/', views.ChangePhoneConfirmView.as_view(), name='change_phone_confirm'),
 ]

@@ -21,42 +21,66 @@ class ServiceDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final detailAsync = ref.watch(serviceDetailProvider(serviceId));
 
+    final service = detailAsync.value;
+
+    final appBar = SliverAppBar(
+      backgroundColor: AppColors.background,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      pinned: true,
+      automaticallyImplyLeading: false,
+      leading: IconButton(
+        icon: const Icon(Icons.chevron_left, size: 28),
+        color: AppColors.textPrimary,
+        onPressed: () => Navigator.of(context).pop(),
+      ),
+      actions: service == null ? null : [
+        IconButton(
+          icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
+          tooltip: 'Report service',
+          onPressed: () => showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.white,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(AppDimensions.radiusXl),
+              ),
+            ),
+            builder: (_) => ReportSheet(serviceId: service.id, caregiverId: service.caregiverId),
+          ),
+        ),
+      ],
+    );
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: detailAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-        error: (e, _) => Center(child: Text('Could not load service details. Please go back and try again.', style: AppTextStyles.bodyMedium)),
+        loading: () => CustomScrollView(
+          slivers: [
+            appBar,
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+            ),
+          ],
+        ),
+        error: (e, _) => CustomScrollView(
+          slivers: [
+            appBar,
+            SliverFillRemaining(
+              child: Center(
+                child: Text(
+                  'Could not load service details. Please go back and try again.',
+                  style: AppTextStyles.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ),
+          ],
+        ),
         data: (service) => CustomScrollView(
           slivers: [
-            SliverAppBar(
-              backgroundColor: AppColors.background,
-              elevation: 0,
-              scrolledUnderElevation: 0,
-              pinned: true,
-              automaticallyImplyLeading: false,
-              leading: IconButton(
-                icon: const Icon(Icons.chevron_left, size: 28),
-                color: AppColors.textPrimary,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.flag_outlined, color: AppColors.textHint),
-                  tooltip: 'Report service',
-                  onPressed: () => showModalBottomSheet(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.white,
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(AppDimensions.radiusXl),
-                      ),
-                    ),
-                    builder: (_) => ReportSheet(serviceId: service.id, caregiverId: service.caregiverId),
-                  ),
-                ),
-              ],
-            ),
+            appBar,
             SliverToBoxAdapter(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

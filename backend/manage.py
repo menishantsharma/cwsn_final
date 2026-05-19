@@ -2,10 +2,24 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from pathlib import Path
+
+
+def load_env():
+    env_path = Path(__file__).resolve().parent / '.env'
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, _, value = line.partition('=')
+                os.environ.setdefault(key.strip(), value.strip())
 
 
 def main():
     """Run administrative tasks."""
+    load_env()
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'cwsn_backend.settings')
     try:
         from django.core.management import execute_from_command_line

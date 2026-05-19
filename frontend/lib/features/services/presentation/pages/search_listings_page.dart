@@ -48,12 +48,81 @@ class _SearchListingsPageState extends ConsumerState<SearchListingsPage> {
     final resultsAsync = ref.watch(searchProvider(widget.query));
     final filter = ref.watch(serviceFilterProvider);
 
+    final appBar = SliverAppBar(
+      pinned: true,
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.chevron_left, size: 28),
+        color: AppColors.textPrimary,
+        onPressed: () => context.pop(),
+      ),
+      title: Text(
+        '"${widget.query}"',
+        style: const TextStyle(
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+      ),
+      actions: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.tune_rounded),
+              color: AppColors.textPrimary,
+              tooltip: 'Filter',
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.white,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                builder: (_) => FilterSheet(initialFilter: filter),
+              ),
+            ),
+            if (filter.isActive)
+              Positioned(
+                top: 10,
+                right: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+
     return Scaffold(
       body: SafeArea(
         child: resultsAsync.when(
-          loading: () =>
-              const Center(child: CircularProgressIndicator(color: AppColors.primary)),
-          error: (_, _) => const Center(child: Text('Something went wrong')),
+          loading: () => CustomScrollView(
+            slivers: [
+              appBar,
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+              ),
+            ],
+          ),
+          error: (_, _) => CustomScrollView(
+            slivers: [
+              appBar,
+              const SliverFillRemaining(
+                child: Center(child: Text('Something went wrong')),
+              ),
+            ],
+          ),
           data: (state) => RefreshIndicator(
             color: AppColors.primary,
             onRefresh: () =>
@@ -62,61 +131,7 @@ class _SearchListingsPageState extends ConsumerState<SearchListingsPage> {
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               slivers: [
-                SliverAppBar(
-                  pinned: true,
-                  backgroundColor: Colors.white,
-                  surfaceTintColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: const Icon(Icons.chevron_left, size: 28),
-                    color: AppColors.textPrimary,
-                    onPressed: () => context.pop(),
-                  ),
-                  title: Text(
-                    '"${widget.query}"',
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  actions: [
-                    Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.tune_rounded),
-                          color: AppColors.textPrimary,
-                          tooltip: 'Filter',
-                          onPressed: () => showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            backgroundColor: Colors.white,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(24),
-                              ),
-                            ),
-                            builder: (_) => FilterSheet(initialFilter: filter),
-                          ),
-                        ),
-                        if (filter.isActive)
-                          Positioned(
-                            top: 10,
-                            right: 10,
-                            child: Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
+                appBar,
                 state.items.isEmpty
                     ? const SliverFillRemaining(
                         child: EmptyState(

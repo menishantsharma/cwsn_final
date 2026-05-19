@@ -241,11 +241,16 @@ class _OtpSheetState extends ConsumerState<_OtpSheet> {
 
   Future<void> _verify(String code) async {
     try {
-      await ref.read(authProvider.notifier).verifyOtp(widget.phone, code);
+      await ref.read(authProvider.notifier).verifyOtp(code);
       // On success the router redirect handles navigation automatically.
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _errorText = 'Invalid code. Please try again.');
+      final msg = e.toString().contains('network')
+          ? 'Network error. Check your connection.'
+          : e.toString().contains('invalid-verification-code') || e.toString().contains('invalid-verification-id')
+              ? 'Invalid code. Please try again.'
+              : 'Verification failed. Please try again.';
+      setState(() => _errorText = msg);
       _pinController.clear();
       _focusNode.requestFocus();
     }

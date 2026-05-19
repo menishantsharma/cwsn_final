@@ -1,107 +1,55 @@
 # apps/users/views.py
 import hashlib
 from django.core.cache import cache
-import requests
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import api_view, permission_classes as perm
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from django.conf import settings
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
+import firebase_admin
+from firebase_admin import auth as firebase_auth
 from .models import User, CWSNProfile, ChildProfile, CaregiverProfile
 from .serializers import CWSNProfileSerializer, ChildProfileSerializer, CaregiverProfileSerializer
 from apps.common.utils import assign_region_from_coordinates
-
-class SendOTPView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        phone_number = request.data.get('phone_number')
-        if not phone_number:
-            return Response({'error': 'Phone number is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        client.http_client.timeout = 5.0  # Timeout applied here
-
-        try:
-            verification = client.verify \
-                .v2 \
-                .services(settings.TWILIO_VERIFY_SERVICE_SID) \
-                .verifications \
-                .create(to=phone_number, channel='sms')
-            
-            return Response({'status': 'OTP sent successfully via WhatsApp', 'sid': verification.sid}, status=status.HTTP_200_OK)
-            
-        except TwilioRestException as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except requests.exceptions.Timeout:
-            # Catching the timeout gracefully
-            return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
 
 
 class VerifyOTPView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        phone_number = request.data.get('phone_number')
-        code = request.data.get('code')
-
-        if not phone_number or not code:
-            return Response({'error': 'Phone number and code are required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        client.http_client.timeout = 5.0  # ADDED TIMEOUT HERE
+        id_token = request.data.get('id_token')
+        if not id_token:
+            return Response({'error': 'id_token is required'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            verification_check = client.verify \
-                .v2 \
-                .services(settings.TWILIO_VERIFY_SERVICE_SID) \
-                .verification_checks \
-                .create(to=phone_number, code=code)
+            decoded = firebase_auth.verify_id_token(id_token)
+        except firebase_admin.exceptions.FirebaseError as e:
+            return Response({'error': f'Invalid Firebase token: {e}'}, status=status.HTTP_401_UNAUTHORIZED)
 
-            if verification_check.status == 'approved':
-                user, created = User.objects.get_or_create(phone_number=phone_number)
+        phone_number = decoded.get('phone_number')
+        if not phone_number:
+            return Response({'error': 'Token does not contain a phone number'}, status=status.HTTP_400_BAD_REQUEST)
 
-                # I changed this
-                if created:
-                    user.is_cwsn_user = True
-                    user.is_caregiver = True
-                    user.save(update_fields=['is_cwsn_user', 'is_caregiver'])
-                    
-                    CWSNProfile.objects.create(
-                        user=user,
-                        name=phone_number,
-                        age=0,
-                        gender='Other',
-                    )
-                    CaregiverProfile.objects.create(
-                        user=user,
-                        name=phone_number,
-                        age=0,
-                        gender='Other',
-                    )
-                # My change over
+        user, created = User.objects.get_or_create(phone_number=phone_number)
 
-                token, _ = Token.objects.get_or_create(user=user)
+        if created:
+            user.is_cwsn_user = True
+            user.is_caregiver = True
+            user.save(update_fields=['is_cwsn_user', 'is_caregiver'])
 
-                return Response({
-                    'status': 'OTP verified successfully',
-                    'token': token.key,
-                    'user_id': user.id,
-                    'has_completed_onboarding': user.has_completed_onboarding,
-                    'is_cwsn_user': user.is_cwsn_user,
-                    'is_caregiver': user.is_caregiver,
-                }, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
-                
-        except TwilioRestException as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except requests.exceptions.Timeout:
-            # Catching the timeout gracefully
-            return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+            CWSNProfile.objects.create(user=user, name=phone_number, age=0, gender='Other')
+            CaregiverProfile.objects.create(user=user, name=phone_number, age=0, gender='Other')
+
+        token, _ = Token.objects.get_or_create(user=user)
+
+        return Response({
+            'status': 'verified',
+            'token': token.key,
+            'user_id': user.id,
+            'has_completed_onboarding': user.has_completed_onboarding,
+            'is_cwsn_user': user.is_cwsn_user,
+            'is_caregiver': user.is_caregiver,
+        }, status=status.HTTP_200_OK)
 
 class MeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -168,63 +116,34 @@ def switch_role(request):
         status=status.HTTP_400_BAD_REQUEST,
     )
 
-class ChangePhoneRequestView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request):
-        new_phone = request.data.get('new_phone_number')
-        if not new_phone:
-            return Response({'error': 'new_phone_number is required'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if User.objects.filter(phone_number=new_phone).exclude(pk=request.user.pk).exists():
-            return Response({'error': 'This phone number is already in use.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        client.http_client.timeout = 5.0
-        try:
-            verification = client.verify \
-                .v2 \
-                .services(settings.TWILIO_VERIFY_SERVICE_SID) \
-                .verifications \
-                .create(to=new_phone, channel='sms')
-            return Response({'status': 'OTP sent', 'sid': verification.sid}, status=status.HTTP_200_OK)
-        except TwilioRestException as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except requests.exceptions.Timeout:
-            return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
-
-
 class ChangePhoneConfirmView(APIView):
+    """
+    Accepts a Firebase ID token for the new phone number.
+    The Flutter app must first verify the new number via Firebase Phone Auth,
+    then send the resulting id_token here.
+    """
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        new_phone = request.data.get('new_phone_number')
-        code = request.data.get('code')
-        if not new_phone or not code:
-            return Response({'error': 'new_phone_number and code are required'}, status=status.HTTP_400_BAD_REQUEST)
+        id_token = request.data.get('id_token')
+        if not id_token:
+            return Response({'error': 'id_token is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            decoded = firebase_auth.verify_id_token(id_token)
+        except firebase_admin.exceptions.FirebaseError as e:
+            return Response({'error': f'Invalid Firebase token: {e}'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        new_phone = decoded.get('phone_number')
+        if not new_phone:
+            return Response({'error': 'Token does not contain a phone number'}, status=status.HTTP_400_BAD_REQUEST)
 
         if User.objects.filter(phone_number=new_phone).exclude(pk=request.user.pk).exists():
             return Response({'error': 'This phone number is already in use.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        client = Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN)
-        client.http_client.timeout = 5.0
-        try:
-            check = client.verify \
-                .v2 \
-                .services(settings.TWILIO_VERIFY_SERVICE_SID) \
-                .verification_checks \
-                .create(to=new_phone, code=code)
-
-            if check.status == 'approved':
-                request.user.phone_number = new_phone
-                request.user.save(update_fields=['phone_number'])
-                return Response({'status': 'Phone number updated successfully'}, status=status.HTTP_200_OK)
-            else:
-                return Response({'error': 'Invalid OTP'}, status=status.HTTP_400_BAD_REQUEST)
-        except TwilioRestException as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except requests.exceptions.Timeout:
-            return Response({'error': 'Twilio service timed out. Please try again.'}, status=status.HTTP_504_GATEWAY_TIMEOUT)
+        request.user.phone_number = new_phone
+        request.user.save(update_fields=['phone_number'])
+        return Response({'status': 'Phone number updated successfully'}, status=status.HTTP_200_OK)
 
 
 @api_view(['DELETE'])

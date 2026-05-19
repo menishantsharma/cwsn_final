@@ -9,7 +9,7 @@ cryptography
 PyJWT
 psycopg2-binary
 dj-rest-auth
-twilio
+firebase-admin
 redis
 gunicorn
 django-redis
