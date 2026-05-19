@@ -22,3 +22,5 @@ frontend/web/flutter_service_worker.js
 
 # Env
 .env
+
+backend/.env
